@@ -1,0 +1,5 @@
+namespace ObjLoader {
+
+ObjLoader objLoade
+
+}
