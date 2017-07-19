@@ -4,8 +4,8 @@
 #include <tchar.h>
 #include <fstream>
 
-#include "window/WindowManager.hpp"
-#include "renderer/Renderer.hpp"
+#include "WindowManager.hpp"
+#include "Renderer.hpp"
 #include "common/Logger.hpp"
 
 using namespace engine;

@@ -1,0 +1,13 @@
+#set(COMMON_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(COMMON_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+set(COMMON_LIB_SRC
+    ${COMMON_LIB_INC_DIR}/Types.hpp
+    ${COMMON_LIB_INC_DIR}/Logger.hpp
+    ${COMMON_LIB_INC_DIR}/DArray.hpp
+    ${COMMON_LIB_SRC_DIR}/DArray.cpp
+)
+
+add_library(COMMON_LIB STATIC ${COMMON_LIB_SRC})
+
+target_include_directories(COMMON_LIB PUBLIC ${COMMON_LIB_INC_DIR})

@@ -1,6 +1,7 @@
 #pragma once
 #include "IWindow.hpp"
 #include "IWindowEventHandler.hpp"
+#include "Types.hpp"
 
 #include <vector>
 #include <unordered_map>
@@ -16,7 +17,7 @@ public:
 
 	int Initialize();
 	
-	IWindow* CreateWindowInstance(unsigned x, unsigned y, unsigned width, unsigned height);
+	IWindow* CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height);
 
 	void Shutdown();
 private:

@@ -15,17 +15,17 @@ typedef bool Bool;
 template<typename T>
 struct Size
 {
-	Size()
-	: width(0)
-	, height(0) {}
+    Size()
+    : width(0)
+    , height(0) {}
 
-	Size(const T& _width, const T& _height)
-	: width(_width)
-	, height(_height) {}
-	~Size() {}
+    Size(const T& _width, const T& _height)
+    : width(_width)
+    , height(_height) {}
+    ~Size() {}
 
-	T width;
-	T height
+    T width;
+    T height;
 };
 
 typedef Size<Uint32> SizeI;

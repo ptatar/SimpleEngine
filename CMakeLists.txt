@@ -1,0 +1,27 @@
+cmake_minimum_required(VERSION 3.5)
+project(SimpleEngine)
+
+set(SIMPLE_ENGINE_VERSION_MAJOR 0)
+set(SIMPLE_ENGINE_VERSION_MINOR 1)
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
+set(CMAKE_CXX_STANDARD 14)
+
+if(WIN32)
+    set(PLATFORM_WINDOWS TRUE)
+    add_definitions(-DPLATFORM_WINDOWS)
+elseif(UNIX)
+    set(PLATFORM_LINUX TRUE)
+    add_definitions(-DPLATFORM_LINUX)
+else()
+    message(FATAL_ERROR "Unknown platform")
+endif()
+
+
+set(SOURCE_DIR "source/Engine")
+
+add_subdirectory(${SOURCE_DIR})
