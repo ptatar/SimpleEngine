@@ -1,4 +1,4 @@
-#include "Device.hpp"
+#include "DeviceDX12.hpp"
 
 #include "Common/Logger.hpp"
 

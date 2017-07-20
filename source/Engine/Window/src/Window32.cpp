@@ -1,5 +1,5 @@
 #include "Window32.hpp"
-#include "Common/Logger.hpp"
+#include "Logger.hpp"
 
 #include <strsafe.h>
 
@@ -64,6 +64,11 @@ int Window32::Initialize(unsigned posX, unsigned posY,
 
     m_width = clientWidth;
     m_height = clientHeight;
+
+	if (!RequestRendererSurface())
+	{
+		return 1;
+	}
     return 0;
 }
 
@@ -147,6 +152,11 @@ void Window32::OnExit() {
 
 bool Window32::IsFullscreen() {
     return m_isFullscreen;
+}
+
+Bool Window32::RequestRendererSurface(Renderer*)
+{
+	
 }
 
 

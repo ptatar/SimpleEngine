@@ -1,4 +1,4 @@
-#include "HardwareManager.hpp"
+#include "HardwareManagerDX12.hpp"
 
 #include "Common/Logger.hpp"
 

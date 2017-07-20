@@ -1,4 +1,4 @@
-#include <Common/Types.hpp>
+#include <Types.hpp>
 #include <memory>
 
 #include "D3DIncludes.hpp"

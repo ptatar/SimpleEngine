@@ -1,8 +1,8 @@
 #pragma once
 
 #include "D3DIncludes.hpp"
-#include "Common/Types.hpp"
-#include "Window/IWindow.hpp"
+#include "Types.hpp"
+#include "IWindow.hpp"
 
 #include <vector>
 

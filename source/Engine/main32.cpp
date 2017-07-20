@@ -5,8 +5,8 @@
 #include <fstream>
 
 #include "WindowManager.hpp"
-#include "Renderer.hpp"
-#include "common/Logger.hpp"
+//#include "Renderer.hpp"
+#include "Logger.hpp"
 
 using namespace engine;
 
@@ -19,10 +19,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	WindowManager winMag;
 	winMag.Initialize();
 	IWindow* window = winMag.CreateWindowInstance(0, 0, 800, 600);
-	Renderer renderer;
-	if (!renderer.Initialize(window)) {
-		return 1;
-	}
+//	Renderer renderer;
+//	if (!renderer.Initialize(window)) {
+//		return 1;
+//	}
 
 	if (window != nullptr) {
 		window->Show();
@@ -32,7 +32,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	else {
 
 	}
-	renderer.Uninitialize();
+//	renderer.Uninitialize();
 	window->Shutdown();
 	return 0;
 }

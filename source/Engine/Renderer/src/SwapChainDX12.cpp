@@ -1,4 +1,4 @@
-#include "SwapChain.hpp"
+#include "SwapChainDX12.hpp"
 
 #include "Common/Logger.hpp"
 #include "Device.hpp"

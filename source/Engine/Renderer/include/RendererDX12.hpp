@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Window/IWindow.hpp"
+//#include "Window/IWindow.hpp"
 #include "Window/IWindowEventHandler.hpp"
 #include "D3DIncludes.hpp"
 #include "Common/Types.hpp"
@@ -18,7 +18,7 @@ class Renderer: IWindowEventHandler {
 public:
 	Renderer();
 	~Renderer();
-	Bool Initialize(IWindow*);
+	//Bool Initialize(IWindow*);
 	void Uninitialize();
 	ResourcesManager* GetResourcesManager();
 	Bool MainLoop();

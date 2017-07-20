@@ -10,7 +10,7 @@
 
 namespace engine {
 
-WindowManager::WindowManager() {}
+WindowManager::WindowManager(Renderer* renderer): m_renderer(renderer)  {}
 
 
 WindowManager::~WindowManager() {
@@ -24,32 +24,34 @@ int WindowManager::Initialize() {
 
 
 void WindowManager::Shutdown() {
-    for (auto* window: m_windows) {
-        if (window != nullptr) {
-            window->Shutdown();
-            window = nullptr;
-        }
-    }
 }
 
 
-IWindow* WindowManager::CreateWindowInstance(unsigned x, unsigned y, unsigned width, unsigned height) {
+IWindow* WindowManager::CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height) {
     IWindow* window = nullptr;
 #if defined(PLATFORM_WINDOWS)
-    window = new Window32();
+    Window32* window = new Window32();
 #elif defined (PLATFOM_LINUX)
-    window = new WindowX();
+    WindowX* window = new WindowX();
 #else
+	IWindow* window = nullptr;
     LOGE("Unimplemented!");
     return nullptr;
 #endif
+
     int res = window->Initialize(x, y, width, height);
-    if (res != 0) {
+    if (res != 0)
+	{
         delete window;
         return nullptr;
     }
 
-    m_windows.push_back(window);
+	if (window->RequestRendererSurface(m_renderer))
+	{
+		delete window;
+		return nullptr;
+	}
+
     return window;
 }
 
