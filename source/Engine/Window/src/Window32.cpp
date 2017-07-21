@@ -65,10 +65,6 @@ int Window32::Initialize(unsigned posX, unsigned posY,
     m_width = clientWidth;
     m_height = clientHeight;
 
-	if (!RequestRendererSurface())
-	{
-		return 1;
-	}
     return 0;
 }
 
@@ -156,7 +152,7 @@ bool Window32::IsFullscreen() {
 
 Bool Window32::RequestRendererSurface(Renderer*)
 {
-	
+	return true;
 }
 
 

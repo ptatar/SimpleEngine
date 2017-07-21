@@ -27,6 +27,10 @@ endif()
 
 add_library(WINDOW_LIB STATIC ${WINDOW_LIB_SRC})
 
-target_link_libraries(WINDOW_LIB PRIVATE COMMON_LIB)
-target_include_directories(WINDOW_LIB PRIVATE ${COMMON_LIB_INC_DIR})
-target_include_directories(WINDOW_LIB PRIVATE ${WINDOW_LIB_INC_DIR})
+target_link_libraries(WINDOW_LIB PRIVATE COMMON_LIB
+								 PRIVATE RENDERER_LIB)
+
+target_include_directories(WINDOW_LIB PRIVATE ${COMMON_LIB_INC_DIR}
+									  PRIVATE ${RENDERER_LIB_INC_DIR}
+									  PRIVATE ${WINDOW_LIB_INC_DIR})
+

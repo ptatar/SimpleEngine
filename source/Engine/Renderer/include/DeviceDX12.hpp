@@ -1,7 +1,7 @@
 #pragma once
 
 #include "D3DIncludes.hpp"
-#include "Common/Types.hpp"
+#include "Types.hpp"
 namespace engine
 {
 

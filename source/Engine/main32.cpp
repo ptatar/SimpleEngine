@@ -15,8 +15,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//Attach console for debug
 	AllocConsole();
 	freopen("CONOUT$", "w", stdout);
-
-	WindowManager winMag;
+	Renderer* renderer = nullptr;
+	WindowManager winMag(renderer);
 	winMag.Initialize();
 	IWindow* window = winMag.CreateWindowInstance(0, 0, 800, 600);
 //	Renderer renderer;

@@ -27,6 +27,7 @@ add_executable(ENGINE_EXE ${ENGINE_EXE_SRC})
 target_link_libraries(ENGINE_EXE WINDOW_LIB)
 target_include_directories(ENGINE_EXE PRIVATE ${WINDOW_LIB_INC_DIR})
 target_include_directories(ENGINE_EXE PRIVATE ${COMMON_LIB_INC_DIR})
+target_include_directories(ENGINE_EXE PRIVATE ${RENDERER_LIB_INC_DIR})
 
 if(${PLATFORM_WINDOWS})
     set_target_properties(ENGINE_EXE

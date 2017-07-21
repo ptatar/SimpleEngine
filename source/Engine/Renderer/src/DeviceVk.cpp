@@ -6,7 +6,7 @@ namespace engine
 {
 	Bool DeviceVk::Initialize()
 	{
-
+		return true;
 	}
 
 } // namespace engine

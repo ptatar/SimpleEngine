@@ -28,7 +28,6 @@ void WindowManager::Shutdown() {
 
 
 IWindow* WindowManager::CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height) {
-    IWindow* window = nullptr;
 #if defined(PLATFORM_WINDOWS)
     Window32* window = new Window32();
 #elif defined (PLATFOM_LINUX)
@@ -46,11 +45,11 @@ IWindow* WindowManager::CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, U
         return nullptr;
     }
 
-	if (window->RequestRendererSurface(m_renderer))
-	{
-		delete window;
-		return nullptr;
-	}
+	//if (window->RequestRendererSurface(m_renderer))
+	//{
+	//	delete window;
+	//	return nullptr;
+	//}
 
     return window;
 }
