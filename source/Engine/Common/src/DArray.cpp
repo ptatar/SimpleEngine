@@ -1,6 +1,6 @@
 #include "DArray.hpp"
 
-namespace common
+namespace engine
 {
 
     DArray::DArray() {}

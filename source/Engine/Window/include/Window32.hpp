@@ -16,33 +16,33 @@ public:
     Window32(Window32&&) = delete;
     ~Window32();
 
-    int Initialize(unsigned posX, unsigned posY, unsigned wndWidth, unsigned wndHeight) override;
+    Int32 Initialize(Uint32 posX, Uint32 posY, Uint32 wndWidth, Uint32 wndHeight) override;
     void RegisterEventCallback(IWindowEventHandler*) override;
     void Show() override;
     void Hide() override;
-    bool HandleEvents() override;
+    Bool HandleEvents() override;
     void Shutdown() override;
 
     WindowId GetWindowId() override;
-    unsigned GetWidth() override;
-    unsigned GetHeight() override;
+    Uint32 GetWidth() override;
+    Uint32 GetHeight() override;
 
     void OnStart() override;
-    void OnResize(unsigned width, unsigned height) override;
-    void OnReposition(unsigned x, unsigned y) override;
+    void OnResize(Uint32 width, Uint32 height) override;
+    void OnReposition(Uint32 x, Uint32 y) override;
     void OnExit() override;
-    bool IsFullscreen() override;
+    Bool IsFullscreen() override;
 
 private:
-    void GetWindowSize(unsigned clientWidth, unsigned clientHeight, unsigned& windowWidth, unsigned& windowHeight);
-	Bool RequestRendererSurface(Renderer* renderer);
+    void GetWindowSize(Uint32 clientWidth, Uint32 clientHeight, Uint32& windowWidth, Uint32& windowHeight);
+    Bool RequestRendererSurface(Renderer* renderer);
 private:
     HINSTANCE m_hInstance;
     HWND      m_hWindow;
     LPCWSTR   m_windowName;
-    bool      m_isFullscreen;
-    unsigned  m_width;
-    unsigned  m_height;
+    Bool      m_isFullscreen;
+    Uint32  m_width;
+    Uint32  m_height;
 
     static LRESULT CALLBACK DefaultWin32EventHandler(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam);
 };
