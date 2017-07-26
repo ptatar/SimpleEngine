@@ -5,7 +5,7 @@
 
 #include "IWindow.hpp"
 #include "IWindowEventHandler.hpp"
-#include "Renderer.hpp"
+#include "IRenderer.hpp"
 
 namespace engine {
 
@@ -35,7 +35,7 @@ public:
 
 private:
     void GetWindowSize(Uint32 clientWidth, Uint32 clientHeight, Uint32& windowWidth, Uint32& windowHeight);
-    Bool RequestRendererSurface(Renderer* renderer);
+    Bool RequestRendererSurface(IRenderer* renderer);
 private:
     HINSTANCE m_hInstance;
     HWND      m_hWindow;

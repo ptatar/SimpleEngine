@@ -150,7 +150,7 @@ bool Window32::IsFullscreen() {
     return m_isFullscreen;
 }
 
-Bool Window32::RequestRendererSurface(Renderer*)
+Bool Window32::RequestRendererSurface(IRenderer*)
 {
 	return true;
 }

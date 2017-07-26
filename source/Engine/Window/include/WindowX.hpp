@@ -36,9 +36,9 @@ public:
     void OnExit() override;
     Bool IsFullscreen() override;
 private:
-	Display* m_display;
-	Window   m_window;
-	Int32    m_screen;
+    Display* m_display;
+    Window   m_window;
+    Int32    m_screen;
 };
 
 } // namespace engine

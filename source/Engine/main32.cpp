@@ -5,7 +5,7 @@
 #include <fstream>
 
 #include "WindowManager.hpp"
-//#include "Renderer.hpp"
+#include "RendererManager.hpp"
 #include "Logger.hpp"
 
 using namespace engine;
@@ -15,9 +15,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//Attach console for debug
 	AllocConsole();
 	freopen("CONOUT$", "w", stdout);
-	Renderer* renderer = nullptr;
+	RendererManager rendererManager;
+	IRenderer* renderer = rendererManager.CreateRenderer();
+	if (!renderer->Initialize())
+	{
+		return -1;
+	}
 	WindowManager winMag(renderer);
-	winMag.Initialize();
+	if (winMag.Initialize())
+	{
+		return -1;
+	}
 	IWindow* window = winMag.CreateWindowInstance(0, 0, 800, 600);
 //	Renderer renderer;
 //	if (!renderer.Initialize(window)) {
@@ -32,7 +40,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	else {
 
 	}
-//	renderer.Uninitialize();
+	renderer->Shutdown();
 	window->Shutdown();
+	delete renderer;
+	delete window;
 	return 0;
 }

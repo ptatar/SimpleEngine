@@ -10,7 +10,7 @@
 
 namespace engine {
 
-WindowManager::WindowManager(Renderer* renderer): m_renderer(renderer)  {}
+WindowManager::WindowManager(IRenderer* renderer): m_renderer(renderer)  {}
 
 
 WindowManager::~WindowManager() {
