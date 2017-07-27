@@ -30,7 +30,7 @@
 
 import os
 import ycm_core
-
+from unipath import Path
 # These are the compilation flags that will be used in case there's no
 # compilation database set (by default, one is not set).
 # CHANGE THIS LIST OF FLAGS. YES, THIS IS THE DROID YOU HAVE BEEN LOOKING FOR.
@@ -146,9 +146,11 @@ def GetCompilationInfoForFile( filename ):
   # corresponding source file, if any. If one exists, the flags for that file
   # should be good enough.
   if IsHeaderFile( filename ):
-    basename = os.path.splitext( filename )[ 0 ]
-    for extension in SOURCE_EXTENSIONS:
-      replacement_file = basename + extension
+    file_path = Path(filename)
+    ext = str(file_path.ext)
+    for ext in SOURCE_EXTENSIONS:
+      replacement_file = str(file_path.parent.parent) + "/src/" + str(file_path.stem) + ext
+      print replacement_file
       if os.path.exists( replacement_file ):
         compilation_info = database.GetCompilationInfoForFile(
           replacement_file )

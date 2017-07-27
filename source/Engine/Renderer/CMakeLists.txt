@@ -1,6 +1,6 @@
 set(RENDERER_LIB_SRC_DIR ${RENDERER_LIB_DIR}/src)
 
-include(findVulkan)
+include(FindVulkan)
 if(NOT ${Vulkan_FOUND})
     message(FATAL_ERROR "Vulkan not found")
 endif()
@@ -36,7 +36,7 @@ elseif(${PLATFORM_LINUX})
 else()
     message(FATAL_ERROR "Unknown platform")
 endif()
-
+message(${Vulkan_INCLUDE_DIRS})
 
 add_library(RENDERER_LIB STATIC ${RENDERER_LIB_SRC})
 
@@ -52,7 +52,3 @@ target_include_directories(RENDERER_LIB PRIVATE ${COMMON_LIB_INC_DIR}
 if(${PLATFORM_LINUX})
     target_link_libraries(RENDERER_LIB PRIVATE ${X11_LIBRARIES})
 endif()
-
-#fixme
-
-target_include_directories(RENDERER_LIB PRIVATE ${VULKAN_SDK}/include)

@@ -1,12 +1,13 @@
 #include "WindowManager.hpp"
-#include "Renderer.hpp"
+#include "RendererManager.hpp"
 
 using namespace engine;
 
 int main()
 {
-    Renderer renderer;
-    WindowManager windowManager(&renderer);
+    RendererManager rendererManager;
+    IRenderer* renderer =rendererManager.CreateRenderer();
+    WindowManager windowManager(renderer);
     windowManager.CreateWindowInstance(0, 0, 800, 600);
     return 0;
 }
