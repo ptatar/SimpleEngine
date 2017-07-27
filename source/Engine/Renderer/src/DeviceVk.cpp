@@ -53,13 +53,24 @@ namespace engine
 			LOGE("Vk adapters enumeration failure: 0x%X");
 		}
 
-		LOGI("Enumerated devices:");
-		for (auto& adapter : m_adapters)
+		LOGI("Enumerated adapters:");
+		Uint32 selectedAdapterIndex = adapterCount;
+		for (Uint32 i; i < m_adapters.size(); ++i)
 		{
 			VkPhysicalDeviceProperties adapterProperties;
-			vkGetPhysicalDeviceProperties(adapter, &adapterProperties);
+			vkGetPhysicalDeviceProperties(m_adapter[i], &adapterProperties);
 			LOGI("\n%s", AdapterPropertiesToString(adapterProperties).c_str());
+			if (adapterProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
+				adapterProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+			{
+				selectedAdapterIndex = i;
+				break;
+			}
 		}
+
+
+
+		LOGI("Adapter selection:");
 		return true;
 	}
 
@@ -97,6 +108,15 @@ namespace engine
 			default:
 				return "UNKNOWN";
 		}
+	}
+
+	Version DeviceVk::VkApiVersionToVersion(Uint32 apiVersion)
+	{
+		// Vulkan spec: 2.9. API Version Numbers and Semantics
+		Version version;
+		version.patch = apiVersion & 0xFFF;
+		version.minor = (apiVersion >> 12) & 0x3FF;
+
 	}
 
 } // namespace engine

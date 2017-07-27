@@ -10,6 +10,12 @@ namespace engine
 
 	class DeviceVk
 	{
+		struct Version
+		{
+			Uint32 major;
+			Uint32 minor;
+			Uint32 patch;
+		};
 	public:
 		DeviceVk() {};
 		~DeviceVk() {};
