@@ -51,7 +51,7 @@ namespace engine
         result = vkEnumeratePhysicalDevices(m_instance, &adapterCount, m_adapters.data());
         if (result != VK_SUCCESS)
         {
-            LOGE("Vk adapters enumeration failure: 0x%X");
+            LOGE("Vk adapters enumeration failure: 0x%X", result);
 			return false;
         }
 

@@ -30,7 +30,7 @@ void WindowManager::Shutdown() {
 IWindow* WindowManager::CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height) {
 #if defined(PLATFORM_WINDOWS)
     Window32* window = new Window32();
-#elif defined (PLATFOM_LINUX)
+#elif defined (PLATFORM_LINUX)
     WindowX* window = new WindowX();
 #else
 	IWindow* window = nullptr;

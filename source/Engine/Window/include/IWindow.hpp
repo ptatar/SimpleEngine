@@ -21,8 +21,6 @@ namespace engine {
         virtual Uint32 GetHeight() = 0;
         virtual Bool IsFullscreen() = 0;
 
-        // TODO find a better way
-        virtual WindowId GetWindowId() = 0;
     };
 
 } // namespace engine

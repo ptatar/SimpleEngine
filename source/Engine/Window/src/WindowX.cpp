@@ -5,7 +5,7 @@
 namespace engine
 {
 
-    WindowX::WindowX():m_display(nullptr), m_window(),m_screen(-1) {}
+    WindowX::WindowX()  {}
 
     Int32 WindowX::Initialize( Uint32 poxX, Uint32 posY, Uint32 wndWidth, Uint32 wndHeight)
     {
@@ -18,7 +18,7 @@ namespace engine
 
         m_screen = DefaultScreen(m_display);
 
-        Window window = XCreateSimpleWindow(m_display, DefaultRootWindow(m_display), 0, 0,
+        m_window = XCreateSimpleWindow(m_display, DefaultRootWindow(m_display), 0, 0,
                                        800, 600, 0, BlackPixel(m_display, m_screen),
                                        WhitePixel(m_display, m_screen));
 
@@ -27,14 +27,16 @@ namespace engine
 
         XSelectInput(m_display, m_window, ExposureMask);
 
-        XMapWindow(m_display, m_window);
-
+        m_initialized = true;
         return 0;
     }
 
     void WindowX::RegisterEventCallback(IWindowEventHandler*) {}
 
-    void WindowX::Show() {}
+    void WindowX::Show()
+    {
+        XMapWindow(m_display, m_window);
+    }
 
     void WindowX::Hide() {}
 
@@ -53,13 +55,15 @@ namespace engine
         return true;
     }
 
-    void WindowX::Shutdown() {}
-
-    WindowId WindowX::GetWindowId() {}
-
-    Uint32 WindowX::GetWidth() {}
-
-    Uint32 WindowX::GetHeight() {}
+    void WindowX::Shutdown()
+    {
+        if (m_initialized)
+        {
+            XDestroyWindow(m_display, m_window);
+            XCloseDisplay(m_display);
+            m_initialized = false;
+        }
+    }
 
     void WindowX::OnStart() {}
 

@@ -14,7 +14,7 @@ public:
     Window32();
     Window32(Window32&) = delete;
     Window32(Window32&&) = delete;
-    ~Window32();
+    virtual ~Window32();
 
     Int32 Initialize(Uint32 posX, Uint32 posY, Uint32 wndWidth, Uint32 wndHeight) override;
     void RegisterEventCallback(IWindowEventHandler*) override;
@@ -23,7 +23,6 @@ public:
     Bool HandleEvents() override;
     void Shutdown() override;
 
-    WindowId GetWindowId() override;
     Uint32 GetWidth() override;
     Uint32 GetHeight() override;
 

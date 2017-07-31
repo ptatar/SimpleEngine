@@ -8,6 +8,10 @@ int main()
     RendererManager rendererManager;
     IRenderer* renderer =rendererManager.CreateRenderer();
     WindowManager windowManager(renderer);
-    windowManager.CreateWindowInstance(0, 0, 800, 600);
+    IWindow* window = windowManager.CreateWindowInstance(0, 0, 800, 600);
+    window->Show();
+    while(window->HandleEvents()) {}
+    window->Shutdown();
+    renderer->Shutdown();
     return 0;
 }

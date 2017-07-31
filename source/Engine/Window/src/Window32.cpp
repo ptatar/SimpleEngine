@@ -110,12 +110,6 @@ bool Window32::HandleEvents() {
     }
 }
 
-
-WindowId Window32::GetWindowId() {
-    return (Uint64)m_hWindow;
-}
-
-
 unsigned Window32::GetWidth() {
     return m_width;
 }
