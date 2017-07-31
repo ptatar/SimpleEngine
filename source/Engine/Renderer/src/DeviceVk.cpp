@@ -44,6 +44,7 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Vk physical devices enumeration failure: 0x%X", result);
+			return false;
         }
 
         std::vector<VkPhysicalDevice> m_adapters(adapterCount);
@@ -51,11 +52,12 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Vk adapters enumeration failure: 0x%X");
+			return false;
         }
 
         LOGI("Enumerated adapters:");
         Uint32 selectedAdapterIndex = adapterCount;
-        for (Uint32 i; i < m_adapters.size(); ++i)
+        for (Uint32 i = 0; i < m_adapters.size(); ++i)
         {
             VkPhysicalDeviceProperties adapterProperties;
             vkGetPhysicalDeviceProperties(m_adapters[i], &adapterProperties);
@@ -63,14 +65,56 @@ namespace engine
             if (adapterProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
                 adapterProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
             {
+				LOGI("Adapter selected: \n%s", AdapterPropertiesToString(adapterProperties).c_str());
                 selectedAdapterIndex = i;
                 break;
             }
         }
+		if (selectedAdapterIndex >= adapterCount)
+		{
+			LOGE("Adapter selection failed");
+			return false;
+		}
+		
+		Uint32 queuePropertiesCount;
+		vkGetPhysicalDeviceQueueFamilyProperties(m_adapters[selectedAdapterIndex], &queuePropertiesCount, nullptr);
 
+		std::vector<VkQueueFamilyProperties> queueFamilyProperties(queuePropertiesCount);
+		vkGetPhysicalDeviceQueueFamilyProperties(m_adapters[selectedAdapterIndex], &queuePropertiesCount, queueFamilyProperties.data());
 
+		LOGI("Listing queue families:");
+		Uint32 queueFamilyIndex = queuePropertiesCount;
+		for (Uint32 i = 0; i < queueFamilyProperties.size(); ++i)
+		{
+			LOGI("Queue Family %d\n%s", i, QueueFamilyToString(queueFamilyProperties[i]).c_str());
+			if (queueFamilyProperties[i].queueCount > 0 &&
+				queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
+				queueFamilyIndex == queuePropertiesCount)
+			{
+				queueFamilyIndex = i;
+			}
 
-        LOGI("Adapter selection:");
+		}
+
+		if (queueFamilyIndex >= queuePropertiesCount)
+		{
+			LOGE("Adapter queues don't fulfil minimal requirements");
+			return false;
+		}
+		LOGI("Selected queue family index %d", queueFamilyIndex);
+		/*
+		VkDeviceCreateInfo deviceCreateInfo;
+		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		deviceCreateInfo.pNext = nullptr;
+		deviceCreateInfo.flags = 0;
+		deviceCreateInfo.queueCreateInfoCount = 1;
+		deviceCreateInfo.pQueueCreateInfos;
+		deviceCreateInfo.enabledLayerCount;
+		deviceCreateInfo.ppEnabledLayerNames;
+		deviceCreateInfo.enabledExtensionCount;
+		deviceCreateInfo.ppEnabledExtensionNames;
+		deviceCreateInfo.pEnabledFeatures;
+		*/
         return true;
     }
 
@@ -109,5 +153,21 @@ namespace engine
                 return "UNKNOWN";
         }
     }
+
+	std::string DeviceVk::QueueFamilyToString(const VkQueueFamilyProperties& queueFamily) const
+	{
+		std::stringstream buf;
+		buf << "Queues count:                          " << queueFamily.queueCount << "\n"
+			<< "Queue flag:                            "
+			<< (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT ? "GRAPHICS_BIT " : "")
+			<< (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT ? "COMPUTE_BIT " : "")
+			<< (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT ? "TRANSFER_BIT " : "")
+			<< (queueFamily.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT ? "SPARSE_BINDING_BIT" : "") << "\n"
+			<< "Queue timestamp valid bits:            " << queueFamily.timestampValidBits << "\n"
+			<< "Queue min transfer granularity (w/h/d):" << queueFamily.minImageTransferGranularity.width << " "
+			<< queueFamily.minImageTransferGranularity.height << " "
+			<< queueFamily.minImageTransferGranularity.depth << " ";
+		return buf.str();
+	}
 
 } // namespace engine

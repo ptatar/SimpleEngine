@@ -25,6 +25,7 @@ namespace engine
     private:
         std::string AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const;
         std::string AdapterTypeToString(const VkPhysicalDeviceType& adpaterType) const;
+		std::string QueueFamilyToString(const VkQueueFamilyProperties& queueFamily) const;
     private:
         VkInstance m_instance;
     };
