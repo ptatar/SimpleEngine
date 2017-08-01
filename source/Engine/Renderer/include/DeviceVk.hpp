@@ -23,6 +23,8 @@ namespace engine
 
         Bool Initialize();
         void Shutdown();
+
+		Bool CreateSurface32();
     private:
         std::string AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const;
         std::string AdapterTypeToString(const VkPhysicalDeviceType& adpaterType) const;

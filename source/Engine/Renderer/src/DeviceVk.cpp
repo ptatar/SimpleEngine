@@ -213,7 +213,25 @@ namespace engine
         vkDestroyInstance(m_instance, nullptr);
     }
 
-    std::string DeviceVk::AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const
+	engine::Bool DeviceVk::CreateSurface(HINSTANCE hInstance, HWND hwnd)
+	{
+		VkSurfaceKHR surface;
+		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo;
+		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		surfaceCreateInfo.pNext = nullptr;
+		surfaceCreateInfo.flags = 0;
+		surfaceCreateInfo.hinstance = hInstance;
+		surfaceCreateInfo.hwnd = hwnd;
+		VkResult result = vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &surface);
+		if (result != VK_SUCCESS)
+		{
+			LOGE("Surface creation failure: %d", result);
+			return
+		}
+
+	}
+
+	std::string DeviceVk::AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const
     {
         std::stringstream buf;
         buf << "Name:        " << adapterProperties.deviceName << "\n"

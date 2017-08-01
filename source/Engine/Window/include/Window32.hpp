@@ -32,6 +32,8 @@ public:
     void OnExit() override;
     Bool IsFullscreen() override;
 
+	HINSTANCE GetHInstance() const { return m_hInstance; }
+	HWND GetHWindow() const { return m_hWindow; }
 private:
     void GetWindowSize(Uint32 clientWidth, Uint32 clientHeight, Uint32& windowWidth, Uint32& windowHeight);
     Bool RequestRendererSurface(IRenderer* renderer);

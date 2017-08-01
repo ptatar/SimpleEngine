@@ -18,8 +18,7 @@ Window32::Window32():
 Window32::~Window32() {};
 
 
-int Window32::Initialize(unsigned posX, unsigned posY,
-                             unsigned clientWidth, unsigned clientHeight) {
+int Window32::Initialize(Uint32 posX, Uint32 posY, Uint32 clientWidth, Uint32 clientHeight) {
     WNDCLASSEX wc;
     m_windowName = L"Window";
 
@@ -125,12 +124,12 @@ void Window32::OnStart() {
 }
 
 
-void Window32::OnResize(unsigned width, unsigned height) {
+void Window32::OnResize(Uint32 width, Uint32 height) {
         // TODO
 }
 
 
-void Window32::OnReposition(unsigned x, unsigned y) {
+void Window32::OnReposition(Uint32 x, Uint32 y) {
 
 }
 
@@ -191,7 +190,7 @@ LRESULT CALLBACK Window32::DefaultWin32EventHandler(HWND hwnd, UINT umessage, WP
 }
 
 
-void Window32::GetWindowSize(unsigned clientWidth, unsigned clientHeight, unsigned& windowWidth, unsigned& windowHeight) {
+void Window32::GetWindowSize(Uint32 clientWidth, Uint32 clientHeight, Uint32& windowWidth, Uint32& windowHeight) {
     // TODO
     windowWidth = clientWidth;
     windowHeight = clientHeight;
