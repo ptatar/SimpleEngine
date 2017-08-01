@@ -4,11 +4,55 @@
 
 #include <sstream>
 #include <vector>
+#include <cstring>
 
 namespace engine
 {
     Bool DeviceVk::Initialize()
     {
+		std::vector<char*> requiredExtension = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+		Uint32 extensionCount;
+		VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+		if (result != VK_SUCCESS)
+		{
+			LOGE("Extension enumeration failure: %d", result);
+			return false;
+		}
+
+		std::vector<VkExtensionProperties> availableExtension(extensionCount);
+		result = vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtension.data());
+		if (result != VK_SUCCESS)
+		{
+			LOGE("Extension enumeration failure: %d", result);
+			return false;
+		}
+
+		std::vector<Bool> extensionCheckResult(requiredExtension.size(), false);
+		Bool extensionSupportError = false;
+		for (Uint32 i = 0; i < requiredExtension.size(); ++i)
+		{
+			Bool supported = false;
+			char* required = requiredExtension[i];
+			for (auto& available : availableExtension)
+			{
+				if (std::strcmp(required,available.extensionName) == 0)
+				{
+					supported = true;
+					break;
+				}
+			}
+			if (supported == false)
+			{
+				LOGE("Required extension not supported: %s", requiredExtension[i]);
+				extensionSupportError = true;
+			}
+		}
+
+		if (extensionSupportError)
+		{
+			return false;
+		}
+		
         VkApplicationInfo applicationInfo;
         applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         applicationInfo.pNext = nullptr;
@@ -25,25 +69,26 @@ namespace engine
         instanceCreateInfo.pApplicationInfo = &applicationInfo;
         instanceCreateInfo.enabledLayerCount = 0;
         instanceCreateInfo.ppEnabledLayerNames = nullptr;
-        instanceCreateInfo.enabledExtensionCount = 0;
-        instanceCreateInfo.ppEnabledExtensionNames = nullptr;
+        instanceCreateInfo.enabledExtensionCount = requiredExtension.size();
+        instanceCreateInfo.ppEnabledExtensionNames = requiredExtension.data();
 
-        VkResult result = vkCreateInstance(&instanceCreateInfo, NULL, &m_instance);
+        result = vkCreateInstance(&instanceCreateInfo, NULL, &m_instance);
         if (result == VK_ERROR_INCOMPATIBLE_DRIVER)
         {
-            LOGE("Vk instance creation failure. Incopatible driver: 0x%X", result);
+            LOGE("Vk instance creation failure. Incopatible driver: %d", result);
             return false;
         }
         else if (result != VK_SUCCESS)
         {
-            LOGE("Vk instance creation failure: 0x%X", result);
+            LOGE("Vk instance creation failure: %d", result);
+			return false;
         }
 
         Uint32 adapterCount;
         result = vkEnumeratePhysicalDevices(m_instance, &adapterCount, NULL);
         if (result != VK_SUCCESS)
         {
-            LOGE("Vk physical devices enumeration failure: 0x%X", result);
+            LOGE("Vk physical devices enumeration failure: %d", result);
 			return false;
         }
 
@@ -51,7 +96,7 @@ namespace engine
         result = vkEnumeratePhysicalDevices(m_instance, &adapterCount, m_adapters.data());
         if (result != VK_SUCCESS)
         {
-            LOGE("Vk adapters enumeration failure: 0x%X", result);
+            LOGE("Vk adapters enumeration failure: %d", result);
 			return false;
         }
 
@@ -72,7 +117,7 @@ namespace engine
         }
 		if (selectedAdapterIndex >= adapterCount)
 		{
-			LOGE("Adapter selection failed");
+			LOGE("Adapter selection failure");
 			return false;
 		}
 		
@@ -102,24 +147,69 @@ namespace engine
 			return false;
 		}
 		LOGI("Selected queue family index %d", queueFamilyIndex);
-		/*
+		
+		Float queuePriorities = 1.0f;
+		VkDeviceQueueCreateInfo queueCreateInfo;
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.pNext = nullptr;
+		queueCreateInfo.flags = 0;
+		queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriorities;
+
 		VkDeviceCreateInfo deviceCreateInfo;
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.pNext = nullptr;
 		deviceCreateInfo.flags = 0;
 		deviceCreateInfo.queueCreateInfoCount = 1;
-		deviceCreateInfo.pQueueCreateInfos;
-		deviceCreateInfo.enabledLayerCount;
-		deviceCreateInfo.ppEnabledLayerNames;
-		deviceCreateInfo.enabledExtensionCount;
-		deviceCreateInfo.ppEnabledExtensionNames;
-		deviceCreateInfo.pEnabledFeatures;
-		*/
+		deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+		deviceCreateInfo.enabledLayerCount = 0;
+		deviceCreateInfo.ppEnabledLayerNames = nullptr;
+		deviceCreateInfo.enabledExtensionCount = 0;
+		deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+		deviceCreateInfo.pEnabledFeatures = nullptr;
+
+		result = vkCreateDevice(m_adapters[selectedAdapterIndex], &deviceCreateInfo, NULL, &m_device);
+		if (result != VK_SUCCESS)
+		{
+			LOGE("Device creation failure: %d", result);
+			return false;
+		}
+
+		VkCommandPoolCreateInfo commandPoolCreateInfo;
+		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		commandPoolCreateInfo.pNext = nullptr;
+		commandPoolCreateInfo.flags = 0;
+		commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
+
+		result = vkCreateCommandPool(m_device, &commandPoolCreateInfo, nullptr, &m_commandPool);
+		if (result != VK_SUCCESS)
+		{
+			LOGE("Command pool creation failure: %d", result);
+			return false;
+		}
+
+		VkCommandBufferAllocateInfo commandBufferAllocateInfo;
+		commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		commandBufferAllocateInfo.pNext = nullptr;
+		commandBufferAllocateInfo.commandPool = m_commandPool;
+		commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		commandBufferAllocateInfo.commandBufferCount = 1;
+
+		result = vkAllocateCommandBuffers(m_device, &commandBufferAllocateInfo, &m_commandBuffer);
+		if (result != VK_SUCCESS)
+		{
+			LOGE("Command buffer allocation failure: %d", result);
+			return false;
+		}
+
         return true;
     }
 
     void DeviceVk::Shutdown()
     {
+		vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+		vkDestroyDevice(m_device, nullptr);
         vkDestroyInstance(m_instance, nullptr);
     }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Types.hpp"
+#define VK_USE_PLATFORM_WIN32_KHR
 #include "vulkan/vulkan.h"
 
 #include <string>
@@ -28,6 +29,9 @@ namespace engine
 		std::string QueueFamilyToString(const VkQueueFamilyProperties& queueFamily) const;
     private:
         VkInstance m_instance;
+		VkDevice m_device;
+		VkCommandPool m_commandPool;
+		VkCommandBuffer m_commandBuffer;
     };
 
 } // namespace engine
