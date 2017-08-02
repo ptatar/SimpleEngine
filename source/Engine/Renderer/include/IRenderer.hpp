@@ -11,7 +11,7 @@ namespace engine {
 		virtual Bool Initialize() = 0;
 		virtual void Shutdown() = 0;
 
-		virtual Surface CreateSurface32() {};
-		virtual Surface CreateSurfaceX() {};
+//		virtual Bool CreateSurface32() {};
+//		virtual Bool CreateSurfaceX() {};
 	};
 } // namespace engine

@@ -4,11 +4,20 @@
 
 namespace engine
 {
+	class Surface32
+	{
+
+	};
+
 	class RendererManager
 	{
 	public:
 		RendererManager() {}
 		~RendererManager() {}
-		IRenderer* CreateRenderer();
+#if defined(PLATFORM_WINDOWS)
+		IRenderer* CreateRenderer(Window32* window32);
+#elif defined(PLATFORM_LINUX)
+		IRenderer* CreateRenderer(WindowX* windowX);
+#endif
 	};
 } // namespace engine
