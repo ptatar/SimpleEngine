@@ -103,8 +103,8 @@ namespace engine
         for (Uint32 i = 0; i < queueFamilyProperties.size(); ++i)
         {
             LOGI("Queue Family %d\n%s", i, QueueFamilyToString(queueFamilyProperties[i]).c_str());
-            if (queueFamilyProperties[i].queueCount > 0 &&
-                queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
+			if (queueFamilyProperties[i].queueCount > 0 &&
+				queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
                 queueFamilyIndex == queuePropertiesCount)
             {
                 queueFamilyIndex = i;
