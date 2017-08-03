@@ -5,21 +5,38 @@ namespace engine
 
 	engine::Bool RendererVk::Initialize()
 	{
-		return m_device.Initialize();
+		return m_device.Initialize(); // remove device from renderer
 	}
 
 	void RendererVk::Shutdown()
 	{
-		m_device->
+		m_device.Shutdown();
 	}
 
-	Bool RendererVk::CreateSurface32(Window32* window32)
+#if defined(PLATFORM_WINDOWS)
+
+	Bool RendererVk::CreateSurface(IWindowSurface32* windowSurface)
 	{
-		m_device->CreateSurface32(window32);
+		DeviceVk::Result<VkSurfaceKHR> result = m_device.CreateSurface(windowSurface);
+		if (result.status == DeviceVk::Status::Success)
+		{
+			m_renderSurface = result.value;
+			return true;
+		}
+		else
+		{
+			
+			return false;
+		}
 	}
 
-	Bool RendererVk::CreateSurfaceX(WindowX* windowX)
+#elif defined(PLATFORM_LINUX)
+
+	Bool RendererVk::CreateSurface(IWindowSurfaceX* windowSurface)
 	{
-		m_device->CreateSurfaceX(windowX);
+		m_device->CreateSurface(surface);
 	}
+
+#endif
+
 }

@@ -16,21 +16,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	AllocConsole();
 	freopen("CONOUT$", "w", stdout);
 	RendererManager rendererManager;
-	IRenderer* renderer = rendererManager.CreateRenderer();
-	if (!renderer->Initialize())
-	{
-		return -1;
-	}
-	WindowManager winMag(renderer);
+	WindowManager winMag(&rendererManager);
 	if (winMag.Initialize())
 	{
 		return -1;
 	}
 	IWindow* window = winMag.CreateWindowInstance(0, 0, 800, 600);
-//	Renderer renderer;
-//	if (!renderer.Initialize(window)) {
-//		return 1;
-//	}
+	if (!window)
+	{
+		return -1;
+	}
 
 	if (window != nullptr) {
 		window->Show();
@@ -40,9 +35,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	else {
 
 	}
-	renderer->Shutdown();
 	window->Shutdown();
-	delete renderer;
 	delete window;
 	return 0;
 }

@@ -22,6 +22,7 @@ if(${PLATFORM_WINDOWS})
         ${RENDERER_LIB_INC_DIR}/IRenderer.hpp
         ${RENDERER_LIB_INC_DIR}/RendererManager.hpp
         ${RENDERER_LIB_SRC_DIR}/RendererManager.cpp
+        ${RENDERER_LIB_INC_DIR}/WindowSurface.hpp
     )
 elseif(${PLATFORM_LINUX})
     set(RENDERER_LIB_SRC
@@ -32,6 +33,7 @@ elseif(${PLATFORM_LINUX})
         ${RENDERER_LIB_INC_DIR}/IRenderer.hpp
         ${RENDERER_LIB_INC_DIR}/RendererManager.hpp
         ${RENDERER_LIB_SRC_DIR}/RendererManager.cpp
+        ${RENDERER_LIB_INC_DIR}/RendererManager.hpp
     )
 else()
     message(FATAL_ERROR "Unknown platform")

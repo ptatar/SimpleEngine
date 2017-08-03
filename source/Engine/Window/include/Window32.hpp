@@ -1,15 +1,18 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+
 
 #include "IWindow.hpp"
 #include "IWindowEventHandler.hpp"
 #include "IRenderer.hpp"
 
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <memory>
+
 namespace engine {
 
-class Window32 : public IWindow, public IWindowEventHandler {
+class Window32 : public IWindow, public IWindowEventHandler, public IWindowSurface32  {
 public:
     Window32();
     Window32(Window32&) = delete;
@@ -32,11 +35,11 @@ public:
     void OnExit() override;
     Bool IsFullscreen() override;
 
-	HINSTANCE GetHInstance() const { return m_hInstance; }
-	HWND GetHWindow() const { return m_hWindow; }
+	HINSTANCE GetHInstance() const override { return m_hInstance; }
+	HWND GetHWindow() const override { return m_hWindow; }
+	Bool BindRenderer(std::unique_ptr<IRenderer> renderer); // FIXME when this function fails unique ptr is still consumed
 private:
     void GetWindowSize(Uint32 clientWidth, Uint32 clientHeight, Uint32& windowWidth, Uint32& windowHeight);
-    Bool RequestRendererSurface(IRenderer* renderer);
 private:
     HINSTANCE m_hInstance;
     HWND      m_hWindow;
@@ -44,6 +47,7 @@ private:
     Bool      m_isFullscreen;
     Uint32  m_width;
     Uint32  m_height;
+	std::unique_ptr<IRenderer> m_renderer;
 
     static LRESULT CALLBACK DefaultWin32EventHandler(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam);
 };

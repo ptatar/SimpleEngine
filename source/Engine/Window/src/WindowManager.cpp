@@ -10,7 +10,7 @@
 
 namespace engine {
 
-WindowManager::WindowManager(IRenderer* renderer): m_renderer(renderer)  {}
+WindowManager::WindowManager(RendererManager* rendererManager): m_rendererManager(rendererManager)  {}
 
 
 WindowManager::~WindowManager() {
@@ -28,30 +28,28 @@ void WindowManager::Shutdown() {
 
 
 IWindow* WindowManager::CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height) {
+	//clean this up
 #if defined(PLATFORM_WINDOWS)
-    Window32* window = new Window32();
+    std::unique_ptr<Window32> window = std::make_unique<Window32>();
 #elif defined (PLATFORM_LINUX)
-    WindowX* window = new WindowX();
+    std::unique_ptr<WindowX> window = std::make_unique<WindowX>();
 #else
-	IWindow* window = nullptr;
-    LOGE("Unimplemented!");
-    return nullptr;
+	ERROR("Dead code path")
 #endif
-
+	
     int res = window->Initialize(x, y, width, height);
     if (res != 0)
 	{
-        delete window;
         return nullptr;
     }
+	std::unique_ptr<IRenderer> renderer(m_rendererManager->CreateRenderer(window.get()));
+	if (renderer == nullptr)
+	{
+		return nullptr;
+	}
+	window->BindRenderer(std::move(renderer));
 
-	//if (window->RequestRendererSurface(m_renderer))
-	//{
-	//	delete window;
-	//	return nullptr;
-	//}
-
-    return window;
+	return window.release();
 }
 
 

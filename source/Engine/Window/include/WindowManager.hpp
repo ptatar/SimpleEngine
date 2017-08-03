@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IWindow.hpp"
-#include "IRenderer.hpp"
+#include "RendererManager.hpp"
 #include "IWindowEventHandler.hpp"
 #include "Types.hpp"
 
@@ -12,7 +12,7 @@ namespace engine {
 
 	class WindowManager {
 	public:
-		WindowManager(IRenderer* renderer);
+		WindowManager(RendererManager* rendererManager);
 		WindowManager(WindowManager&) = delete;
 		WindowManager(WindowManager&&) = delete;
 		~WindowManager();
@@ -20,10 +20,9 @@ namespace engine {
 		int Initialize();
 	
 		IWindow* CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height);
-
 		void Shutdown();
 	private:
-		IRenderer* m_renderer;
+		RendererManager* m_rendererManager;
 	};
 
 } // namespace engine

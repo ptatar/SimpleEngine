@@ -1,23 +1,21 @@
 #pragma once
 
 #include "IRenderer.hpp"
+#include "WindowSurface.hpp"
+
+#include <memory>
 
 namespace engine
 {
-	class Surface32
-	{
-
-	};
-
 	class RendererManager
 	{
 	public:
 		RendererManager() {}
 		~RendererManager() {}
-#if defined(PLATFORM_WINDOWS)
-		IRenderer* CreateRenderer(Window32* window32);
-#elif defined(PLATFORM_LINUX)
-		IRenderer* CreateRenderer(WindowX* windowX);
-#endif
+	#if defined(PLATFORM_WINDOWS)
+		std::unique_ptr<IRenderer> CreateRenderer(IWindowSurface32* surface);
+	#elif defined(PLATFORM_LINUX)
+		std::unique_ptr<IRenderer> CreateRenderer(IWindowSurfaceX* surface);
+	#endif
 	};
 } // namespace engine

@@ -5,17 +5,24 @@
 namespace engine
 {
 #if defined(PLATFORM_WINDOWS)
-	IRenderer* RendererManager::CreateRenderer32(Window32* window32)
+	std::unique_ptr<IRenderer> RendererManager::CreateRenderer(IWindowSurface32* surface)
 	{
-		RendererVk* renderer = new RendererVk();
-		renderer->CreateSurface32(window32)
-		return new RendererVk();
+		std::unique_ptr<RendererVk> renderer = std::make_unique<RendererVk>();
+		if (!renderer->Initialize())
+		{
+			return nullptr;
+		}
+		if (!renderer->CreateSurface(surface))
+		{
+			return nullptr;
+		}
+		return renderer;
 	}
 #elif defined(PLATFORM_LINUX)
-	IRenderer* RendererManager::CreateRendererX(WindowX* windowX)
+	std::unique_ptr<IRenderer> RendererManager::CreateRenderer(IWindowSurfaceX* surface)
 	{
 		RendererVk* renderer = new RendererVk();
-		renderer->CreateSurfaceX(windowX);
+		renderer->CreateSurface(surface);
 		return renderer;
 	}
 #endif

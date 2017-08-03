@@ -91,6 +91,11 @@ void Window32::Shutdown() {
 
     UnregisterClass(m_windowName, m_hInstance);
     m_hInstance = NULL;
+	if (m_renderer != nullptr)
+	{
+		m_renderer->Shutdown();
+	}
+	m_renderer = nullptr;
 }
 
 
@@ -143,12 +148,21 @@ bool Window32::IsFullscreen() {
     return m_isFullscreen;
 }
 
-Bool Window32::RequestRendererSurface()
+Bool Window32::BindRenderer(std::unique_ptr<IRenderer> renderer)
 {
-	if (m_rendererManager->CreateRenderer(this);
-	return true;
+	if (m_renderer != nullptr)
+	{
+		m_renderer->Shutdown();
+	}
+	
+	if (renderer->CreateSurface(this))
+	{
+		return true;
+	}
+	m_renderer = std::move(renderer);
+	return false;
+	
 }
-
 
 LRESULT CALLBACK Window32::DefaultWin32EventHandler(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam) {
     Window32* window = reinterpret_cast<Window32*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
