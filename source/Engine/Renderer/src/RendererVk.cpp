@@ -3,7 +3,7 @@
 namespace engine
 {
 
-	engine::Bool RendererVk::Initialize()
+	Bool RendererVk::Initialize()
 	{
 		return m_device.Initialize(); // remove device from renderer
 	}
@@ -34,7 +34,16 @@ namespace engine
 
 	Bool RendererVk::CreateSurface(IWindowSurfaceX* windowSurface)
 	{
-		m_device->CreateSurface(surface);
+        DeviceVk::Result<VkSurfaceKHR> result = m_device.CreateSurface(windowSurface);
+        if(result.status == DeviceVk::Status::Success)
+        {
+            m_renderSurface = result.value;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
 	}
 
 #endif

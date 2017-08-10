@@ -21,7 +21,6 @@ elseif(${PLATFORM_LINUX})
         ${WINDOW_LIB_SRC_DIR}/WindowX.cpp
         ${WINDOW_LIB_INC_DIR}/WindowX.hpp
     )
-    include(FindX11)
 else()
     message(FATAL_ERROR "Unknown platform")
 endif()

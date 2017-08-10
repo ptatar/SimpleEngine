@@ -47,7 +47,7 @@ target_link_libraries(RENDERER_LIB PRIVATE COMMON_LIB
 
 target_include_directories(RENDERER_LIB PRIVATE ${COMMON_LIB_INC_DIR}
                                         PUBLIC ${RENDERER_LIB_INC_DIR}
-                                        PRIVATE ${X11_INCLUDE_DIR}
+                                        PRIVATE ${X11_INCLUDE_DIRS}
                                         PRIVATE ${Vulkan_INCLUDE_DIRS}
                                         )
 

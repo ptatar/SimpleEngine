@@ -2,17 +2,21 @@
 
 #include "IWindow.hpp"
 #include "IWindowEventHandler.hpp"
+#include "WindowSurface.hpp"
+#include "IRenderer.hpp"
 #include "Types.hpp"
 #include "Logger.hpp"
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
+#include <memory>
 
 #undef Bool //wtf??
 
 namespace engine {
 
-class WindowX: public IWindow, public IWindowEventHandler {
+class WindowX: public IWindow, public IWindowEventHandler, public IWindowSurfaceX {
 public:
     WindowX();
     WindowX(WindowX&) = delete;
@@ -34,6 +38,11 @@ public:
     void OnReposition( Uint32 x, Uint32 y) override;
     void OnExit() override;
     Bool IsFullscreen() override;
+
+    //IWindowSurfaceX
+    virtual Window GetWindow() const override { return m_window; }
+    virtual Display* GetDisplay() const override { return m_display; }
+    Bool BindRenderer(std::unique_ptr<IRenderer> renderer);
 private:
     Bool     m_initialized;
     Display* m_display;
@@ -41,6 +50,7 @@ private:
     Int32    m_screen;
     Uint32   m_width;
     Uint32   m_height;
+    std::unique_ptr<IRenderer> m_renderer;
 };
 
 } // namespace engine

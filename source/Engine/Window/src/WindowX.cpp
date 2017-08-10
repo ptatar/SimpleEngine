@@ -75,4 +75,19 @@ namespace engine
 
     Bool WindowX::IsFullscreen() { return false; }
 
+    Bool WindowX::BindRenderer(std::unique_ptr<IRenderer> renderer)
+    {
+	    if (m_renderer != nullptr)
+	    {
+		    m_renderer->Shutdown();
+	    }
+	
+	    if (renderer->CreateSurface(this))
+	    {
+		    return true;
+	    }
+	    m_renderer = std::move(renderer);
+	    return false;
+    }
+
 } // namespace engine

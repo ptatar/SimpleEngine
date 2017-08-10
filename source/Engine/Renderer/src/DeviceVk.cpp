@@ -37,7 +37,7 @@ namespace engine
         instanceCreateInfo.enabledExtensionCount = requiredInstanceExtension.size();
         instanceCreateInfo.ppEnabledExtensionNames = requiredInstanceExtension.data();
 
-		VkResult result = vkCreateInstance(&instanceCreateInfo, NULL, &m_instance);
+        VkResult result = vkCreateInstance(&instanceCreateInfo, NULL, &m_instance);
         if (result == VK_ERROR_INCOMPATIBLE_DRIVER)
         {
             LOGE("Vk instance creation failure. Incopatible driver: %d", result);
@@ -75,11 +75,11 @@ namespace engine
             if (adapterProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
                 adapterProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
             {
-				std::vector<const char*> requiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-				if (!CheckDeviceExtensionsSupport(m_adapters[i],requiredDeviceExtensions))
-				{
-					return false;
-				}
+                std::vector<const char*> requiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+                if (!CheckDeviceExtensionsSupport(m_adapters[i],requiredDeviceExtensions))
+                {
+                    return false;
+                }
 
                 LOGI("Adapter selected: \n%s", AdapterPropertiesToString(adapterProperties).c_str());
                 selectedAdapterIndex = i;
@@ -91,7 +91,7 @@ namespace engine
             LOGE("Adapter selection failure");
             return false;
         }
-        
+
         Uint32 queuePropertiesCount;
         vkGetPhysicalDeviceQueueFamilyProperties(m_adapters[selectedAdapterIndex], &queuePropertiesCount, nullptr);
 
@@ -103,8 +103,8 @@ namespace engine
         for (Uint32 i = 0; i < queueFamilyProperties.size(); ++i)
         {
             LOGI("Queue Family %d\n%s", i, QueueFamilyToString(queueFamilyProperties[i]).c_str());
-			if (queueFamilyProperties[i].queueCount > 0 &&
-				queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
+            if (queueFamilyProperties[i].queueCount > 0 &&
+                queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
                 queueFamilyIndex == queuePropertiesCount)
             {
                 queueFamilyIndex = i;
@@ -118,7 +118,7 @@ namespace engine
             return false;
         }
         LOGI("Selected queue family index %d", queueFamilyIndex);
-        
+
         Float queuePriorities = 1.0f;
         VkDeviceQueueCreateInfo queueCreateInfo;
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -198,14 +198,27 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Surface creation failure: %d", result);
-			return Result<VkSurfaceKHR> {Status::Failure, renderSurface};
+            return Result<VkSurfaceKHR> {Status::Failure, renderSurface};
         }
-		return Result<VkSurfaceKHR> {Status::Success, renderSurface};
+        return Result<VkSurfaceKHR> {Status::Success, renderSurface};
     }
 #elif defined(PLATFORM_LINUX)
     DeviceVk::Result<VkSurfaceKHR> DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
     {
-		return; // TODO
+        VkSurfaceKHR renderSurface;
+        VkXlibSurfaceCreateInfoKHR surfaceCreateInfo;
+        surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+        surfaceCreateInfo.pNext = nullptr;
+        surfaceCreateInfo.flags = 0;
+        surfaceCreateInfo.window = windowSurface->GetWindow();
+        surfaceCreateInfo.dpy = windowSurface->GetDisplay();
+        VkResult result = vkCreateXlibSurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &renderSurface);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Surface creation failure: %d", result);
+            return Result<VkSurfaceKHR> {Status::Failure, renderSurface};
+        }
+        return Result<VkSurfaceKHR> {Status::Success, renderSurface};
     }
 #endif
 
@@ -270,68 +283,68 @@ namespace engine
         return instanceRequiredExtensions;
     }
 
-	Bool DeviceVk::CheckExtensionSupport(std::vector<const char*>& requiredExtensions, std::vector<VkExtensionProperties>& availableExtensions)
-	{
-		std::vector<Bool> extensionCheckResult(requiredExtensions.size(), false);
-		Bool extensionSupportError = false;
-		for (Uint32 i = 0; i < requiredExtensions.size(); ++i)
-		{
-			Bool supported = false;
-			const char* required = requiredExtensions[i];
-			for (auto& available : availableExtensions)
-			{
-				if (std::strcmp(required, available.extensionName) == 0)
-				{
-					supported = true;
-					break;
-				}
-			}
-			if (supported == false)
-			{
-				LOGE("Required extension not supported: %s", requiredExtensions[i]);
-				extensionSupportError = true;
-			}
-		}
-		return !extensionSupportError;
-	}
+    Bool DeviceVk::CheckExtensionSupport(std::vector<const char*>& requiredExtensions, std::vector<VkExtensionProperties>& availableExtensions)
+    {
+        std::vector<Bool> extensionCheckResult(requiredExtensions.size(), false);
+        Bool extensionSupportError = false;
+        for (Uint32 i = 0; i < requiredExtensions.size(); ++i)
+        {
+            Bool supported = false;
+            const char* required = requiredExtensions[i];
+            for (auto& available : availableExtensions)
+            {
+                if (std::strcmp(required, available.extensionName) == 0)
+                {
+                    supported = true;
+                    break;
+                }
+            }
+            if (supported == false)
+            {
+                LOGE("Required extension not supported: %s", requiredExtensions[i]);
+                extensionSupportError = true;
+            }
+        }
+        return !extensionSupportError;
+    }
 
-	Bool DeviceVk::CheckInstanceExtensionsSupport(std::vector<const char*>& requiredExtensions)
-	{
-		Uint32 extensionCount;
-		VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-		if (result != VK_SUCCESS)
-		{
-			LOGE("Extension enumeration failure: %d", result);
-			return false;
-		}
+    Bool DeviceVk::CheckInstanceExtensionsSupport(std::vector<const char*>& requiredExtensions)
+    {
+        Uint32 extensionCount;
+        VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Extension enumeration failure: %d", result);
+            return false;
+        }
 
-		std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-		result = vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
-		if (result != VK_SUCCESS)
-		{
-			LOGE("Extension enumeration failure: %d", result);
-			return false;
-		}
-		return CheckExtensionSupport(requiredExtensions, availableExtensions);
-	}
+        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+        result = vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Extension enumeration failure: %d", result);
+            return false;
+        }
+        return CheckExtensionSupport(requiredExtensions, availableExtensions);
+    }
 
-	engine::Bool DeviceVk::CheckDeviceExtensionsSupport(VkPhysicalDevice& adapter, std::vector<const char*>& requiredExtensions)
-	{
-		Uint32 extensionCount;
-		VkResult result = vkEnumerateDeviceExtensionProperties(adapter, nullptr, &extensionCount, nullptr);
-		if (result != VK_SUCCESS)
-		{
-			LOGE("Device extension enumeration failure: %d", result);
-			return false;
-		}
-		std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-		result = vkEnumerateDeviceExtensionProperties(adapter, nullptr, &extensionCount, availableExtensions.data());
-		if (result != VK_SUCCESS)
-		{
-			LOGE("Device extension enumeration failure: %d", result);
-			return false;
-		}
-		return CheckExtensionSupport(requiredExtensions, availableExtensions);
-	}
+    Bool DeviceVk::CheckDeviceExtensionsSupport(VkPhysicalDevice& adapter, std::vector<const char*>& requiredExtensions)
+    {
+        Uint32 extensionCount;
+        VkResult result = vkEnumerateDeviceExtensionProperties(adapter, nullptr, &extensionCount, nullptr);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Device extension enumeration failure: %d", result);
+            return false;
+        }
+        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+        result = vkEnumerateDeviceExtensionProperties(adapter, nullptr, &extensionCount, availableExtensions.data());
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Device extension enumeration failure: %d", result);
+            return false;
+        }
+        return CheckExtensionSupport(requiredExtensions, availableExtensions);
+    }
 
 } // namespace engine

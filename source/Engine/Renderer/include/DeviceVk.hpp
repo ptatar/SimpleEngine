@@ -14,24 +14,27 @@
 
 #include "WindowSurface.hpp"
 
+#undef Status
+#undef Success
+
 namespace engine
 {
 
     class DeviceVk
     {
     public:
-		enum class Status
-		{
-			Success,
-			Failure,
-		};
+        enum class Status
+        {
+            Success,
+            Failure,
+        };
 
-		template <typename T>
-		struct Result
-		{
-			Status status;
-			T value;
-		};
+        template <typename T>
+        struct Result
+        {
+            Status status;
+            T value;
+        };
 
         DeviceVk() {};
         ~DeviceVk() {};
@@ -39,24 +42,24 @@ namespace engine
         Bool Initialize();
         void Shutdown();
 #if defined(PLATFORM_WINDOWS)
-		Result<VkSurfaceKHR> CreateSurface(IWindowSurface32* windowSurface);
+        Result<VkSurfaceKHR> CreateSurface(IWindowSurface32* windowSurface);
 #elif defined(PLATFORM_LINUX)
         Result<VkSurfaceKHR> CreateSurface(IWindowSurfaceX* windowSurface);
 #endif
     private:
         std::string AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const;
         std::string AdapterTypeToString(const VkPhysicalDeviceType& adpaterType) const;
-		std::string QueueFamilyToString(const VkQueueFamilyProperties& queueFamily) const;
+        std::string QueueFamilyToString(const VkQueueFamilyProperties& queueFamily) const;
         std::vector<const char*> GetRequiredInstanceExtension() const;
-		Bool CheckExtensionSupport(std::vector<const char*>& requiredExtensions, std::vector<VkExtensionProperties>& availableExtensions);
-		Bool CheckInstanceExtensionsSupport(std::vector<const char*>& requiredExtensions);
-		Bool CheckDeviceExtensionsSupport(VkPhysicalDevice& adapter, std::vector<const char*>& requiredExtensions);
+        Bool CheckExtensionSupport(std::vector<const char*>& requiredExtensions, std::vector<VkExtensionProperties>& availableExtensions);
+        Bool CheckInstanceExtensionsSupport(std::vector<const char*>& requiredExtensions);
+        Bool CheckDeviceExtensionsSupport(VkPhysicalDevice& adapter, std::vector<const char*>& requiredExtensions);
 
     private:
         VkInstance m_instance;
-		VkDevice m_device;
-		VkCommandPool m_commandPool;
-		VkCommandBuffer m_commandBuffer;
+        VkDevice m_device;
+        VkCommandPool m_commandPool;
+        VkCommandBuffer m_commandBuffer;
     };
 
 } // namespace engine

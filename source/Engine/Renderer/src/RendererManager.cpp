@@ -21,8 +21,15 @@ namespace engine
 #elif defined(PLATFORM_LINUX)
 	std::unique_ptr<IRenderer> RendererManager::CreateRenderer(IWindowSurfaceX* surface)
 	{
-		RendererVk* renderer = new RendererVk();
-		renderer->CreateSurface(surface);
+        std::unique_ptr<RendererVk> renderer = std::make_unique<RendererVk>();
+        if(!renderer->Initialize())
+        {
+            return nullptr;
+        }
+        if(!renderer->CreateSurface(surface))
+        {
+		    renderer->CreateSurface(surface);
+        }
 		return renderer;
 	}
 #endif

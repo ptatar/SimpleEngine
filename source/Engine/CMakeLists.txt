@@ -16,6 +16,7 @@ elseif(${PLATFORM_LINUX})
     set(ENGINE_EXE_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/mainX.cpp
     )
+    include(FindX11)
 else()
     message(FATAL_ERROR "Unknown platform")
 endif()
