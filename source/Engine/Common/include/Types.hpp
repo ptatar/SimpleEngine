@@ -16,22 +16,22 @@ namespace engine
     typedef bool Bool;
 
     template<typename T>
-    struct Size
+    struct Extent
     {
-        Size()
+        Extent()
         : width(0)
         , height(0) {}
 
-        Size(const T& _width, const T& _height)
+        Extent(const T& _width, const T& _height)
         : width(_width)
         , height(_height) {}
-        ~Size() {}
+        ~Extent() {}
 
         T width;
         T height;
     };
 
-    typedef Size<Uint32> SizeI;
-    typedef Size<Float> SizeF;
+    typedef Extent<Uint32> ExtentI;
+    typedef Extent<Float> ExtentF;
 
 } // namespace engine

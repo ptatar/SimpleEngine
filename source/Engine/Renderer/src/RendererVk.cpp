@@ -15,35 +15,69 @@ namespace engine
 
 #if defined(PLATFORM_WINDOWS)
 
+    // FIX ME Failure flow cleanup
 	Bool RendererVk::CreateSurface(IWindowSurface32* windowSurface)
 	{
-		DeviceVk::Result<VkSurfaceKHR> result = m_device.CreateSurface(windowSurface);
-		if (result.status == DeviceVk::Status::Success)
+		DeviceVk::Result<VkSurfaceKHR> surfaceResult = m_device.CreateSurface(windowSurface);
+		if(surfaceResult.status != Status::Success)
 		{
-			m_renderSurface = result.value;
-			return true;
-		}
-		else
-		{
-			
 			return false;
 		}
+
+        DeviceVk::Result<VkSemaphore> semaphoreImageResult = m_device.CreateSemaphore();
+        if(semaphoreImageResult.status != Status::Success)
+        {
+            return false;
+        }
+
+        DeviceVk::Result<VkSemaphore> semaphoreRenderingResult = m_device.CreateSemaphore();
+        if(semaphoreRenderingResult.status != Status::Success)
+        {
+            return false;
+        }
+
+        if(m_device.CreateSwapChain() != true)
+        {
+            return false;
+        }
+
+		m_renderSurface = result.value;
+        m_semaphoreImageReady = semaphoreImageResult.value;
+        m_semaphoreRenderingFinished = semaphoreRenderingResult.result;
+
+        return false;
 	}
 
 #elif defined(PLATFORM_LINUX)
 
 	Bool RendererVk::CreateSurface(IWindowSurfaceX* windowSurface)
 	{
-        DeviceVk::Result<VkSurfaceKHR> result = m_device.CreateSurface(windowSurface);
-        if(result.status == DeviceVk::Status::Success)
-        {
-            m_renderSurface = result.value;
-            return true;
-        }
-        else
+		Result<VkSurfaceKHR> surfaceResult = m_device.CreateSurface(windowSurface);
+		if(surfaceResult.status != Status::Success)
+		{
+			return false;
+		}
+
+        Result<VkSemaphore> semaphoreImageResult = m_device.CreateSemaphore();
+        if(semaphoreImageResult.status != Status::Success)
         {
             return false;
         }
+
+        Result<VkSemaphore> semaphoreRenderingResult = m_device.CreateSemaphore();
+        if(semaphoreRenderingResult.status != Status::Success)
+        {
+            return false;
+        }
+
+        if(m_device.CreateSwapchain(surfaceResult.value) != true)
+        {
+            return false;
+        }
+
+		m_renderSurface = surfaceResult.value;
+        m_semaphoreImageReady = semaphoreImageResult.value;
+        m_semaphoreRenderingFinished = semaphoreRenderingResult.value;
 	}
 
 #endif

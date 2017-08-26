@@ -11,13 +11,11 @@ namespace engine
     Bool DeviceVk::Initialize()
     {
         std::vector<const char*> requiredInstanceExtension = GetRequiredInstanceExtension();
-    
-
         if (!CheckInstanceExtensionsSupport(requiredInstanceExtension))
         {
             return false;
         }
-        
+
         VkApplicationInfo applicationInfo;
         applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         applicationInfo.pNext = nullptr;
@@ -57,8 +55,8 @@ namespace engine
             return false;
         }
 
-        std::vector<VkPhysicalDevice> m_adapters(adapterCount);
-        result = vkEnumeratePhysicalDevices(m_instance, &adapterCount, m_adapters.data());
+        std::vector<VkPhysicalDevice> adapters(adapterCount);
+        result = vkEnumeratePhysicalDevices(m_instance, &adapterCount, adapters.data());
         if (result != VK_SUCCESS)
         {
             LOGE("Vk adapters enumeration failure: %d", result);
@@ -67,22 +65,24 @@ namespace engine
 
         LOGI("Enumerated adapters:");
         Uint32 selectedAdapterIndex = adapterCount;
-        for (Uint32 i = 0; i < m_adapters.size(); ++i)
+        std::vector<const char*> requiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
+        for (Uint32 i = 0; i < adapters.size(); ++i)
         {
             VkPhysicalDeviceProperties adapterProperties;
-            vkGetPhysicalDeviceProperties(m_adapters[i], &adapterProperties);
+            vkGetPhysicalDeviceProperties(adapters[i], &adapterProperties);
             LOGI("\n%s", AdapterPropertiesToString(adapterProperties).c_str());
             if (adapterProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
                 adapterProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
             {
-                std::vector<const char*> requiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-                if (!CheckDeviceExtensionsSupport(m_adapters[i],requiredDeviceExtensions))
+                if (!CheckDeviceExtensionsSupport(adapters[i],requiredDeviceExtensions))
                 {
-                    return false;
+                    continue;
                 }
 
                 LOGI("Adapter selected: \n%s", AdapterPropertiesToString(adapterProperties).c_str());
                 selectedAdapterIndex = i;
+                m_adapter = adapters[selectedAdapterIndex];
                 break;
             }
         }
@@ -93,10 +93,10 @@ namespace engine
         }
 
         Uint32 queuePropertiesCount;
-        vkGetPhysicalDeviceQueueFamilyProperties(m_adapters[selectedAdapterIndex], &queuePropertiesCount, nullptr);
+        vkGetPhysicalDeviceQueueFamilyProperties(m_adapter, &queuePropertiesCount, nullptr);
 
         std::vector<VkQueueFamilyProperties> queueFamilyProperties(queuePropertiesCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(m_adapters[selectedAdapterIndex], &queuePropertiesCount, queueFamilyProperties.data());
+        vkGetPhysicalDeviceQueueFamilyProperties(m_adapter, &queuePropertiesCount, queueFamilyProperties.data());
 
         LOGI("Listing queue families:");
         Uint32 queueFamilyIndex = queuePropertiesCount;
@@ -136,11 +136,11 @@ namespace engine
         deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
         deviceCreateInfo.enabledLayerCount = 0;
         deviceCreateInfo.ppEnabledLayerNames = nullptr;
-        deviceCreateInfo.enabledExtensionCount = 0;
-        deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+        deviceCreateInfo.enabledExtensionCount = requiredDeviceExtensions.size();
+        deviceCreateInfo.ppEnabledExtensionNames = requiredDeviceExtensions.data();
         deviceCreateInfo.pEnabledFeatures = nullptr;
 
-        result = vkCreateDevice(m_adapters[selectedAdapterIndex], &deviceCreateInfo, NULL, &m_device);
+        result = vkCreateDevice(m_adapter, &deviceCreateInfo, NULL, &m_device);
         if (result != VK_SUCCESS)
         {
             LOGE("Device creation failure: %d", result);
@@ -185,7 +185,7 @@ namespace engine
     }
 
 #if defined(PLATFORM_WINDOWS)
-    DeviceVk::Result<VkSurfaceKHR> DeviceVk::CreateSurface(IWindowSurface32* windowSurface)
+    Result<VkSurfaceKHR> DeviceVk::CreateSurface(IWindowSurface32* windowSurface)
     {
         VkSurfaceKHR renderSurface;
         VkWin32SurfaceCreateInfoKHR surfaceCreateInfo;
@@ -203,7 +203,7 @@ namespace engine
         return Result<VkSurfaceKHR> {Status::Success, renderSurface};
     }
 #elif defined(PLATFORM_LINUX)
-    DeviceVk::Result<VkSurfaceKHR> DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
+    Result<VkSurfaceKHR> DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
     {
         VkSurfaceKHR renderSurface;
         VkXlibSurfaceCreateInfoKHR surfaceCreateInfo;
@@ -218,9 +218,144 @@ namespace engine
             LOGE("Surface creation failure: %d", result);
             return Result<VkSurfaceKHR> {Status::Failure, renderSurface};
         }
+
         return Result<VkSurfaceKHR> {Status::Success, renderSurface};
     }
 #endif
+
+    Bool DeviceVk::CreateSwapchain(SwapchainCreateInfo& createInfo)
+    {
+        /*
+        TargetSettings targetSettings;
+        targetSettings.colorSpace = VK_FORMAT_B8G8R8A8_UNORM;
+        targetSettings.surfaceFormat = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        targetSettings.imagesCount = 2;
+        targetSettings.transformation = VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR;
+        targetSettings.imageWidth = 800;
+        targetSettings.imageHeight = 600;
+        targetSettings.attachments = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        targetSettings.presentationMode = VK_PRESENT_MODE_MAILBOX_KHR;
+        */
+        VkSurfaceCapabilitiesKHR surfaceCapabilities;
+        VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_adapter,
+                                                                    createInfo.surface,
+                                                                    &surfaceCapabilities);
+        if(result != VK_SUCCESS)
+        {
+            LOGE("Adapter surface capabilities: %d", result);
+            return false;
+        }
+
+        Uint32 formatCount;
+        result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_adapter, createInfo.surface, &formatCount,  nullptr);
+        if(result != VK_SUCCESS)
+        {
+            LOGE("Adapter supported sufrace formats count query failed: %d", result);
+            return false;
+        }
+
+        std::vector<VkSurfaceFormatKHR> supportedSurfaceFormats(formatCount);
+        result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_adapter,
+                                                      createInfo.surface,
+                                                      &formatCount,
+                                                      supportedSurfaceFormats.data());
+
+        if(result != VK_SUCCESS)
+        {
+            LOGE("Adapter support surface foramts query failed: %d", result);
+            return false;
+        }
+
+        Bool formatFound = false;
+        for(auto& surfaceFormat: supportedSurfaceFormats)
+        {
+            if(surfaceFormat.colorSpace == createInfo.colorSpace)
+            {
+                if(surfaceFormat.format == createInfo.surfaceFormat)
+                {
+                    formatFound = true;
+                }
+            }
+        }
+
+
+        Uint32 presentModeCount;
+        result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_adapter,
+                                                           createInfo.surface,
+                                                           &presentModeCount,
+                                                           nullptr);
+        if(result != VK_SUCCESS)
+        {
+            LOGE("Presentation modes count query failed: %d", result);
+            return false;
+        }
+
+        std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+        result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_adapter,
+                                                           createInfo.surface,
+                                                           &presentModeCount,
+                                                           presentModes.data());
+        if(result != VK_SUCCESS)
+        {
+            LOGE("Presentation modes query failed: %d", result);
+            return false;
+        }
+
+        Uint32 targetPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+        for(auto& presentMode: presentModes)
+        {
+            if(presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+            {
+                targetPresentMode = presentMode;
+            }
+        }
+
+        VkSwapchainCreateInfoKHR swapchainCreateInfo;
+        swapchainCreateInfo.sType                 = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        swapchainCreateInfo.pNext                 = nullptr;
+        swapchainCreateInfo.flags                 = 0;
+        swapchainCreateInfo.surface               = createInfo.surface;
+        swapchainCreateInfo.minImageCount         = 2;
+        swapchainCreateInfo.imageFormat           = createInfo.surfaceFormat;
+        swapchainCreateInfo.imageColorSpace       = createInfo.colorSpace;
+        swapchainCreateInfo.imageExtent           = VkExtent2D{createInfo.imageWidth, createInfo.imageHeight};
+        swapchainCreateInfo.imageArrayLayers      = 1;
+        swapchainCreateInfo.imageUsage            = createInfo.usage;
+        swapchainCreateInfo.imageSharingMode      = VK_SHARING_MODE_EXCLUSIVE;
+        swapchainCreateInfo.queueFamilyIndexCount = 0;
+        swapchainCreateInfo.pQueueFamilyIndices   = 0;
+        swapchainCreateInfo.preTransform          = createInfo.transformation;
+        swapchainCreateInfo.compositeAlpha        = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        swapchainCreateInfo.presentMode           = createInfo.presentationMode;
+        swapchainCreateInfo.clipped               = VK_TRUE;
+        swapchainCreateInfo.oldSwapchain          = 0;
+
+        VkSwapchainKHR swapchain;
+        result = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &swapchain);
+        if(result != VK_SUCCESS)
+        {
+            LOGE("Swapchain creation failed: %d", result);
+            return false;
+        }
+        return true;
+    }
+
+    Result<VkSemaphore> DeviceVk::CreateSemaphore()
+    {
+        VkSemaphoreCreateInfo semaphoreCreateInfo;
+        semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        semaphoreCreateInfo.pNext = nullptr;
+        semaphoreCreateInfo.flags = 0;
+
+        VkSemaphore semaphore;
+        VkResult result = vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &semaphore);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Semaphore creation failure: %d", result);
+            return Result<VkSemaphore> { Status::Success, semaphore };
+        }
+        return Result<VkSemaphore> { Status::Success, semaphore };
+    }
 
     std::string DeviceVk::AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const
     {
@@ -324,7 +459,7 @@ namespace engine
         {
             LOGE("Extension enumeration failure: %d", result);
             return false;
-        }
+         }
         return CheckExtensionSupport(requiredExtensions, availableExtensions);
     }
 

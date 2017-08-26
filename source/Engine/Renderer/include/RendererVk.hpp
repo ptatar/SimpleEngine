@@ -25,5 +25,7 @@ namespace engine
 	private:
 		DeviceVk m_device;
 		VkSurfaceKHR m_renderSurface;
+        VkSemaphore m_semaphoreImageReady;
+        VkSemaphore m_semaphoreRenderingFinished;
 	};
 } // namespace engine
