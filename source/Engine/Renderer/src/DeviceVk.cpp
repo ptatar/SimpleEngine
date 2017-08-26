@@ -225,21 +225,24 @@ namespace engine
 
     Bool DeviceVk::CreateSwapchain(SwapchainCreateInfo& createInfo)
     {
-        /*
-        TargetSettings targetSettings;
-        targetSettings.colorSpace = VK_FORMAT_B8G8R8A8_UNORM;
-        targetSettings.surfaceFormat = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        targetSettings.imagesCount = 2;
-        targetSettings.transformation = VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR;
-        targetSettings.imageWidth = 800;
-        targetSettings.imageHeight = 600;
-        targetSettings.attachments = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-        targetSettings.presentationMode = VK_PRESENT_MODE_MAILBOX_KHR;
-        */
+
         VkSurfaceCapabilitiesKHR surfaceCapabilities;
         VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_adapter,
                                                                     createInfo.surface,
                                                                     &surfaceCapabilities);
+        if(createInfo.imageWidth > surfaceCapabilities.maxImageExtent.width ||
+           createInfo.imageHeight > surfaceCapabilities.maxImageExtent.height)
+        {
+            LOGE("Invalid surface extents");
+            return false;
+        }
+
+        if(createInfo.imagesCount > surfaceCapabilities.maxImageCount ||
+           createInfo.imagesCount < surfaceCapabilities.minImageCount)
+        {
+            LOGE("Invalid image count");
+            return false;
+        }
         if(result != VK_SUCCESS)
         {
             LOGE("Adapter surface capabilities: %d", result);
@@ -277,7 +280,12 @@ namespace engine
                 }
             }
         }
-
+        
+        if(!formatFound)
+        {
+            LOGE("Not supported format and color space combination");
+            return false;
+        }
 
         Uint32 presentModeCount;
         result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_adapter,

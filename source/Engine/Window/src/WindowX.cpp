@@ -26,7 +26,8 @@ namespace engine
         XSetWMProtocols(m_display , m_window, &delWindow, 1);
 
         XSelectInput(m_display, m_window, ExposureMask);
-
+        m_width = wndWidth;
+        m_height = wndHeight;
         m_initialized = true;
         return 0;
     }
