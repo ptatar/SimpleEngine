@@ -9,6 +9,11 @@
 
 namespace engine
 {
+   
+    class SemaphoreHandler;
+    class SurfaceHandler;
+    class SwapchainHandler;
+
     struct SwapchainCreateInfo
     {
         VkColorSpaceKHR colorSpace;
@@ -31,12 +36,15 @@ namespace engine
         Bool Initialize();
         void Shutdown();
 #if defined(PLATFORM_WINDOWS)
-        Result<VkSurfaceKHR> CreateSurface(IWindowSurface32* windowSurface);
+        Result<SurfaceHandler> CreateSurface(IWindowSurface32* windowSurface);
 #elif defined(PLATFORM_LINUX)
-        Result<VkSurfaceKHR> CreateSurface(IWindowSurfaceX* windowSurface);
+        Result<SurfaceHandler> CreateSurface(IWindowSurfaceX* windowSurface);
 #endif
-        Bool CreateSwapchain(SwapchainCreateInfo& createInfo);
-        Result<VkSemaphore> CreateSemaphore();
+        Result<SwapchainHandler> CreateSwapchain(SwapchainCreateInfo& createInfo);
+        Result<SemaphoreHandler> CreateSemaphore();
+        void DestroySemaphore(VkSemaphore semaphore) { vkDestroySemaphore(m_device, semaphore, nullptr); }
+        void DestroySurface(VkSurfaceKHR surface) { vkDestroySurfaceKHR(m_instance, surface, nullptr); }
+        void DestroySwapchain(VkSwapchainKHR swapchain) { vkDestroySwapchainKHR(m_device, swapchain, nullptr); }
 
     private:
         std::string AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const;
@@ -52,6 +60,39 @@ namespace engine
         VkPhysicalDevice m_adapter;
         VkCommandPool m_commandPool;
         VkCommandBuffer m_commandBuffer;
-    };
+    }; // DeviceVK
+
+#define CREATE_HANDLER(NAME, TYPE, DESTRUCTOR) \
+    class NAME \
+    { \
+    public: \
+        NAME(): m_device(nullptr), m_inited(false) {} \
+        NAME(DeviceVk* device, TYPE type): m_type(type), m_inited(true) {} \
+        NAME(NAME&& rs) \
+        { \
+            m_type = rs.m_type; \
+            m_device = rs.m_device; \
+            m_inited = rs.m_inited; \
+        } \
+        NAME(const NAME&) = delete; \
+        ~NAME() \
+        { \
+            m_device->DESTRUCTOR(m_type); \
+        } \
+        TYPE Get() const \
+        { \
+            return m_type; \
+        } \
+    private: \
+        TYPE m_type; \
+        DeviceVk* m_device; \
+        Bool m_inited; \
+    }
+
+    CREATE_HANDLER(SemaphoreHandler, VkSemaphore, DestroySemaphore);
+    CREATE_HANDLER(SurfaceHandler, VkSurfaceKHR, DestroySurface);
+    CREATE_HANDLER(SwapchainHandler, VkSwapchainKHR, DestroySwapchain);
+
+#undef CREATE_HANDLER
 
 } // namespace engine

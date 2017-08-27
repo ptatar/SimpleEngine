@@ -13,6 +13,7 @@
 
 #include "Types.hpp" // DO NOT MOVE IT BEFORE X11!!!
 
+
 namespace engine
 {
     enum class Status
@@ -24,16 +25,11 @@ namespace engine
     template <typename T>
     struct Result
     {
+        Result(Status _status): status(_status) {}
+        Result(Status _status, T& _value): status(_status), value(_value) {}
+        Result(Status _status, T&& _value): status(_status), value(std::move(value)) {}
         Status status;
         T value;
-    };
-
-    class SemaphoreHandler
-    {
-        public:
-            SemaphoreHandler() {}
-            ~SemaphoreHandler() {}
-        private:
     };
 
 } // namespace engine

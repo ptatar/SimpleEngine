@@ -7,25 +7,26 @@
 
 namespace engine
 {
-	class RendererVk: public IRenderer
-	{
-	public:
-		RendererVk() {}
-		~RendererVk() {}
+    class RendererVk: public IRenderer
+    {
+    public:
+        RendererVk() {}
+        ~RendererVk() {}
 
-		Bool Initialize() override;
-		void Shutdown() override;
+        Bool Initialize() override;
+        void Shutdown() override;
 
-	#if defined(PLATFORM_WINDOWS)
-		Bool CreateSurface(IWindowSurface32* windowSurface) override;
-	#elif defined(PLATFORM_LINUX)
-		Bool CreateSurface(IWindowSurfaceX* windowSurface) override;
-	#endif
+    #if defined(PLATFORM_WINDOWS)
+        Bool CreateSurface(IWindowSurface32* windowSurface) override;
+    #elif defined(PLATFORM_LINUX)
+        Bool CreateSurface(IWindowSurfaceX* windowSurface) override;
+    #endif
 
-	private:
-		DeviceVk m_device;
-		VkSurfaceKHR m_renderSurface;
-        VkSemaphore m_semaphoreImageReady;
-        VkSemaphore m_semaphoreRenderingFinished;
-	};
+    private:
+        DeviceVk m_device;
+        SurfaceHandler m_renderSurface;
+        SemaphoreHandler m_semaphoreImageReady;
+        SemaphoreHandler m_semaphoreRenderingFinished;
+        SwapchainHandler m_swapchain;
+    };
 } // namespace engine

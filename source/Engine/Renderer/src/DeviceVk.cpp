@@ -8,6 +8,7 @@
 
 namespace engine
 {
+
     Bool DeviceVk::Initialize()
     {
         std::vector<const char*> requiredInstanceExtension = GetRequiredInstanceExtension();
@@ -185,45 +186,45 @@ namespace engine
     }
 
 #if defined(PLATFORM_WINDOWS)
-    Result<VkSurfaceKHR> DeviceVk::CreateSurface(IWindowSurface32* windowSurface)
+    Result<SurfaceHandler> DeviceVk::CreateSurface(IWindowSurface32* windowSurface)
     {
-        VkSurfaceKHR renderSurface;
+        VkSurfaceKHR surface;
         VkWin32SurfaceCreateInfoKHR surfaceCreateInfo;
         surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         surfaceCreateInfo.pNext = nullptr;
         surfaceCreateInfo.flags = 0;
         surfaceCreateInfo.hinstance = windowSurface->GetHInstance();
         surfaceCreateInfo.hwnd = windowSurface->GetHWindow();
-        VkResult result = vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &renderSurface);
+        VkResult result = vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &surface);
         if (result != VK_SUCCESS)
         {
             LOGE("Surface creation failure: %d", result);
-            return Result<VkSurfaceKHR> {Status::Failure, renderSurface};
+            return Status::Failure;
         }
-        return Result<VkSurfaceKHR> {Status::Success, renderSurface};
+        return Result<VkSurfaceKHR>(Status::Success, SurfaceHandler(this, surface));
     }
 #elif defined(PLATFORM_LINUX)
-    Result<VkSurfaceKHR> DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
+    Result<SurfaceHandler> DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
     {
-        VkSurfaceKHR renderSurface;
+        VkSurfaceKHR surface;
         VkXlibSurfaceCreateInfoKHR surfaceCreateInfo;
         surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
         surfaceCreateInfo.pNext = nullptr;
         surfaceCreateInfo.flags = 0;
         surfaceCreateInfo.window = windowSurface->GetWindow();
         surfaceCreateInfo.dpy = windowSurface->GetDisplay();
-        VkResult result = vkCreateXlibSurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &renderSurface);
+        VkResult result = vkCreateXlibSurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &surface);
         if (result != VK_SUCCESS)
         {
             LOGE("Surface creation failure: %d", result);
-            return Result<VkSurfaceKHR> {Status::Failure, renderSurface};
+            return Status::Failure;
         }
 
-        return Result<VkSurfaceKHR> {Status::Success, renderSurface};
+        return Result<SurfaceHandler>(Status::Success, std::move(SurfaceHandler(this, surface)));
     }
 #endif
 
-    Bool DeviceVk::CreateSwapchain(SwapchainCreateInfo& createInfo)
+    Result<SwapchainHandler> DeviceVk::CreateSwapchain(SwapchainCreateInfo& createInfo)
     {
 
         VkSurfaceCapabilitiesKHR surfaceCapabilities;
@@ -234,19 +235,19 @@ namespace engine
            createInfo.imageHeight > surfaceCapabilities.maxImageExtent.height)
         {
             LOGE("Invalid surface extents");
-            return false;
+            return Status::Failure;
         }
 
         if(createInfo.imagesCount > surfaceCapabilities.maxImageCount ||
            createInfo.imagesCount < surfaceCapabilities.minImageCount)
         {
             LOGE("Invalid image count");
-            return false;
+            return Status::Failure;
         }
         if(result != VK_SUCCESS)
         {
             LOGE("Adapter surface capabilities: %d", result);
-            return false;
+            return Status::Failure;
         }
 
         Uint32 formatCount;
@@ -254,7 +255,7 @@ namespace engine
         if(result != VK_SUCCESS)
         {
             LOGE("Adapter supported sufrace formats count query failed: %d", result);
-            return false;
+            return Status::Failure;
         }
 
         std::vector<VkSurfaceFormatKHR> supportedSurfaceFormats(formatCount);
@@ -266,7 +267,7 @@ namespace engine
         if(result != VK_SUCCESS)
         {
             LOGE("Adapter support surface foramts query failed: %d", result);
-            return false;
+            return Status::Failure;
         }
 
         Bool formatFound = false;
@@ -280,11 +281,11 @@ namespace engine
                 }
             }
         }
-        
+
         if(!formatFound)
         {
             LOGE("Not supported format and color space combination");
-            return false;
+            return Status::Failure;
         }
 
         Uint32 presentModeCount;
@@ -295,7 +296,7 @@ namespace engine
         if(result != VK_SUCCESS)
         {
             LOGE("Presentation modes count query failed: %d", result);
-            return false;
+            return Status::Failure;
         }
 
         std::vector<VkPresentModeKHR> presentModes(presentModeCount);
@@ -306,7 +307,7 @@ namespace engine
         if(result != VK_SUCCESS)
         {
             LOGE("Presentation modes query failed: %d", result);
-            return false;
+            return Status::Failure;
         }
 
         Uint32 targetPresentMode = VK_PRESENT_MODE_FIFO_KHR;
@@ -343,12 +344,12 @@ namespace engine
         if(result != VK_SUCCESS)
         {
             LOGE("Swapchain creation failed: %d", result);
-            return false;
+            return Status::Failure;
         }
-        return true;
+        return Result<SwapchainHandler>(Status::Success, SwapchainHandler(this, swapchain));
     }
 
-    Result<VkSemaphore> DeviceVk::CreateSemaphore()
+    Result<SemaphoreHandler> DeviceVk::CreateSemaphore()
     {
         VkSemaphoreCreateInfo semaphoreCreateInfo;
         semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -360,9 +361,9 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Semaphore creation failure: %d", result);
-            return Result<VkSemaphore> { Status::Success, semaphore };
+            return Status::Failure;
         }
-        return Result<VkSemaphore> { Status::Success, semaphore };
+        return Result<SemaphoreHandler>(Status::Success, SemaphoreHandler(this, semaphore) );
     }
 
     std::string DeviceVk::AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const
