@@ -17,7 +17,7 @@ if(${PLATFORM_WINDOWS})
 #        ${RENDERER_LIB_INC_DIR}/SwapChainDX12.hpp
         ${RENDERER_LIB_SRC_DIR}/DeviceVk.cpp
         ${RENDERER_LIB_SRC_DIR}/RendererVk.cpp
-        ${RENDERER_LIB_INC_DIR}/DeviceVk.Chpp
+        ${RENDERER_LIB_INC_DIR}/DeviceVk.hpp
         ${RENDERER_LIB_INC_DIR}/RendererVk.hpp
         ${RENDERER_LIB_INC_DIR}/IRenderer.hpp
         ${RENDERER_LIB_INC_DIR}/RendererManager.hpp

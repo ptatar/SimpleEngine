@@ -201,7 +201,7 @@ namespace engine
             LOGE("Surface creation failure: %d", result);
             return Status::Failure;
         }
-        return Result<VkSurfaceKHR>(Status::Success, SurfaceHandler(this, surface));
+        return Result<SurfaceHandler>(Status::Success, SurfaceHandler(this, surface));
     }
 #elif defined(PLATFORM_LINUX)
     Result<SurfaceHandler> DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
@@ -220,7 +220,7 @@ namespace engine
             return Status::Failure;
         }
 
-        return Result<SurfaceHandler>(Status::Success, std::move(SurfaceHandler(this, surface)));
+        return Result<SurfaceHandler>(Status::Success, SurfaceHandler(this, surface));
     }
 #endif
 

@@ -49,8 +49,11 @@ int Window32::Initialize(Uint32 posX, Uint32 posY, Uint32 clientWidth, Uint32 cl
     DWORD styleEx = WS_EX_APPWINDOW;
 
     unsigned wndWidth, wndHeight;
-    GetWindowSize(clientWidth, clientHeight, wndWidth, wndHeight);
-
+    if (!GetWindowSize(clientWidth, clientHeight, wndWidth, wndHeight, style, styleEx))
+    {
+        UnregisterClass(m_windowName, m_hInstance);
+        return 1;
+    }
     m_hWindow = CreateWindowEx(styleEx, m_windowName, m_windowName, style, posX, posY,
                                wndWidth, wndHeight, NULL, NULL, m_hInstance, NULL);
 
@@ -205,10 +208,19 @@ LRESULT CALLBACK Window32::DefaultWin32EventHandler(HWND hwnd, UINT umessage, WP
 }
 
 
-void Window32::GetWindowSize(Uint32 clientWidth, Uint32 clientHeight, Uint32& windowWidth, Uint32& windowHeight) {
-    // TODO
-    windowWidth = clientWidth;
-    windowHeight = clientHeight;
+Bool Window32::GetWindowSize(Uint32 clientWidth, Uint32 clientHeight, Uint32& windowWidth, Uint32& windowHeight, Uint32 style, Uint32 styleEx) {
+    std::unique_ptr<RECT> windowSize = std::make_unique<RECT>();
+    windowSize->top = 0;
+    windowSize->left = 0;
+    windowSize->right = 800;
+    windowSize->bottom = 600;
+    if (!AdjustWindowRectEx(windowSize.get(), style, false, styleEx))
+    {
+        return false;
+    }
+    windowWidth = windowSize->right - windowSize->left;
+    windowHeight = windowSize->bottom - windowSize->top;
+    return true;
 }
 
 
