@@ -28,5 +28,7 @@ namespace engine
         SemaphoreHandler m_semaphoreImageReady;
         SemaphoreHandler m_semaphoreRenderingFinished;
         SwapchainHandler m_swapchain;
+        CommandPoolHandler m_commandPool;
+        std::vector<VkCommandBuffer> m_commandBuffers;
     };
 } // namespace engine

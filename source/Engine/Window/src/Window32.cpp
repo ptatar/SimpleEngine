@@ -41,9 +41,6 @@ int Window32::Initialize(Uint32 posX, Uint32 posY, Uint32 clientWidth, Uint32 cl
         LOGE("Window registration error!");
         return 1;
     }
-    //while(true){}
-    //int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-    //int screenWidth = GetSystemMetrics(SM_CXSCREEN);
 
     DWORD style   = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP | WS_OVERLAPPEDWINDOW;
     DWORD styleEx = WS_EX_APPWINDOW;
@@ -51,14 +48,14 @@ int Window32::Initialize(Uint32 posX, Uint32 posY, Uint32 clientWidth, Uint32 cl
     unsigned wndWidth, wndHeight;
     if (!GetWindowSize(clientWidth, clientHeight, wndWidth, wndHeight, style, styleEx))
     {
-        UnregisterClass(m_windowName, m_hInstance);
+        UnregisterClass(m_windowName, m_hInstance); // FIX THIS
         return 1;
     }
     m_hWindow = CreateWindowEx(styleEx, m_windowName, m_windowName, style, posX, posY,
                                wndWidth, wndHeight, NULL, NULL, m_hInstance, NULL);
 
     if (m_hWindow == nullptr) {
-        UnregisterClass(m_windowName, m_hInstance);
+        UnregisterClass(m_windowName, m_hInstance); // THIS TOO
         return 1;
     }
 
@@ -94,11 +91,11 @@ void Window32::Shutdown() {
 
     UnregisterClass(m_windowName, m_hInstance);
     m_hInstance = NULL;
-	if (m_renderer != nullptr)
-	{
-		m_renderer->Shutdown();
-	}
-	m_renderer = nullptr;
+    if (m_renderer != nullptr)
+    {
+        m_renderer->Shutdown();
+    }
+    m_renderer = nullptr;
 }
 
 
@@ -153,18 +150,17 @@ bool Window32::IsFullscreen() {
 
 Bool Window32::BindRenderer(std::unique_ptr<IRenderer> renderer)
 {
-	if (m_renderer != nullptr)
-	{
-		m_renderer->Shutdown();
-	}
-	
-	if (renderer->CreateSurface(this))
-	{
-		return true;
-	}
-	m_renderer = std::move(renderer);
-	return false;
-	
+    if (m_renderer != nullptr)
+    {
+        m_renderer->Shutdown();
+    }
+
+    if (renderer->CreateSurface(this))
+    {
+        return true;
+    }
+    m_renderer = std::move(renderer);
+    return false;
 }
 
 LRESULT CALLBACK Window32::DefaultWin32EventHandler(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam) {

@@ -7,15 +7,15 @@
 
 namespace engine
 {
-	class RendererManager
-	{
-	public:
-		RendererManager() {}
-		~RendererManager() {}
-	#if defined(PLATFORM_WINDOWS)
-		std::unique_ptr<IRenderer> CreateRenderer(IWindowSurface32* surface);
-	#elif defined(PLATFORM_LINUX)
-		std::unique_ptr<IRenderer> CreateRenderer(IWindowSurfaceX* surface);
-	#endif
-	};
+    class RendererManager
+    {
+    public:
+        RendererManager() {}
+        ~RendererManager() {}
+#if defined(PLATFORM_WINDOWS)
+        std::unique_ptr<IRenderer> CreateRenderer(IWindowSurface32* surface);
+#elif defined(PLATFORM_LINUX)
+        std::unique_ptr<IRenderer> CreateRenderer(IWindowSurfaceX* surface);
+#endif
+    };
 } // namespace engine
