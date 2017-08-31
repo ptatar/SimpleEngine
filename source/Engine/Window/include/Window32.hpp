@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #include "IWindow.hpp"
 #include "IWindowEventHandler.hpp"
 #include "IRenderer.hpp"
@@ -35,19 +33,20 @@ public:
     void OnExit() override;
     Bool IsFullscreen() override;
 
-	HINSTANCE GetHInstance() const override { return m_hInstance; }
-	HWND GetHWindow() const override { return m_hWindow; }
-	Bool BindRenderer(std::unique_ptr<IRenderer> renderer); // FIXME when this function fails unique ptr is still consumed
+    virtual HINSTANCE GetHInstance() const override { return m_hInstance; }
+    virtual HWND GetHWindow() const override { return m_hWindow; }
+    virtual ExtentI GetSurfaceExtent() const { return ExtentI(m_width, m_height); }
+    Bool BindRenderer(std::unique_ptr<IRenderer> renderer); // FIXME when this function fails unique ptr is still consumed
 private:
-    void GetWindowSize(Uint32 clientWidth, Uint32 clientHeight, Uint32& windowWidth, Uint32& windowHeight);
+    Bool GetWindowSize(Uint32 clientWidth, Uint32 clientHeight, Uint32& windowWidth, Uint32& windowHeight, Uint32 style, Uint32 styleEx);
 private:
     HINSTANCE m_hInstance;
     HWND      m_hWindow;
     LPCWSTR   m_windowName;
     Bool      m_isFullscreen;
-    Uint32  m_width;
-    Uint32  m_height;
-	std::unique_ptr<IRenderer> m_renderer;
+    Uint32    m_width;
+    Uint32    m_height;
+    std::unique_ptr<IRenderer> m_renderer;
 
     static LRESULT CALLBACK DefaultWin32EventHandler(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam);
 };

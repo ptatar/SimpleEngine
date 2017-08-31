@@ -110,7 +110,6 @@ namespace engine
             {
                 queueFamilyIndex = i;
             }
-
         }
 
         if (queueFamilyIndex >= queuePropertiesCount)
@@ -118,7 +117,8 @@ namespace engine
             LOGE("Adapter queues don't fulfil minimal requirements");
             return false;
         }
-        LOGI("Selected queue family index %d", queueFamilyIndex);
+        m_queueFamilyIndex = queueFamilyIndex;
+        LOGI("Selected queue family index %d", m_queueFamilyIndex);
 
         Float queuePriorities = 1.0f;
         VkDeviceQueueCreateInfo queueCreateInfo;
@@ -148,39 +148,11 @@ namespace engine
             return false;
         }
 
-        VkCommandPoolCreateInfo commandPoolCreateInfo;
-        commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        commandPoolCreateInfo.pNext = nullptr;
-        commandPoolCreateInfo.flags = 0;
-        commandPoolCreateInfo.queueFamilyIndex = queueFamilyIndex;
-
-        result = vkCreateCommandPool(m_device, &commandPoolCreateInfo, nullptr, &m_commandPool);
-        if (result != VK_SUCCESS)
-        {
-            LOGE("Command pool creation failure: %d", result);
-            return false;
-        }
-
-        VkCommandBufferAllocateInfo commandBufferAllocateInfo;
-        commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        commandBufferAllocateInfo.pNext = nullptr;
-        commandBufferAllocateInfo.commandPool = m_commandPool;
-        commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        commandBufferAllocateInfo.commandBufferCount = 1;
-
-        result = vkAllocateCommandBuffers(m_device, &commandBufferAllocateInfo, &m_commandBuffer);
-        if (result != VK_SUCCESS)
-        {
-            LOGE("Command buffer allocation failure: %d", result);
-            return false;
-        }
-
         return true;
     }
 
     void DeviceVk::Shutdown()
     {
-        vkDestroyCommandPool(m_device, m_commandPool, nullptr);
         vkDestroyDevice(m_device, nullptr);
         vkDestroyInstance(m_instance, nullptr);
     }
@@ -201,7 +173,7 @@ namespace engine
             LOGE("Surface creation failure: %d", result);
             return Status::Failure;
         }
-        return Result<VkSurfaceKHR>(Status::Success, SurfaceHandler(this, surface));
+        return Result<SurfaceHandler>(Status::Success, SurfaceHandler(this, surface));
     }
 #elif defined(PLATFORM_LINUX)
     Result<SurfaceHandler> DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
@@ -363,7 +335,53 @@ namespace engine
             LOGE("Semaphore creation failure: %d", result);
             return Status::Failure;
         }
-        return Result<SemaphoreHandler>(Status::Success, SemaphoreHandler(this, semaphore) );
+        return Result<SemaphoreHandler>(Status::Success, SemaphoreHandler(this, semaphore));
+    }
+
+    Result<CommandPoolHandler> DeviceVk::CreateCommandPool()
+    {
+        VkCommandPoolCreateInfo commandPoolCreateInfo;
+        commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        commandPoolCreateInfo.pNext = nullptr;
+        commandPoolCreateInfo.flags = 0;
+        commandPoolCreateInfo.queueFamilyIndex = m_queueFamilyIndex;
+
+        VkCommandPool commandPool;
+        VkResult result = vkCreateCommandPool(m_device, &commandPoolCreateInfo, nullptr, &commandPool);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Command Pool creation failed: %d", result);
+            return Status::Failure;
+        }
+        return Result<CommandPoolHandler>(Status::Success, CommandPoolHandler(this, commandPool));
+    }
+
+    Result<std::vector<VkCommandBuffer>> DeviceVk::AllocateCommandBuffers(VkSwapchainKHR swapchain, VkCommandPool commandPool)
+    {
+        Uint32 imageCount;
+        VkResult result = vkGetSwapchainImagesKHR(m_device, swapchain, &imageCount, nullptr);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Swapchain image count query failed: %d", imageCount);
+            return Status::Failure;
+        }
+
+        std::vector<VkCommandBuffer> commandBuffers(imageCount);
+        VkCommandBufferAllocateInfo commandBufferAllocateInfo;
+        commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        commandBufferAllocateInfo.pNext = nullptr;
+        commandBufferAllocateInfo.commandPool = commandPool;
+        commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        commandBufferAllocateInfo.commandBufferCount = imageCount;
+
+        result = vkAllocateCommandBuffers(m_device, &commandBufferAllocateInfo, commandBuffers.data());
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Command Buffers allocation failed: %d", result);
+            return Status::Failure;
+        }
+
+        return Result<std::vector<VkCommandBuffer>>(Status::Success, commandBuffers);
     }
 
     std::string DeviceVk::AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const

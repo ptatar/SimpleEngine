@@ -13,6 +13,7 @@ namespace engine
     class SemaphoreHandler;
     class SurfaceHandler;
     class SwapchainHandler;
+    class CommandPoolHandler;
 
     struct SwapchainCreateInfo
     {
@@ -42,9 +43,14 @@ namespace engine
 #endif
         Result<SwapchainHandler> CreateSwapchain(SwapchainCreateInfo& createInfo);
         Result<SemaphoreHandler> CreateSemaphore();
+
+        Result<CommandPoolHandler> CreateCommandPool();
+        Result<std::vector<VkCommandBuffer>> AllocateCommandBuffers(VkSwapchainKHR swapchain, VkCommandPool commandPool);
+
         void DestroySemaphore(VkSemaphore semaphore) { vkDestroySemaphore(m_device, semaphore, nullptr); }
         void DestroySurface(VkSurfaceKHR surface) { vkDestroySurfaceKHR(m_instance, surface, nullptr); }
         void DestroySwapchain(VkSwapchainKHR swapchain) { vkDestroySwapchainKHR(m_device, swapchain, nullptr); }
+        void DestroyCommandPool(VkCommandPool commandPool) { vkDestroyCommandPool(m_device, commandPool, nullptr); }
 
     private:
         std::string AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const;
@@ -54,20 +60,22 @@ namespace engine
         Bool CheckExtensionSupport(std::vector<const char*>& requiredExtensions, std::vector<VkExtensionProperties>& availableExtensions);
         Bool CheckInstanceExtensionsSupport(std::vector<const char*>& requiredExtensions);
         Bool CheckDeviceExtensionsSupport(VkPhysicalDevice& adapter, std::vector<const char*>& requiredExtensions);
+
     private:
         VkInstance m_instance;
         VkDevice m_device;
         VkPhysicalDevice m_adapter;
-        VkCommandPool m_commandPool;
         VkCommandBuffer m_commandBuffer;
+        Uint32 m_queueFamilyIndex;
     }; // DeviceVK
 
+    // I don't think it was even worth to write this thing
 #define CREATE_HANDLER(NAME, TYPE, DESTRUCTOR) \
     class NAME \
     { \
     public: \
         NAME(): m_device(nullptr) {} \
-        NAME(DeviceVk* device, TYPE type):m_device(device), m_type(type) {} \
+        NAME(DeviceVk* device, TYPE type): m_device(device), m_type(type) {} \
         NAME(NAME&& rs) \
         { \
             m_type = rs.m_type; \
@@ -108,6 +116,7 @@ namespace engine
     CREATE_HANDLER(SemaphoreHandler, VkSemaphore, DestroySemaphore);
     CREATE_HANDLER(SurfaceHandler, VkSurfaceKHR, DestroySurface);
     CREATE_HANDLER(SwapchainHandler, VkSwapchainKHR, DestroySwapchain);
+    CREATE_HANDLER(CommandPoolHandler, VkCommandPool, DestroyCommandPool);
 
 #undef CREATE_HANDLER
 

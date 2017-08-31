@@ -12,6 +12,7 @@ namespace engine
         virtual ~IWindowSurface32() {}
         virtual HINSTANCE GetHInstance() const = 0;
         virtual HWND GetHWindow() const = 0;
+        virtual ExtentI GetSurfaceExtent() const = 0;
     };
 
 #elif defined(PLATFORM_LINUX)
