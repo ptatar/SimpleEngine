@@ -220,7 +220,7 @@ namespace engine
             return Status::Failure;
         }
 
-        return Result<SurfaceHandler>(Status::Success, std::move(SurfaceHandler(this, surface)));
+        return Result<SurfaceHandler>(Status::Success, SurfaceHandler(this, surface));
     }
 #endif
 

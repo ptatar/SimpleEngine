@@ -41,11 +41,11 @@ namespace engine
             return false;
         }
 
-        m_renderSurface = result.value;
-        m_semaphoreImageReady = semaphoreImageResult.value;
-        m_semaphoreRenderingFinished = semaphoreRenderingResult.result;
+        m_renderSurface = std::move(result.value);
+        m_semaphoreImageReady = std::move(semaphoreImageResult.value);
+        m_semaphoreRenderingFinished = std::move(semaphoreRenderingResult.value);
 
-        return false;
+        return true;
     }
 
 #elif defined(PLATFORM_LINUX)
@@ -88,9 +88,10 @@ namespace engine
             return false;
         }
 
-        m_renderSurface(std::move(surfaceResult.value));
-        m_semaphoreImageReady = semaphoreImageResult.value;
-        m_semaphoreRenderingFinished = semaphoreRenderingResult.value;
+        m_renderSurface = std::move(surfaceResult.value);
+        m_semaphoreImageReady = std::move(semaphoreImageResult.value);
+        m_semaphoreRenderingFinished = std::move(semaphoreRenderingResult.value);
+        return true;
     }
 
 #endif

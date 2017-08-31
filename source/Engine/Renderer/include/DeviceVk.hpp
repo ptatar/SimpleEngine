@@ -66,18 +66,35 @@ namespace engine
     class NAME \
     { \
     public: \
-        NAME(): m_device(nullptr), m_inited(false) {} \
-        NAME(DeviceVk* device, TYPE type): m_type(type), m_inited(true) {} \
+        NAME(): m_device(nullptr) {} \
+        NAME(DeviceVk* device, TYPE type):m_device(device), m_type(type) {} \
         NAME(NAME&& rs) \
         { \
             m_type = rs.m_type; \
             m_device = rs.m_device; \
-            m_inited = rs.m_inited; \
+            rs.m_device = nullptr; \
         } \
         NAME(const NAME&) = delete; \
         ~NAME() \
         { \
-            m_device->DESTRUCTOR(m_type); \
+            if(m_device) \
+            { \
+                m_device->DESTRUCTOR(m_type); \
+            } \
+        } \
+        NAME operator=(const NAME&) = delete; \
+        NAME operator=(NAME&& rs) \
+        { \
+            if(rs.m_device) \
+            { \
+                DeviceVk* ptr = rs.m_device; \
+                rs.m_device = nullptr; \
+                return NAME(ptr, rs.m_type); \
+            } \
+            else \
+            { \
+                return NAME(); \
+            } \
         } \
         TYPE Get() const \
         { \
@@ -86,7 +103,6 @@ namespace engine
     private: \
         TYPE m_type; \
         DeviceVk* m_device; \
-        Bool m_inited; \
     }
 
     CREATE_HANDLER(SemaphoreHandler, VkSemaphore, DestroySemaphore);
