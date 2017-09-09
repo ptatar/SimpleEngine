@@ -41,6 +41,8 @@ namespace engine
 #elif defined(PLATFORM_LINUX)
         Result<SurfaceHandler> CreateSurface(IWindowSurfaceX* windowSurface);
 #endif
+
+        void ClearScreenTest(VkSwapchainKHR swaochain);
         Result<SwapchainHandler> CreateSwapchain(SwapchainCreateInfo& createInfo);
         Result<SemaphoreHandler> CreateSemaphore();
 

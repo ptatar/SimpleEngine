@@ -7,7 +7,7 @@
 
 namespace engine
 {
-    class RendererVk: public IRenderer
+    class RendererVk: public IRenderer, public Runnable
     {
     public:
         RendererVk() {}
@@ -15,7 +15,7 @@ namespace engine
 
         Bool Initialize() override;
         void Shutdown() override;
-
+        void Update() override;
     #if defined(PLATFORM_WINDOWS)
         Bool CreateSurface(IWindowSurface32* windowSurface) override;
     #elif defined(PLATFORM_LINUX)

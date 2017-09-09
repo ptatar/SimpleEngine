@@ -196,6 +196,18 @@ namespace engine
     }
 #endif
 
+    void DeviceVk::ClearScreenTest(VkSwapchainKHR swapchain)
+    {
+        VkCommandBufferBeginInfo commandBufferBeginInfo;
+        commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        commandBufferBeginInfo.pNext = nullptr;
+        commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        commandBufferBeginInfo.pInheritanceInfo = nullptr;
+
+        VkClearColorValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    }
+
     Result<SwapchainHandler> DeviceVk::CreateSwapchain(SwapchainCreateInfo& createInfo)
     {
 

@@ -11,6 +11,7 @@ namespace engine {
         virtual ~IRenderer() {}
         virtual Bool Initialize() = 0;
         virtual void Shutdown() = 0;
+        virtual void Update() = 0;
 	#if defined(PLATFORM_WINDOWS)
         virtual Bool CreateSurface(IWindowSurface32* windowSurface) = 0;
 	#elif defined(PLATFORM_LINUX)

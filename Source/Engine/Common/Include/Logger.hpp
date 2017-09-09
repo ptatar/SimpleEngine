@@ -13,10 +13,10 @@ namespace logger {
 
 template<typename...Args>
 void Write(const char* funcName, int line, const char* str, Args...args) {
-	static const int maxMsgSize = 2048;
-	static char buffer[maxMsgSize];
-	snprintf(buffer, maxMsgSize, str, args...);
+	static const int bufferSize = 2048;
+	static char buffer[bufferSize];
 
+	snprintf(buffer, bufferSize, str, args...);
 	std::cout << funcName << " : " << line << "  " << buffer << "\n";
 }
 

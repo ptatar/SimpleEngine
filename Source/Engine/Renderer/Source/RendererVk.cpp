@@ -13,6 +13,10 @@ namespace engine
         m_device.Shutdown();
     }
 
+    void RendererVk::Update()
+    {
+    }
+
 #if defined(PLATFORM_WINDOWS)
     Bool RendererVk::CreateSurface(IWindowSurface32* windowSurface)
     {
@@ -108,9 +112,21 @@ namespace engine
         swapchainCreateInfo.presentationMode = VK_PRESENT_MODE_MAILBOX_KHR;
         swapchainCreateInfo.surface = surfaceResult.value.Get();
 
-
         auto swapchainResult = m_device.CreateSwapchain(swapchainCreateInfo);
-        if(swapchainResult.status != Status::Success)
+        if (swapchainResult.status != Status::Success)
+        {
+            return false;
+        }
+
+        auto commandPoolResult = m_device.CreateCommandPool();
+        if (commandPoolResult.status != Status::Success)
+        {
+            return false;
+        }
+
+        auto commandBuffersResult = m_device.AllocateCommandBuffers(swapchainResult.value.Get(),
+                                                                    commandPoolResult.value.Get());
+        if (commandBuffersResult.status != Status::Success)
         {
             return false;
         }
@@ -118,6 +134,9 @@ namespace engine
         m_renderSurface = std::move(surfaceResult.value);
         m_semaphoreImageReady = std::move(semaphoreImageResult.value);
         m_semaphoreRenderingFinished = std::move(semaphoreRenderingResult.value);
+        m_swapchain = std::move(swapchainResult.value);
+        m_commandPool = std::move(commandPoolResult.value);
+        m_commandBuffers = std::move(commandBuffersResult.value);
 
         return true;
     }
