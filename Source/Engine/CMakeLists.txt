@@ -2,10 +2,14 @@ cmake_minimum_required(VERSION 3.7)
 
 if(${PLATFORM_WINDOWS})
     set(ENGINE_EXE_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/System.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/System.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/main32.cpp
     )
 elseif(${PLATFORM_LINUX})
     set(ENGINE_EXE_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/System.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/System.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/mainX.cpp
     )
 else()

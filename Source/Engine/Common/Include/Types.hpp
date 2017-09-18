@@ -34,4 +34,33 @@ namespace engine
     typedef Extent<Uint32> ExtentI;
     typedef Extent<Float> ExtentF;
 
+    template<typename T>
+    class ObjectRef
+    {
+    public:
+        ObjectRef(T* type): m_type(type)
+        {
+            m_refCount++;
+        };
+        ObjectRef(const ObjectRef& objectRef): m_type(objectRef.m_type)
+        {
+            m_refCount++;
+        }
+        ObjectRef(const ObjectRef&& objectRef) : m_type(objectRef.m_type)
+        {
+            m_refCount++;
+        }
+        ~ObjectRef()
+        {
+            m_refCount--;
+            if (m_refCount)
+            {
+
+            }
+        }
+    private:
+        T m_type;
+        mutable Uint32 m_refCount;
+    };
+
 } // namespace engine

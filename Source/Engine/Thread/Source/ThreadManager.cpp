@@ -6,24 +6,41 @@ namespace engine
 {
     void ThreadManager::Worker::Start()
     {
+        LOGI("Thread: %d Starts")
+        m_shutdown = false;
+        m_thread = std::thread(Loop);
+    }
+
+    void ThreadManager::Worker::Loop()
+    {
         while (!m_shutdown)
         {
             if (m_job)
             {
                 while (!m_shutdown && m_job->Work()) {}
+                m_job = nullptr;
             }
-            else
+
+            m_threadManager->NotifyIdle(this);
+            if (!m_job)
             {
-                m_threadManager->NotifyIdle(this);
-                if (!m_job)
-                {
-                    std::unique_lock<std::mutex> lock(m_mutex);
-                    m_conditionVar.wait(lock);
-                }
+                std::unique_lock<std::mutex> lock(m_mutex);
+                m_conditionVar.wait(lock);
             }
         }
 
         LOGI("Thread: %d Exit", m_index);
+    }
+
+    Bool ThreadManager::Initialize(Uint32 workerCount)
+    {
+        std::lock_guard<std::mutex> workersGuard(m_workersMx);
+        m_workers.resize(workerCount);
+        for (Uint32 i = 0; i < workerCount; i++)
+        {
+            m_workers[i] = std::make_unique<Worker>(this, i);
+            m_workers[i]->Start();
+        }
     }
 
     void ThreadManager::Execute(IJob* job)
@@ -35,6 +52,7 @@ namespace engine
                 auto* idleWorker = m_idleWorkers.front();
                 m_idleWorkers.pop_front();
                 idleWorker->SetJob(job);
+                idleWorker->WakeUp();
                 return;
             }
         }
@@ -53,6 +71,7 @@ namespace engine
                 auto* job = m_jobQueue.front();
                 m_jobQueue.pop_front();
                 worker->SetJob(job);
+                return;
             }
         }
 
@@ -63,9 +82,17 @@ namespace engine
 
     void ThreadManager::Shutdown()
     {
+        LOGI("ThreadManager Shut down starts")
         for(auto& worker: m_workers)
         {
+            worker->Shutdown();
         }
+
+        for (auto& worker : m_workers)
+        {
+            worker->Join();
+        }
+        LOGI("ThreadManager Shut down ends")
     }
 
 } // namespace engine

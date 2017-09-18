@@ -10,19 +10,20 @@
 
 namespace engine {
 
-	class WindowManager {
-	public:
-		WindowManager(RendererManager* rendererManager);
-		WindowManager(WindowManager&) = delete;
-		WindowManager(WindowManager&&) = delete;
-		~WindowManager();
+    class WindowManager {
+    public:
+        WindowManager(RendererManager* rendererManager);
+        WindowManager(WindowManager&) = delete;
+        WindowManager(WindowManager&&) = delete;
+        ~WindowManager();
 
-		int Initialize();
-	
-		IWindow* CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height);
-		void Shutdown();
-	private:
-		RendererManager* m_rendererManager;
-	};
+        Bool Initialize();
+        void Update();
+        IWindow* CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height);
+        void Shutdown();
+    private:
+        RendererManager* m_rendererManager;
+        std::vector<std::unique_ptr<IWindow>> m_windows;
+    };
 
 } // namespace engine

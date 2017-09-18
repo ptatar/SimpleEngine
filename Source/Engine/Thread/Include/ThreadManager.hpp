@@ -19,10 +19,14 @@ namespace engine
                 : m_threadManager(threadManager)
                 , m_index(index)
                 , m_job(nullptr)
-                , m_shutdown(false)  {}
+                , m_shutdown(false) {}
             ~Worker() {};
             void Start();
+            void Loop();
             void SetJob(IJob* job) { m_job = job; }
+            void Shutdown() { m_shutdown = true; }
+            void Join() { if(m_thread.joinable()) m_thread.join(); }
+            void WakeUp() { m_conditionVar.notify_one(); }
 
         private:
             ThreadManager* m_threadManager;
@@ -30,15 +34,18 @@ namespace engine
             IJob* m_job;
             std::mutex m_mutex;
             std::condition_variable m_conditionVar;
-            Bool m_shutdown;
+            volatile Bool m_shutdown;
+            std::thread m_thread;
         };
 
     public:
         ThreadManager() {}
         ~ThreadManager() { Shutdown(); }
+        Bool Initialize(Uint32 workerCount);
         void Execute(IJob* job);
         void NotifyIdle(Worker* worker);
         void Shutdown();
+
     private:
         Uint32 m_maxQueueSize;
         std::list<IJob*> m_jobQueue;
@@ -46,7 +53,7 @@ namespace engine
         std::mutex m_workersMx;
         std::mutex m_jobsMx;
         std::condition_variable m_jobCv;
-        std::vector<Worker*> m_workers;
+        std::vector<std::unique_ptr<Worker>> m_workers;
     };
 
 } // namespace engine
