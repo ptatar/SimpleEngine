@@ -143,4 +143,8 @@ namespace engine
 
 #endif
 
+    Bool RendererVk::Work()
+    {
+        
+    }
 }

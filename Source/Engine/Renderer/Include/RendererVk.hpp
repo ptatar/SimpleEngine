@@ -4,10 +4,18 @@
 #include "DeviceVk.hpp"
 #include "IRenderer.hpp"
 #include "WindowSurface.hpp"
+#include "IJob.hpp"
 
 namespace engine
 {
-    class RendererVk: public IRenderer, public Runnable
+    class CommandRecorder: public IJob
+    {
+    public:
+        CommandRecorder();
+        ~CommandRecorder();
+    }
+
+    class RendererVk: public IRenderer, public IJob
     {
     public:
         RendererVk() {}
@@ -21,6 +29,7 @@ namespace engine
     #elif defined(PLATFORM_LINUX)
         Bool CreateSurface(IWindowSurfaceX* windowSurface) override;
     #endif
+    virtual Bool Work() override;
 
     private:
         DeviceVk m_device;

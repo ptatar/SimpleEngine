@@ -4,11 +4,13 @@ set(LIBRARY_INC_DIR ${THREAD_LIB_INC_DIR} PARENT_SCOPE)
 
 
 set(THREAD_LIB_SRC
-    ${THREAD_LIB_INC_DIR}/IRunnable.hpp
+    ${THREAD_LIB_INC_DIR}/IJob.hpp
     ${THREAD_LIB_INC_DIR}/ThreadManager.hpp
     ${THREAD_LIB_SRC_DIR}/ThreadManager.cpp
 )
 
 add_library(THREAD_LIB STATIC ${THREAD_LIB_SRC})
+
+target_link_libraries(THREAD_LIB COMMON_LIB)
 
 target_include_directories(THREAD_LIB PUBLIC ${THREAD_LIB_INC_DIR})

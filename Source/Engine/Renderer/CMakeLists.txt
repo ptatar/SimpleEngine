@@ -1,5 +1,5 @@
-set(RENDERER_LIB_SRC_DIR ${RENDERER_LIB_DIR}/Source)
-set(RENDERER_LIB_INC_DIR ${RENDERER_LIB_DIR}/Include)
+set(RENDERER_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Source)
+set(RENDERER_LIB_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Include)
 set(LIBRARY_INC_DIR ${RENDERER_LIB_INC_DIR} PARENT_SCOPE)
 
 if(${PLATFORM_WINDOWS})
@@ -36,9 +36,11 @@ endif()
 add_library(RENDERER_LIB STATIC ${RENDERER_LIB_SRC})
 
 target_link_libraries(RENDERER_LIB PRIVATE COMMON_LIB
+                                   PRIVATE THREAD_LIB
                                    PRIVATE ${Vulkan_LIBRARIES})
 
 target_include_directories(RENDERER_LIB PRIVATE ${COMMON_LIB_INC_DIR}
+                                        PRIVATE ${THREAD_LIB_INC_DIR}
                                         PUBLIC ${RENDERER_LIB_INC_DIR}
                                         PRIVATE ${X11_INCLUDE_DIRS}
                                         PRIVATE ${Vulkan_INCLUDE_DIRS}
