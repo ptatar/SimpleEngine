@@ -10,7 +10,7 @@
 
 namespace engine {
 
-class Window32 : public IWindow, public IWindowEventHandler, public IWindowSurface32, private Referenceable {
+class Window32 : public IWindow, public IWindowEventHandler, public IWindowSurface32 {
 public:
     Window32();
     Window32(Window32&) = delete;

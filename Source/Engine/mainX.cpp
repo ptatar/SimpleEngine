@@ -1,5 +1,4 @@
-#include "WindowManager.hpp"
-#include "RendererManager.hpp"
+#include "System.hpp"
 
 using namespace engine;
 
@@ -7,7 +6,7 @@ int main()
 {
     RendererManager rendererManager;
     WindowManager windowManager(&rendererManager);
-    IWindow* window = windowManager.CreateWindowInstance(0, 0, 800, 600);
+    auto window = windowManager.CreateWindowInstance(0, 0, 800, 600);
     window->Show();
     while(window->HandleEvents()) {}
     window->Shutdown();

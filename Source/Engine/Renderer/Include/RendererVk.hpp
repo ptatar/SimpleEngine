@@ -13,7 +13,7 @@ namespace engine
     public:
         CommandRecorder();
         ~CommandRecorder();
-    }
+    };
 
     class RendererVk: public IRenderer, public IJob
     {

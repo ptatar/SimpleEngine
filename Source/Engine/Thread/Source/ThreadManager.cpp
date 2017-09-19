@@ -6,9 +6,9 @@ namespace engine
 {
     void ThreadManager::Worker::Start()
     {
-        LOGI("Thread: %d Starts")
+        LOGI("Thread: %d Starts");
         m_shutdown = false;
-        m_thread = std::thread(Loop);
+        m_thread = std::thread([this](){ Loop(); } );
     }
 
     void ThreadManager::Worker::Loop()
@@ -82,7 +82,7 @@ namespace engine
 
     void ThreadManager::Shutdown()
     {
-        LOGI("ThreadManager Shut down starts")
+        LOGI("ThreadManager Shut down starts");
         for(auto& worker: m_workers)
         {
             worker->Shutdown();
@@ -92,7 +92,7 @@ namespace engine
         {
             worker->Join();
         }
-        LOGI("ThreadManager Shut down ends")
+        LOGI("ThreadManager Shut down ends");
     }
 
 } // namespace engine

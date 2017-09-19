@@ -8,7 +8,7 @@ namespace engine {
 
     typedef Uint64 WindowId;
 
-    class IWindow {
+    class IWindow: private Referenceable {
     public:
         virtual ~IWindow() {};
         virtual int Initialize(Uint32 posX, Uint32 posY, Uint32 wndWidth, Uint32 wndHeight) = 0;

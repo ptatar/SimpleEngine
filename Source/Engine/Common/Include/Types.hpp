@@ -34,18 +34,7 @@ namespace engine
     typedef Extent<Uint32> ExtentI;
     typedef Extent<Float> ExtentF;
 
-
-    class ObjectRef;
-    class Referenceable
-    {
-    public:
-        virtual ~Referenceable() {}
-        void AddRef() const { ++m_refCount; }
-        Uint32 RemoveRef() const { return --m_refCount; }
-    private:
-        mutable Uint32 m_refCount = 0;
-        friend ObjectRef;
-    };
+    class Referenceable;
 
     template<typename T>
     class ObjectRef
@@ -53,19 +42,21 @@ namespace engine
     public:
         ObjectRef(T* type) : m_type(type)
         {
-            type->AddRef();
+            static_assert(std::is_convertible<T*, Referenceable*>::value,
+                    "ObjectRef can only hold Referenceable derived");
+            m_type->AddRef();
         }
         ObjectRef(const ObjectRef& objectRef) : m_type(objectRef.m_type)
         {
-            type->AddRef();
+            m_type->AddRef();
         }
         ObjectRef(const ObjectRef&& objectRef) : m_type(objectRef.m_type)
         {
-            type->AddRef();
+            m_type->AddRef();
         }
         ~ObjectRef()
         {
-            if (!type->RemoveRef())
+            if (!m_type->RemoveRef())
             {
                 delete m_type;
                 m_type = nullptr;
@@ -90,8 +81,29 @@ namespace engine
         {
             return m_type;
         }
+        T* Get()
+        {
+            return m_type;
+        }
+        template<typename U>
+        ObjectRef<U> operator()
+        {
+            static_assert(std::is_convertible<T*, U*>::value, "Can only cast on releted types.");
+            m_type->AddRef();
+            return this
+        }
     private:
-        T m_type;
+        T* m_type;
+    };
+
+    class Referenceable
+    {
+    public:
+        virtual ~Referenceable() {}
+        void AddRef() const { ++m_refCount; }
+        Uint32 RemoveRef() const { return --m_refCount; }
+    private:
+        mutable Uint32 m_refCount = 0;
     };
 
 } // namespace engine
