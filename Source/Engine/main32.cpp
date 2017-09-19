@@ -4,9 +4,7 @@
 #include <tchar.h>
 #include <fstream>
 
-#include "WindowManager.hpp"
-#include "RendererManager.hpp"
-#include "ThreadManager.hpp"
+#include "System.hpp"
 #include "Logger.hpp"
 
 using namespace engine;
@@ -16,19 +14,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     //Attach console for debug
     AllocConsole();
     freopen("CONOUT$", "w", stdout);
+
+    System system;
+    if (!system.Initialize())
+    {
+        return -1;
+    }
+    system.MainLoop();
+    system.Shutdown();
     ThreadManager threadManager;
     if (!threadManager.Initialize())
     {
         return -1;
     }
 
-    RendererManager rendererManager;
-    WindowManager winMag(&rendererManager);
-    if (winMag.Initialize())
-    {
-        return -1;
-    }
-    IWindow* window = winMag.CreateWindowInstance(0, 0, 800, 600);
+
+    ObjectRef<IWindow> window = winMag.CreateWindowInstance(0, 0, 800, 600);
     if (!window)
     {
         return -1;

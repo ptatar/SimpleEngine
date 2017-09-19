@@ -19,7 +19,7 @@ namespace engine {
 
         Bool Initialize();
         void Update();
-        IWindow* CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height);
+        ObjectRef<IWindow> CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height);
         void Shutdown();
     private:
         RendererManager* m_rendererManager;

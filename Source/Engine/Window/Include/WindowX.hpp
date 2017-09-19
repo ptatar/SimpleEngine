@@ -11,7 +11,7 @@
 
 namespace engine {
 
-    class WindowX: public IWindow, public IWindowEventHandler, public IWindowSurfaceX
+    class WindowX: public IWindow, public IWindowEventHandler, public IWindowSurfaceX, private Referenceable
     {
     public:
         WindowX();

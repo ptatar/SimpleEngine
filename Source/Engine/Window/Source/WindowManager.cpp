@@ -34,13 +34,13 @@ void WindowManager::Shutdown()
 }
 
 
-IWindow* WindowManager::CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height)
+ObjectRef<IWindow> WindowManager::CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height)
 {
     //clean this up
 #if defined(PLATFORM_WINDOWS)
-    std::unique_ptr<Window32> window = std::make_unique<Window32>();
+    ObjectRef<Window32> window(new Window32());
 #elif defined (PLATFORM_LINUX)
-    std::unique_ptr<WindowX> window = std::make_unique<WindowX>();
+    ObjectRef<WindowX> window( new WindowX());
 #else
     ERROR("Dead code path")
 #endif
