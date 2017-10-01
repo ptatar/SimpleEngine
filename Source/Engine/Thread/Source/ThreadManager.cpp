@@ -22,7 +22,7 @@ namespace engine
             }
 
             m_threadManager->NotifyIdle(this);
-            if (!m_job)
+            if (!m_job && !m_shutdown)
             {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 m_conditionVar.wait(lock);
@@ -32,7 +32,13 @@ namespace engine
         LOGI("Thread: %d Exit", m_index);
     }
 
-    Bool ThreadManager::Initialize(Uint32 workerCount)
+    void ThreadManager::Worker::Shutdown()
+    {
+        m_shutdown = true;
+        m_conditionVar.notify_one();
+    }
+
+    Bool ThreadManager::Initialize(Uint32 workerCount, Uint32 maxQueueSize)
     {
         std::lock_guard<std::mutex> workersGuard(m_workersMx);
         m_workers.resize(workerCount);
@@ -41,6 +47,9 @@ namespace engine
             m_workers[i] = std::make_unique<Worker>(this, i);
             m_workers[i]->Start();
         }
+        m_shutdown = false;
+        m_maxQueueSize = maxQueueSize;
+        return true;
     }
 
     void ThreadManager::Execute(IJob* job)
@@ -82,6 +91,15 @@ namespace engine
 
     void ThreadManager::Shutdown()
     {
+        if(m_shutdown)
+        {
+            return;
+        }
+        else
+        {
+            m_shutdown = true;
+        }
+
         LOGI("ThreadManager Shut down starts");
         for(auto& worker: m_workers)
         {

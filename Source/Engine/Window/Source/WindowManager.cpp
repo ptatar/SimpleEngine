@@ -34,7 +34,11 @@ namespace engine {
     }
 
 
-    ObjectRef<IWindow> WindowManager::CreateWindowInstance(Uint32 x, Uint32 y, Uint32 width, Uint32 height)
+    ObjectRef<IWindow> WindowManager::CreateWindowInstance(Uint32 x,
+                                                           Uint32 y,
+                                                           Uint32 width,
+                                                           Uint32 height,
+                                                           Bool mainWindow)
     {
         //clean this up
     #if defined(PLATFORM_WINDOWS)
@@ -57,8 +61,8 @@ namespace engine {
             return nullptr;
         }
         window->BindRenderer(std::move(renderer));
-
-        return window;
+        
+        return static_cast<ObjectRef<IWindow>>(window);
     }
 
 } // namespace engine

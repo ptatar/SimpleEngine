@@ -18,4 +18,11 @@ namespace engine
         std::unique_ptr<IRenderer> CreateRenderer(IWindowSurfaceX* surface);
 #endif
     };
+
+    class RendererManagerUnit: public IUnit, public RendererManager
+    {
+    public:
+        RendererManagerUnit(ISystem* system)
+            : IUnit(system) {}
+    }
 } // namespace engine

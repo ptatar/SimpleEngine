@@ -1,19 +1,33 @@
 #pragma once
 
+#include <type_traits>
+
 namespace engine
 {
 
-    typedef signed   char Int8;
-    typedef unsigned char Uint8;
-    typedef signed   short Int16;
-    typedef unsigned short Uint16;
-    typedef signed   int   Int32;
-    typedef unsigned int   Uint32;
+    typedef signed   char      Int8;
+    typedef unsigned char      Uint8;
+    typedef signed   short     Int16;
+    typedef unsigned short     Uint16;
+    typedef signed   int       Int32;
+    typedef unsigned int       Uint32;
     typedef signed   long long Int64;
     typedef unsigned long long Uint64;
-    typedef float Float;
-    typedef double Double;
-    typedef bool Bool;
+    typedef float              Float;
+    typedef double             Double;
+    typedef bool               Bool;
+
+    static_assert(sizeof(Int8)   == 1, "Invalid type size");
+    static_assert(sizeof(Uint8)  == 1, "Invalid type size");
+    static_assert(sizeof(Int16)  == 2, "Invalid type size");
+    static_assert(sizeof(Uint16) == 2, "Invalid type size");
+    static_assert(sizeof(Int32)  == 4, "Invalid type size");
+    static_assert(sizeof(Uint32) == 4, "Invalid type size");
+    static_assert(sizeof(Int64)  == 8, "Invalid type size");
+    static_assert(sizeof(Uint64) == 8, "Invalid type size");
+    static_assert(sizeof(Float)  == 4, "Invalid type size");
+    static_assert(sizeof(Double) == 8, "Invalid type size");
+    static_assert(sizeof(Bool    == 1, "Invalid type size");
 
     template<typename T>
     struct Extent
@@ -86,11 +100,10 @@ namespace engine
             return m_type;
         }
         template<typename U>
-        ObjectRef<U> operator()
+        explicit operator ObjectRef<U>()
         {
             static_assert(std::is_convertible<T*, U*>::value, "Can only cast on releted types.");
-            m_type->AddRef();
-            return this
+            return ObjectRef<U>(static_cast<U*>(m_type));
         }
     private:
         T* m_type;
@@ -105,5 +118,24 @@ namespace engine
     private:
         mutable Uint32 m_refCount = 0;
     };
+
+    class ISystem;
+    class IUnit
+    {
+        public:
+            IUnit(ISystem* system): m_system(system){}
+            ~IUnit() = 0;
+
+        ISystem* const m_system;
+    }
+
+    class ISystem
+    {
+        public:
+            virtual ~ISystem() {}
+            void RequestShutdown(Subsystem* subsystem) = 0;
+    }
+
+
 
 } // namespace engine

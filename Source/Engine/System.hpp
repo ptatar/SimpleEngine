@@ -7,19 +7,19 @@
 namespace engine
 {
 
-    class System
+    class System: public ISystem
     {
     public:
-        System() {}
-        ~System() {}
+        System();
+        ~System();
         Bool Initialize();
         void MainLoop();
         void Shutdown();
 
     public:
-        ThreadManager m_threadManager;
-        WindowManager m_windowManager;
-        RendererManager m_renderManager;
+        ThreadManagerUnit m_threadManager;
+        WindowManagerUnit m_windowManager;
+        RendererManagerUnit m_renderManager;
     };
 
 } // namespace engine

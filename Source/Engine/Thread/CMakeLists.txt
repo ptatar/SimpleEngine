@@ -11,6 +11,7 @@ set(THREAD_LIB_SRC
 
 add_library(THREAD_LIB STATIC ${THREAD_LIB_SRC})
 
-target_link_libraries(THREAD_LIB COMMON_LIB)
+target_link_libraries(THREAD_LIB COMMON_LIB
+                                 Threads::Threads) #not my var name
 
 target_include_directories(THREAD_LIB PUBLIC ${THREAD_LIB_INC_DIR})
