@@ -5,17 +5,17 @@
 
 namespace engine {
 
-    class IRenderer
+    class IRenderer: public virtual Referenceable
     {
     public:
         virtual ~IRenderer() {}
         virtual Bool Initialize() = 0;
         virtual void Shutdown() = 0;
         virtual void Update() = 0;
-	#if defined(PLATFORM_WINDOWS)
+    #if defined(PLATFORM_WINDOWS)
         virtual Bool CreateSurface(IWindowSurface32* windowSurface) = 0;
-	#elif defined(PLATFORM_LINUX)
+    #elif defined(PLATFORM_LINUX)
         virtual Bool CreateSurface(IWindowSurfaceX* windowSurface) = 0;
-	#endif
+    #endif
     };
 } // namespace engine

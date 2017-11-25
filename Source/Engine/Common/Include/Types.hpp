@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <utility>
 
 namespace engine
 {
@@ -27,7 +28,7 @@ namespace engine
     static_assert(sizeof(Uint64) == 8, "Invalid type size");
     static_assert(sizeof(Float)  == 4, "Invalid type size");
     static_assert(sizeof(Double) == 8, "Invalid type size");
-    static_assert(sizeof(Bool    == 1, "Invalid type size");
+    static_assert(sizeof(Bool)   == 1, "Invalid type size");
 
     template<typename T>
     struct Extent
@@ -58,7 +59,8 @@ namespace engine
         {
             static_assert(std::is_convertible<T*, Referenceable*>::value,
                     "ObjectRef can only hold Referenceable derived");
-            m_type->AddRef();
+            if (type != nullptr)
+                m_type->AddRef();
         }
         ObjectRef(const ObjectRef& objectRef) : m_type(objectRef.m_type)
         {
@@ -70,7 +72,7 @@ namespace engine
         }
         ~ObjectRef()
         {
-            if (!m_type->RemoveRef())
+            if (m_type && !m_type->RemoveRef())
             {
                 delete m_type;
                 m_type = nullptr;
@@ -109,6 +111,19 @@ namespace engine
         T* m_type;
     };
 
+    template<class T, typename ...Args >
+    ObjectRef<T> MakeObjectRef(Args&&... args)
+    {
+        return ObjectRef<T>( new T(std::forward<Args>(args)...));
+    }
+
+    template<typename To, typename From >
+    ObjectRef<To> ObjectRefCast(ObjectRef<From>& base)
+    {
+        static_assert(std::is_convertible<From*, To*>::value, "Can only cast on releted types.");
+        return ObjectRef<To>(static_cast<To*>(base.Get()));
+    }
+
     class Referenceable
     {
     public:
@@ -118,24 +133,5 @@ namespace engine
     private:
         mutable Uint32 m_refCount = 0;
     };
-
-    class ISystem;
-    class IUnit
-    {
-        public:
-            IUnit(ISystem* system): m_system(system){}
-            ~IUnit() = 0;
-
-        ISystem* const m_system;
-    }
-
-    class ISystem
-    {
-        public:
-            virtual ~ISystem() {}
-            void RequestShutdown(Subsystem* subsystem) = 0;
-    }
-
-
 
 } // namespace engine

@@ -2,14 +2,10 @@ cmake_minimum_required(VERSION 3.7)
 
 if(${PLATFORM_WINDOWS})
     set(ENGINE_EXE_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/System.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/System.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/main32.cpp
     )
 elseif(${PLATFORM_LINUX})
     set(ENGINE_EXE_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/System.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/System.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/mainX.cpp
     )
 else()
@@ -27,8 +23,9 @@ include_library(${WINDOW_LIB_DIR} WINDOW_LIB_INC_DIR)
 include_library(${RENDERER_LIB_DIR} RENDERER_LIB_INC_DIR)
 
 add_executable(ENGINE_EXE ${ENGINE_EXE_SRC})
-target_link_libraries(ENGINE_EXE WINDOW_LIB)
-target_link_libraries(ENGINE_EXE RENDERER_LIB)
+target_link_libraries(ENGINE_EXE WINDOW_LIB
+                                 RENDERER_LIB
+                                 THREAD_LIB)
 
 target_include_directories(ENGINE_EXE PRIVATE ${WINDOW_LIB_INC_DIR}
                                       PRIVATE ${COMMON_LIB_INC_DIR}

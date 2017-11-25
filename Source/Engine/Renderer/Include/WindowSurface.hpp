@@ -3,29 +3,30 @@
 #include "XlibInclude.hpp"
 #include "Types.hpp"
 
+#include <vector>
+
 namespace engine
 {
-#if defined(PLATFORM_WINDOWS)
-    class IWindowSurface32
+    enum class WindowType
     {
-    public:
-        virtual ~IWindowSurface32() {}
-        virtual HINSTANCE GetHInstance() const = 0;
-        virtual HWND GetHWindow() const = 0;
-        virtual ExtentI GetSurfaceExtent() const = 0;
+        WindowX,
+        Window32,
     };
 
-#elif defined(PLATFORM_LINUX)
+    class IWindowSurface
+    {
+        public:
+            virtual ~IWindowSurface() {}
+            virtual ExtentI GetSurfaceExtent() const = 0;
+            virtual WindowType GetWindowType() const = 0;
+    };
 
-    class IWindowSurfaceX
+    class IWindowSurfaceX: public IWindowSurface
     {
         public:
             virtual ~IWindowSurfaceX() {}
+            virtual WindowType GetWindowType() const { return WindowType::WindowX; }
             virtual Window GetWindow() const = 0;
             virtual Display* GetDisplay() const = 0;
-            virtual ExtentI GetSurfaceExtent() const = 0;
     };
-
-#endif
-
 } // namespace engine

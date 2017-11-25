@@ -145,6 +145,6 @@ namespace engine
 
     Bool RendererVk::Work()
     {
-        
+        return false;
     }
 }

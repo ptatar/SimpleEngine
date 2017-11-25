@@ -29,11 +29,13 @@ endif()
 add_library(WINDOW_LIB STATIC ${WINDOW_LIB_SRC})
 
 target_link_libraries(WINDOW_LIB PRIVATE COMMON_LIB
-                                 PRIVATE RENDERER_LIB)
+                                 PRIVATE RENDERER_LIB
+                                 PRIVATE THREAD_LIB)
 
 target_include_directories(WINDOW_LIB PRIVATE ${COMMON_LIB_INC_DIR}
                                       PRIVATE ${RENDERER_LIB_INC_DIR}
-                                      PRIVATE ${WINDOW_LIB_INC_DIR})
+                                      PRIVATE ${WINDOW_LIB_INC_DIR}
+                                      PRIVATE ${THRED_LIB_INC_DIR})
 
 if(${PLATFORM_LINUX})
     target_link_libraries(WINDOW_LIB PRIVATE ${X11_LIBRARIES})

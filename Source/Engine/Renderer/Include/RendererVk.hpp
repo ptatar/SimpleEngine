@@ -29,7 +29,7 @@ namespace engine
     #elif defined(PLATFORM_LINUX)
         Bool CreateSurface(IWindowSurfaceX* windowSurface) override;
     #endif
-    virtual Bool Work() override;
+        Bool Work() override;
 
     private:
         DeviceVk m_device;

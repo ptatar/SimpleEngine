@@ -6,40 +6,42 @@
 #include "IRenderer.hpp"
 #include "Types.hpp"
 #include "Logger.hpp"
+#include "IJob.hpp"
+#include "RendererManager.hpp"
 
 #include <memory>
 
-namespace engine {
-
-    class WindowX: public IWindow, public IWindowEventHandler, public IWindowSurfaceX
+namespace engine
+{
+    class WindowX: public IWindow, public IWindowSurfaceX, public IJob
     {
     public:
         WindowX();
         WindowX(WindowX&) = delete;
         WindowX(WindowX&&) = delete;
         virtual ~WindowX() {};
-
-        Int32 Initialize(Uint32 poxX, Uint32 posY, Uint32 wndWidth, Uint32 wndHeight) override;
-        void RegisterEventCallback(IWindowEventHandler*) override;
+        Int32 Initialize(Uint32 poxX, Uint32 posY, Uint32 wndWidth, Uint32 wndHeight);
+        void RegisterEventCallback(IWindowEventHandler*);
         void Show() override;
         void Hide() override;
-        Bool HandleEvents() override;
+        Bool HandleEvents();;
         void Shutdown() override;
 
         Uint32 GetWidth() override { return m_width; }
         Uint32 GetHeight() override { return m_height; }
 
-        void OnStart() override;
-        void OnResize(Uint32 width, Uint32 height) override;
-        void OnReposition( Uint32 x, Uint32 y) override;
-        void OnExit() override;
+        void OnStart();
+        void OnResize(Uint32 width, Uint32 height);
+        void OnReposition( Uint32 x, Uint32 y);
+        void OnExit();
         Bool IsFullscreen() override;
 
-        //IWindowSurfaceX
+        //IWindowSurface
         virtual Window GetWindow() const override { return m_window; }
         virtual Display* GetDisplay() const override { return m_display; }
         virtual ExtentI GetSurfaceExtent() const override { return ExtentI(m_width, m_height); }
-        Bool BindRenderer(std::unique_ptr<IRenderer> renderer);
+        virtual IWindowSurfaceX* GetSurface() override { return this; }
+        Bool Work() override { return HandleEvents(); }
 
     private:
         Bool     m_initialized;

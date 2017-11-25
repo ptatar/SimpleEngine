@@ -2,6 +2,7 @@
 
 #include "IWindow.hpp"
 #include "RendererManager.hpp"
+#include "ThreadManager.hpp"
 #include "IWindowEventHandler.hpp"
 #include "Types.hpp"
 
@@ -10,9 +11,10 @@
 
 namespace engine {
 
-    class WindowManager {
+    class WindowManager
+    {
     public:
-        WindowManager(RendererManager* rendererManager);
+        WindowManager(RendererManager* rendererManager, ThreadManager* threadManager);
         WindowManager(WindowManager&) = delete;
         WindowManager(WindowManager&&) = delete;
         ~WindowManager();
@@ -22,20 +24,19 @@ namespace engine {
         ObjectRef<IWindow> CreateWindowInstance(Uint32 x,
                                                 Uint32 y,
                                                 Uint32 width,
-                                                Uint32 height,
-                                                Bool mainWindow = false);
+                                                Uint32 height);
         void Shutdown();
     private:
         RendererManager* m_rendererManager;
-        std::vector<std::unique_ptr<IWindow>> m_windows;
+        ThreadManager* m_threadManager;
     };
-
+/*
     class WindowManagerUnit: public IUnit, public WindowManager
     {
         public:
             WindowManagerUnit(ISystem* system, RendererManager* rendererManager)
                 : IUnit(system)
-                , WindowManager(rendererManager) {}
+                , WindowManager(rendererManager, ) {}
     };
-
+*/
 } // namespace engine

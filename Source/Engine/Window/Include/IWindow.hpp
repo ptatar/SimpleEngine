@@ -2,25 +2,25 @@
 
 #include "IWindowEventHandler.hpp"
 #include "Types.hpp"
+#include "IJob.hpp"
+#include "WindowSurface.hpp"
 
-namespace engine {
+namespace engine
+{
 
+    class IRenderer;
 
-    typedef Uint64 WindowId;
-
-    class IWindow: public Referenceable {
+    class IWindow: public virtual Referenceable
+    {
     public:
         virtual ~IWindow() {};
-        virtual int Initialize(Uint32 posX, Uint32 posY, Uint32 wndWidth, Uint32 wndHeight) = 0;
         virtual void Show() = 0;
         virtual void Hide() = 0;
         virtual void Shutdown() = 0;
-        virtual void RegisterEventCallback(IWindowEventHandler*) = 0;
-        virtual Bool HandleEvents() = 0;
         virtual Uint32 GetWidth() = 0;
         virtual Uint32 GetHeight() = 0;
         virtual Bool IsFullscreen() = 0;
-
+        virtual IWindowSurface* GetSurface() = 0;
     };
 
 } // namespace engine

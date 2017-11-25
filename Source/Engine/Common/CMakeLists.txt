@@ -4,6 +4,7 @@ set(LIBRARY_INC_DIR ${COMMON_LIB_INC_DIR} PARENT_SCOPE)
 
 set(COMMON_LIB_SRC
     ${COMMON_LIB_INC_DIR}/Types.hpp
+    ${COMMON_LIB_INC_DIR}/Utility.hpp
     ${COMMON_LIB_INC_DIR}/Logger.hpp
     ${COMMON_LIB_INC_DIR}/DArray.hpp
     ${COMMON_LIB_SRC_DIR}/DArray.cpp

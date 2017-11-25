@@ -4,10 +4,11 @@
 
 namespace engine
 {
-    class IJob
+    class IJob: public virtual Referenceable
     {
     public:
         virtual ~IJob() {}
         virtual Bool Work() = 0;
     };
+
 } // namespace engine

@@ -1,5 +1,5 @@
 #include "System.hpp"
-
+/*
 namespace engine
 {
     System::System()
@@ -39,3 +39,4 @@ namespace engine
 
 
 } // namespace engine
+*/

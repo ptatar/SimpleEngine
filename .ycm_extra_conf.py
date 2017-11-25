@@ -146,18 +146,16 @@ def GetCompilationInfoForFile( filename ):
   # corresponding source file, if any. If one exists, the flags for that file
   # should be good enough.
   if IsHeaderFile( filename ):
-    file_path = Path(filename)
+    file_path = Path(os.path.abspath(filename))
     ext = str(file_path.ext)
     for ext in SOURCE_EXTENSIONS:
-      replacement_file = str(file_path.parent.parent) + "/src/" + str(file_path.stem) + ext
-      print replacement_file
+      replacement_file = str(file_path.parent.parent) + "/Source/" + str(file_path.stem) + ext
       if os.path.exists( replacement_file ):
-        compilation_info = database.GetCompilationInfoForFile(
-          replacement_file )
+        compilation_info = database.GetCompilationInfoForFile(replacement_file)
         if compilation_info.compiler_flags_:
           return compilation_info
     default_path = os.path.dirname(os.path.abspath(__file__))
-    default_path = os.path.join(os.path.dirname(__file__), 'source/Engine/mainX.cpp')
+    default_path = os.path.join(os.path.dirname(__file__), 'Source/Engine/mainX.cpp')
     if os.path.exists(default_path):
       compilation_info = database.GetCompilationInfoForFile(default_path)
       if compilation_info.compiler_flags_:

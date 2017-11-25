@@ -1,18 +1,20 @@
-#include "System.hpp"
+#include "ThreadManager.hpp"
+#include "WindowManager.hpp"
+#include "RendererManager.hpp"
 
 using namespace engine;
 
 int main()
 {
-    System system;
-    if(!system.Initialize())
-    {
-        return -1;
-    }
-    WindowManager& windowManager = system.m_windowManager;
+    ThreadManager threadManager;
+    threadManager.Initialize(2, 4);
+    RendererManager rendererManager(&threadManager);
+    WindowManager windowManager(&rendererManager, &threadManager);
     auto window = windowManager.CreateWindowInstance(0, 0, 800, 600);
-    system.MainLoop();
-    system.Shutdown();
+    auto renderer = rendererManager.GetRenderer(window->GetSurface());
+    threadManager.Finish();
+    //system.MainLoop();
+    //system.Shutdown();
     /*RendererManager rendererManager;
     WindowManager windowManager(&rendererManager);
     window->Show();

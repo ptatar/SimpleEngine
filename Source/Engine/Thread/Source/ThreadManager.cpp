@@ -2,6 +2,8 @@
 
 #include "Logger.hpp"
 
+#include <thread>
+
 namespace engine
 {
     void ThreadManager::Worker::Start()
@@ -15,14 +17,14 @@ namespace engine
     {
         while (!m_shutdown)
         {
-            if (m_job)
+            if (m_job.Valid())
             {
                 while (!m_shutdown && m_job->Work()) {}
                 m_job = nullptr;
             }
 
             m_threadManager->NotifyIdle(this);
-            if (!m_job && !m_shutdown)
+            if (!m_job.Valid() && !m_shutdown)
             {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 m_conditionVar.wait(lock);
@@ -52,7 +54,7 @@ namespace engine
         return true;
     }
 
-    void ThreadManager::Execute(IJob* job)
+    void ThreadManager::Execute(ObjectRef<IJob>& job)
     {
         {
             std::lock_guard<std::mutex> workersGuard(m_workersMx);
@@ -77,7 +79,7 @@ namespace engine
             std::lock_guard<std::mutex> jobsGuard(m_jobsMx);
             if(m_jobQueue.size() > 0)
             {
-                auto* job = m_jobQueue.front();
+                auto& job = m_jobQueue.front();
                 m_jobQueue.pop_front();
                 worker->SetJob(job);
                 return;
@@ -106,11 +108,26 @@ namespace engine
             worker->Shutdown();
         }
 
-        for (auto& worker : m_workers)
+        for (auto& worker: m_workers)
         {
             worker->Join();
         }
         LOGI("ThreadManager Shut down ends");
+    }
+
+    void ThreadManager::Finish()
+    {
+        Bool working = false;
+
+        while(m_idleWorkers.size() != m_workers.size())
+        {
+            Sleep();
+        }
+    }
+
+    void ThreadManager::Sleep()
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
 } // namespace engine

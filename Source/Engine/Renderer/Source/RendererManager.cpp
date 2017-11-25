@@ -1,36 +1,31 @@
 #include "RendererManager.hpp"
 
 #include "RendererVk.hpp"
-
+#include "Utility.hpp"
 namespace engine
 {
-#if defined(PLATFORM_WINDOWS)
-    std::unique_ptr<IRenderer> RendererManager::CreateRenderer(IWindowSurface32* surface)
+
+    ObjectRef<IRenderer> RendererManager::GetRenderer(IWindowSurface* surface)
     {
-        std::unique_ptr<RendererVk> renderer = std::make_unique<RendererVk>();
-        if (!renderer->Initialize())
+        if(surface->GetWindowType() == WindowType::WindowX)
         {
-            return nullptr;
+            IWindowSurfaceX* surfaceX = reinterpret_cast<IWindowSurfaceX*>(surface);
+            ObjectRef<RendererVk> renderer = ObjectRef<RendererVk>(new RendererVk());
+            if(!renderer->Initialize())
+            {
+                return nullptr;
+            }
+
+            if(!renderer->CreateSurface(surfaceX))
+            {
+                return nullptr;
+            }
+            auto job = static_cast<ObjectRef<IJob>>(renderer);
+            m_threadManager->Execute(job);
+            return ObjectRefCast<IRenderer, RendererVk>(renderer);
         }
-        if (!renderer->CreateSurface(surface))
-        {
-            return nullptr;
-        }
-        return renderer;
+
+        ASSERT(true);
+        return nullptr;
     }
-#elif defined(PLATFORM_LINUX)
-    std::unique_ptr<IRenderer> RendererManager::CreateRenderer(IWindowSurfaceX* surface)
-    {
-        std::unique_ptr<RendererVk> renderer = std::make_unique<RendererVk>();
-        if(!renderer->Initialize())
-        {
-            return nullptr;
-        }
-        if(!renderer->CreateSurface(surface))
-        {
-            renderer->CreateSurface(surface);
-        }
-        return renderer;
-    }
-#endif
 } // namespace engine

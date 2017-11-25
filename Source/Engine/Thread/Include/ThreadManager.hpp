@@ -24,7 +24,7 @@ namespace engine
             ~Worker() {};
             void Start();
             void Loop();
-            void SetJob(IJob* job) { m_job = job; }
+            void SetJob(ObjectRef<IJob>& job) { m_job = job; }
             void Shutdown();
             void Join() { if(m_thread.joinable()) m_thread.join(); }
             void WakeUp() { m_conditionVar.notify_one(); }
@@ -32,7 +32,7 @@ namespace engine
         private:
             ThreadManager* m_threadManager;
             Uint32 m_index;
-            IJob* m_job;
+            ObjectRef<IJob> m_job;
             std::mutex m_mutex;
             std::condition_variable m_conditionVar;
             volatile Bool m_shutdown;
@@ -45,13 +45,15 @@ namespace engine
             , m_shutdown(false) {}
         ~ThreadManager() { Shutdown(); }
         Bool Initialize(Uint32 workerCount, Uint32 maxQueueSize);
-        void Execute(IJob* job);
+        void Execute(ObjectRef<IJob>& job);
         void NotifyIdle(Worker* worker);
         void Shutdown();
+        void Finish();
+        void Sleep();
 
     private:
         Uint32 m_maxQueueSize;
-        std::list<IJob*> m_jobQueue;
+        std::list<ObjectRef<IJob>> m_jobQueue;
         std::list<Worker*> m_idleWorkers;
         std::mutex m_workersMx;
         std::mutex m_jobsMx;
@@ -60,12 +62,12 @@ namespace engine
         Bool m_shutdown;
     };
 
-
+/*
     class ThreadManagerUnit: public IUnit, public ThreadManager
     {
         public:
             ThreadManagerUnit(ISystem* system)
                 : IUnit(system) {}
     }
-
+*/
 } // namespace engine

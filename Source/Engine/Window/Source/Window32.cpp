@@ -148,19 +148,18 @@ bool Window32::IsFullscreen() {
     return m_isFullscreen;
 }
 
-Bool Window32::BindRenderer(std::unique_ptr<IRenderer> renderer)
+IRenderer* CreateRendererInterface()
 {
-    if (m_renderer != nullptr)
+    std::unique_ptr<RendererVk> renderer = std::make_unique<RendererVk>();
+    if (!renderer->Initialize())
     {
-        m_renderer->Shutdown();
+        return nullptr;
     }
 
-    if (renderer->CreateSurface(this))
+    if (!renderer->CreateSurface(this))
     {
-        return true;
+        return nullptr;
     }
-    m_renderer = std::move(renderer);
-    return false;
 }
 
 LRESULT CALLBACK Window32::DefaultWin32EventHandler(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM lparam) {

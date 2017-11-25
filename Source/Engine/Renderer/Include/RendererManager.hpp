@@ -2,27 +2,27 @@
 
 #include "IRenderer.hpp"
 #include "WindowSurface.hpp"
-
-#include <memory>
+#include "ThreadManager.hpp"
 
 namespace engine
 {
     class RendererManager
     {
     public:
-        RendererManager() {}
+        RendererManager(ThreadManager* threadManager): m_threadManager(threadManager) {}
         ~RendererManager() {}
-#if defined(PLATFORM_WINDOWS)
-        std::unique_ptr<IRenderer> CreateRenderer(IWindowSurface32* surface);
-#elif defined(PLATFORM_LINUX)
-        std::unique_ptr<IRenderer> CreateRenderer(IWindowSurfaceX* surface);
-#endif
-    };
 
+        ObjectRef<IRenderer> GetRenderer(IWindowSurface* surface);
+
+    private:
+        ThreadManager* m_threadManager;
+    };
+/*
     class RendererManagerUnit: public IUnit, public RendererManager
     {
     public:
         RendererManagerUnit(ISystem* system)
             : IUnit(system) {}
     }
+*/
 } // namespace engine

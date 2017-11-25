@@ -11,7 +11,9 @@
 
 namespace engine {
 
-    WindowManager::WindowManager(RendererManager* rendererManager): m_rendererManager(rendererManager)  {}
+    WindowManager::WindowManager(RendererManager* rendererManager, ThreadManager* threadManager)
+        : m_rendererManager(rendererManager)
+        , m_threadManager(threadManager) {}
 
 
     WindowManager::~WindowManager()
@@ -33,36 +35,42 @@ namespace engine {
     {
     }
 
-
+#if defined(PLATFORM_WINDOW)
     ObjectRef<IWindow> WindowManager::CreateWindowInstance(Uint32 x,
                                                            Uint32 y,
                                                            Uint32 width,
                                                            Uint32 height,
                                                            Bool mainWindow)
     {
-        //clean this up
-    #if defined(PLATFORM_WINDOWS)
         ObjectRef<Window32> window(new Window32());
-    #elif defined (PLATFORM_LINUX)
-        ObjectRef<WindowX> window( new WindowX());
-    #else
-        ERROR("Dead code path")
-    #endif
 
         int res = window->Initialize(x, y, width, height);
         if (res != 0)
         {
             return nullptr;
         }
+        m_threadManager->Execute(static_cast<ObjectRef<IJob>>(window));
+        return static_cast<ObjectRef>>(window);
+    }
 
-        std::unique_ptr<IRenderer> renderer(m_rendererManager->CreateRenderer(window.Get()));
-        if (renderer == nullptr)
+#elif defined(PLATFORM_LINUX)
+    ObjectRef<IWindow> WindowManager::CreateWindowInstance(Uint32 x,
+                                                           Uint32 y,
+                                                           Uint32 width,
+                                                           Uint32 height)
+    {
+        ObjectRef<WindowX> window(new WindowX());
+
+        int res = window->Initialize(x, y, width, height);
+        if (res != 0)
         {
             return nullptr;
         }
-        window->BindRenderer(std::move(renderer));
-        
-        return static_cast<ObjectRef<IWindow>>(window);
+        window->Show();
+        auto job = static_cast<ObjectRef<IJob>>(window);
+        m_threadManager->Execute(job);
+        return ObjectRefCast<IWindow, WindowX>(window);
     }
+#endif
 
 } // namespace engine
