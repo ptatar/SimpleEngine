@@ -20,8 +20,9 @@ namespace engine
             {
                 return nullptr;
             }
-            auto job = static_cast<ObjectRef<IJob>>(renderer);
+            auto job = ObjectRefCast<IJob, RendererVk>(renderer);
             m_threadManager->Execute(job);
+            auto listener = ObjectRefCast<IJob, RendererVk>(renderer);
             return ObjectRefCast<IRenderer, RendererVk>(renderer);
         }
 

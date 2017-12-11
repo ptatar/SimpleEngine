@@ -10,7 +10,7 @@ namespace engine
 
     class IRenderer;
 
-    class IWindow: public virtual Referenceable
+    class IWindow
     {
     public:
         virtual ~IWindow() {};

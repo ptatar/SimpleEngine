@@ -19,12 +19,12 @@ namespace engine
         WindowX();
         WindowX(WindowX&) = delete;
         WindowX(WindowX&&) = delete;
-        virtual ~WindowX() {};
+        virtual ~WindowX();
         Int32 Initialize(Uint32 poxX, Uint32 posY, Uint32 wndWidth, Uint32 wndHeight);
         void RegisterEventCallback(IWindowEventHandler*);
         void Show() override;
         void Hide() override;
-        Bool HandleEvents();;
+        Bool HandleEvents();
         void Shutdown() override;
 
         Uint32 GetWidth() override { return m_width; }
@@ -33,13 +33,17 @@ namespace engine
         void OnStart();
         void OnResize(Uint32 width, Uint32 height);
         void OnReposition( Uint32 x, Uint32 y);
-        void OnExit();
+        void OnShutdown();
+        void OnFullscreen();
         Bool IsFullscreen() override;
 
         //IWindowSurface
         virtual Window GetWindow() const override { return m_window; }
         virtual Display* GetDisplay() const override { return m_display; }
         virtual ExtentI GetSurfaceExtent() const override { return ExtentI(m_width, m_height); }
+        virtual void RegisterEventListener(ObjectRef<ISurfaceEventListener>& surfaceEventListener) override;
+        virtual void UnregisterEventListener(ObjectRef<ISurfaceEventListener>& surfaceEventListener) override;
+
         virtual IWindowSurfaceX* GetSurface() override { return this; }
         Bool Work() override { return HandleEvents(); }
 
@@ -50,7 +54,10 @@ namespace engine
         Int32    m_screen;
         Uint32   m_width;
         Uint32   m_height;
-        std::unique_ptr<IRenderer> m_renderer;
+        std::list<ObjectRef<ISurfaceEventListener>> m_surfaceEventListeners;
+        Atom m_shutdownAtom;
+        Bool m_shutdown;
+        Bool m_show;
     }; // class WindowX
 
 } // namespace engine

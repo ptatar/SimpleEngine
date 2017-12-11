@@ -1,6 +1,7 @@
 #include "DeviceVk.hpp"
 
 #include "Logger.hpp"
+#include "Utility.hpp"
 
 #include <sstream>
 #include <vector>
@@ -13,6 +14,12 @@ namespace engine
     {
         std::vector<const char*> requiredInstanceExtension = GetRequiredInstanceExtension();
         if (!CheckInstanceExtensionsSupport(requiredInstanceExtension))
+        {
+            return false;
+        }
+
+        std::vector<const char*> requiredInstanceLayers = GetRequiredInstanceLayers();
+        if (!CheckInstanceLayersSupport(requiredInstanceLayers))
         {
             return false;
         }
@@ -31,8 +38,8 @@ namespace engine
         instanceCreateInfo.pNext = nullptr;
         instanceCreateInfo.flags = 0;
         instanceCreateInfo.pApplicationInfo = &applicationInfo;
-        instanceCreateInfo.enabledLayerCount = 0;
-        instanceCreateInfo.ppEnabledLayerNames = nullptr;
+        instanceCreateInfo.enabledLayerCount = requiredInstanceLayers.size();
+        instanceCreateInfo.ppEnabledLayerNames = requiredInstanceLayers.data();
         instanceCreateInfo.enabledExtensionCount = requiredInstanceExtension.size();
         instanceCreateInfo.ppEnabledExtensionNames = requiredInstanceExtension.data();
 
@@ -45,6 +52,16 @@ namespace engine
         else if (result != VK_SUCCESS)
         {
             LOGE("Vk instance creation failure: %d", result);
+            return false;
+        }
+
+        if (!LoadFunctionPointers())
+        {
+            return false;
+        }
+
+        if (!SetupDebugCallback())
+        {
             return false;
         }
 
@@ -211,98 +228,6 @@ namespace engine
     Result<SwapchainHandler> DeviceVk::CreateSwapchain(SwapchainCreateInfo& createInfo)
     {
 
-        VkSurfaceCapabilitiesKHR surfaceCapabilities;
-        VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_adapter,
-                                                                    createInfo.surface,
-                                                                    &surfaceCapabilities);
-        if(createInfo.imageWidth > surfaceCapabilities.maxImageExtent.width ||
-           createInfo.imageHeight > surfaceCapabilities.maxImageExtent.height)
-        {
-            LOGE("Invalid surface extents");
-            return Status::Failure;
-        }
-
-        if(createInfo.imagesCount > surfaceCapabilities.maxImageCount ||
-           createInfo.imagesCount < surfaceCapabilities.minImageCount)
-        {
-            LOGE("Invalid image count");
-            return Status::Failure;
-        }
-        if(result != VK_SUCCESS)
-        {
-            LOGE("Adapter surface capabilities: %d", result);
-            return Status::Failure;
-        }
-
-        Uint32 formatCount;
-        result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_adapter, createInfo.surface, &formatCount,  nullptr);
-        if(result != VK_SUCCESS)
-        {
-            LOGE("Adapter supported sufrace formats count query failed: %d", result);
-            return Status::Failure;
-        }
-
-        std::vector<VkSurfaceFormatKHR> supportedSurfaceFormats(formatCount);
-        result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_adapter,
-                                                      createInfo.surface,
-                                                      &formatCount,
-                                                      supportedSurfaceFormats.data());
-
-        if(result != VK_SUCCESS)
-        {
-            LOGE("Adapter support surface foramts query failed: %d", result);
-            return Status::Failure;
-        }
-
-        Bool formatFound = false;
-        for(auto& surfaceFormat: supportedSurfaceFormats)
-        {
-            if(surfaceFormat.colorSpace == createInfo.colorSpace)
-            {
-                if(surfaceFormat.format == createInfo.surfaceFormat)
-                {
-                    formatFound = true;
-                }
-            }
-        }
-
-        if(!formatFound)
-        {
-            LOGE("Not supported format and color space combination");
-            return Status::Failure;
-        }
-
-        Uint32 presentModeCount;
-        result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_adapter,
-                                                           createInfo.surface,
-                                                           &presentModeCount,
-                                                           nullptr);
-        if(result != VK_SUCCESS)
-        {
-            LOGE("Presentation modes count query failed: %d", result);
-            return Status::Failure;
-        }
-
-        std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-        result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_adapter,
-                                                           createInfo.surface,
-                                                           &presentModeCount,
-                                                           presentModes.data());
-        if(result != VK_SUCCESS)
-        {
-            LOGE("Presentation modes query failed: %d", result);
-            return Status::Failure;
-        }
-
-        Uint32 targetPresentMode = VK_PRESENT_MODE_FIFO_KHR;
-        for(auto& presentMode: presentModes)
-        {
-            if(presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
-            {
-                targetPresentMode = presentMode;
-            }
-        }
-
         VkSwapchainCreateInfoKHR swapchainCreateInfo;
         swapchainCreateInfo.sType                 = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchainCreateInfo.pNext                 = nullptr;
@@ -324,7 +249,7 @@ namespace engine
         swapchainCreateInfo.oldSwapchain          = 0;
 
         VkSwapchainKHR swapchain;
-        result = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &swapchain);
+        VkResult result = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &swapchain);
         if(result != VK_SUCCESS)
         {
             LOGE("Swapchain creation failed: %d", result);
@@ -396,6 +321,96 @@ namespace engine
         return Result<std::vector<VkCommandBuffer>>(Status::Success, commandBuffers);
     }
 
+    std::vector<VkPresentModeKHR> DeviceVk::GetSupporedPresentModes(VkSurfaceKHR surface) const
+    {
+        Uint32 presentModeCount = 0;
+        VkResult result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_adapter,
+                                                           surface,
+                                                           &presentModeCount,
+                                                           nullptr);
+
+        if (result != VK_SUCCESS)
+        {
+            LOGE("vkGetPhysucalDeviceSurfacePresentModesKHR failed: %d", result);
+            return std::vector<VkPresentModeKHR>();
+        }
+
+        std::vector<VkPresentModeKHR> supportedPresentModes(presentModeCount);
+        result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_adapter,
+                                                           surface,
+                                                           &presentModeCount,
+                                                           supportedPresentModes.data());
+        if (result != VK_SUCCESS)
+        {
+            LOGE("vkGetPhysucalDeviceSurfacePresentModesKHR failed: %d", result);
+            return std::vector<VkPresentModeKHR>();
+        }
+
+        return supportedPresentModes;
+    }
+
+    std::vector<VkSurfaceFormatKHR> DeviceVk::GetSupportedSurfaceFormats(VkSurfaceKHR surface) const
+    {
+        Uint32 formatCount;
+        VkResult result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_adapter, surface, &formatCount,  nullptr);
+        if(result != VK_SUCCESS)
+        {
+            LOGE("Adapter supported sufrace formats count query failed: %d", result);
+            return std::vector<VkSurfaceFormatKHR>(0);
+        }
+
+        std::vector<VkSurfaceFormatKHR> supportedSurfaceFormats(formatCount);
+        result = vkGetPhysicalDeviceSurfaceFormatsKHR(m_adapter,
+                                                      surface,
+                                                      &formatCount,
+                                                      supportedSurfaceFormats.data());
+
+        if(result != VK_SUCCESS)
+        {
+            LOGE("Adapter support surface foramts query failed: %d", result);
+            return std::vector<VkSurfaceFormatKHR>(0);
+        }
+
+        return supportedSurfaceFormats;
+    }
+
+    Bool DeviceVk::CheckAdapterSurfaceSupport(VkSurfaceKHR surface)
+    {
+        Uint32 supported;
+        VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(m_adapter,
+                                                               m_queueFamilyIndex,
+                                                               surface,
+                                                               &supported);
+        if (result)
+        {
+            LOGE("Adapter surface and queue support failed: %d", result);
+            return false;
+        }
+        else if (!supported)
+        {
+            LOGE("Given queue can't render on this surface");
+            return false;
+        }
+        return true;
+    }
+
+    Bool DeviceVk::GetSurfaceCapabilities(VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR& capabilities) const
+    {
+        VkSurfaceCapabilitiesKHR surfaceCapabilities;
+        VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_adapter,
+                                                                    surface,
+                                                                    &capabilities);
+
+        if (result != VK_SUCCESS)
+        {
+            LOGE("vkGetPhysicalDeviceSurfaceCapabilitiesKHR failed: %d", result);
+            return false;
+        }
+
+        return true;
+    }
+
+
     std::string DeviceVk::AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const
     {
         std::stringstream buf;
@@ -448,6 +463,7 @@ namespace engine
         std::vector<const char*> instanceRequiredExtensions =
         {
             VK_KHR_SURFACE_EXTENSION_NAME,
+            VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
         #if defined(PLATFORM_WINDOWS)
             VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
         #elif defined(PLATFORM_LINUX)
@@ -455,6 +471,15 @@ namespace engine
         #endif
         };
         return instanceRequiredExtensions;
+    }
+
+    std::vector<const char*> DeviceVk::GetRequiredInstanceLayers() const
+    {
+        std::vector<const char*> instanceRequiredLayers =
+        {
+            "VK_LAYER_LUNARG_standard_validation"
+        };
+        return instanceRequiredLayers;
     }
 
     Bool DeviceVk::CheckExtensionSupport(std::vector<const char*>& requiredExtensions, std::vector<VkExtensionProperties>& availableExtensions)
@@ -520,5 +545,104 @@ namespace engine
         }
         return CheckExtensionSupport(requiredExtensions, availableExtensions);
     }
+
+    Bool DeviceVk::CheckInstanceLayersSupport(std::vector<const char*>& requiredLayers) const
+    {
+        Uint32 layerCount;
+        VkResult result = vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Layers enumeration failure: %d", result);
+            return false;
+        }
+
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        result = vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Layers enumeration failure: %d", result);
+            return false;
+        }
+        Bool found = false;
+        for (auto& required: requiredLayers)
+        {
+            found = false;
+            for (auto& available: availableLayers)
+            {
+                if (std::strcmp(required, available.layerName) == 0)
+                {
+                    LOGI("Found required layer: %s", required);
+                    found = true;
+                }
+            }
+            if(!found)
+            {
+                LOGE("Required layer not found: %d", required);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    Bool DeviceVk::SetupDebugCallback()
+    {
+        if (!m_CreateDebugReportCallback)
+        {
+            return false;
+        }
+
+        VkDebugReportCallbackCreateInfoEXT createInfo;
+        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+        createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+        createInfo.pfnCallback = DeviceVk::DebugCallback;
+        VkResult result = m_CreateDebugReportCallback(m_instance, &createInfo, nullptr, &m_debugCallback);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("CreateDebugReportCallback failure: %", result);
+            return false;
+        }
+        return true;
+    }
+
+    void DeviceVk::FinalizeDebugCallback()
+    {
+
+        if (m_DestroyDebugReportCallback && m_debugCallback)
+        {
+            m_DestroyDebugReportCallback(m_instance, m_debugCallback, nullptr);
+            m_debugCallback = 0;
+        }
+    }
+
+    Bool DeviceVk::LoadFunctionPointers()
+    {
+        m_CreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)
+            vkGetInstanceProcAddr(m_instance,"vkCreateDebugReportCallbackEXT");
+        if (!m_CreateDebugReportCallback)
+        {
+            return false;
+        }
+        m_DestroyDebugReportCallback = (PFN_vkDestroyDebugReportCallbackEXT)
+            vkGetInstanceProcAddr(m_instance, "vkDestroyDebugReportCallbackEXT");
+        if (!m_DestroyDebugReportCallback)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    VKAPI_ATTR VkBool32 VKAPI_CALL DeviceVk::DebugCallback(VkDebugReportFlagsEXT flags,
+                                                           VkDebugReportObjectTypeEXT objType,
+                                                           uint64_t obj,
+                                                           size_t location,
+                                                           int32_t code,
+                                                           const char* layerPrefix,
+                                                           const char* msg,
+                                                           void* userData)
+        {
+            LOGE("Layer %s: %s", layerPrefix, msg);
+            return false;
+        }
 
 } // namespace engine

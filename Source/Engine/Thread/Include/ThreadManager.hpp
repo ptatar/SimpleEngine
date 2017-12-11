@@ -24,7 +24,7 @@ namespace engine
             ~Worker() {};
             void Start();
             void Loop();
-            void SetJob(ObjectRef<IJob>& job) { m_job = job; }
+            void SetJob(ObjectRef<IJob>& job);
             void Shutdown();
             void Join() { if(m_thread.joinable()) m_thread.join(); }
             void WakeUp() { m_conditionVar.notify_one(); }

@@ -19,7 +19,9 @@ namespace engine
         {
             if (m_job.Valid())
             {
+                m_job->SetRunning(true);
                 while (!m_shutdown && m_job->Work()) {}
+                m_job->SetRunning(false);
                 m_job = nullptr;
             }
 
@@ -32,6 +34,11 @@ namespace engine
         }
 
         LOGI("Thread: %d Exit", m_index);
+    }
+
+    void ThreadManager::Worker::SetJob(ObjectRef<IJob>& job)
+    {
+        m_job = job;
     }
 
     void ThreadManager::Worker::Shutdown()
@@ -127,7 +134,7 @@ namespace engine
 
     void ThreadManager::Sleep()
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
 } // namespace engine

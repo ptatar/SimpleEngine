@@ -7,7 +7,9 @@ set(COMMON_LIB_SRC
     ${COMMON_LIB_INC_DIR}/Utility.hpp
     ${COMMON_LIB_INC_DIR}/Logger.hpp
     ${COMMON_LIB_INC_DIR}/DArray.hpp
+    ${COMMON_LIB_INC_DIR}/Assert.hpp
     ${COMMON_LIB_SRC_DIR}/DArray.cpp
+    ${COMMON_LIB_SRC_DIR}/Utility.cpp
 )
 
 add_library(COMMON_LIB STATIC ${COMMON_LIB_SRC})

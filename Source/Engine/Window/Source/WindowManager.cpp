@@ -66,7 +66,7 @@ namespace engine {
         {
             return nullptr;
         }
-        window->Show();
+
         auto job = static_cast<ObjectRef<IJob>>(window);
         m_threadManager->Execute(job);
         return ObjectRefCast<IWindow, WindowX>(window);

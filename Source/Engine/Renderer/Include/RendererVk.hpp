@@ -15,7 +15,7 @@ namespace engine
         ~CommandRecorder();
     };
 
-    class RendererVk: public IRenderer, public IJob
+    class RendererVk: public IRenderer, public ISurfaceEventListener, public IJob
     {
     public:
         RendererVk() {}
@@ -30,6 +30,22 @@ namespace engine
         Bool CreateSurface(IWindowSurfaceX* windowSurface) override;
     #endif
         Bool Work() override;
+
+    private:
+        Bool CheckPresentModeSupported(const std::vector<VkPresentModeKHR>& presentModes,
+                                       VkPresentModeKHR target) const;
+
+        Bool CheckSurfaceFormatSupport(const std::vector<VkSurfaceFormatKHR>& surfaceFormats,
+                                      VkColorSpaceKHR colorSpace,
+                                      VkFormat format) const;
+
+        // ISurfaceEventListener
+        virtual void OnResize(Uint32 width, Uint32 height) override {}
+        virtual void OnReposition(Uint32 x, Uint32 y) override {}
+        virtual void OnShow() override {}
+        virtual void OnHide() override {}
+        virtual void OnFullscreen() override {}
+        virtual void OnShutdown() override {}
 
     private:
         DeviceVk m_device;

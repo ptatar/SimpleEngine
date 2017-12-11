@@ -2,6 +2,10 @@
 
 #include <type_traits>
 #include <utility>
+#include <atomic>
+
+#include "Logger.hpp"
+#include "Assert.hpp"
 
 namespace engine
 {
@@ -49,45 +53,82 @@ namespace engine
     typedef Extent<Uint32> ExtentI;
     typedef Extent<Float> ExtentF;
 
-    class Referenceable;
+    class AtomicCounter
+    {
+    public:
+        AtomicCounter():m_refCount(nullptr) {}
+        AtomicCounter(std::atomic<Uint32>* refCount): m_refCount(refCount) {}
+        AtomicCounter(const AtomicCounter& other):m_refCount(other.m_refCount)
+        {
+            AddRef();
+        }
+        virtual ~AtomicCounter() {}
+        void Initialize()
+        {
+            m_refCount = new std::atomic<Uint32>();
+            ASSERT(m_refCount);
+        }
+        Uint32 AddRef() const { return m_refCount->fetch_add(1); }
+        Uint32 RemoveRef() const { return m_refCount->fetch_sub(1); }
+        Uint32 Get() const { return m_refCount->load(); }
+        Bool Valid() const { return m_refCount; }
 
+    protected:
+        std::atomic<Uint32>* m_refCount;
+    };
+
+    // Maybe rewrite it to aux ref counting
     template<typename T>
-    class ObjectRef
+    class ObjectRef: protected AtomicCounter
     {
     public:
         ObjectRef(T* type) : m_type(type)
         {
-            static_assert(std::is_convertible<T*, Referenceable*>::value,
-                    "ObjectRef can only hold Referenceable derived");
-            if (type != nullptr)
-                m_type->AddRef();
+            Initialize();
+            AddRef();
         }
-        ObjectRef(const ObjectRef& objectRef) : m_type(objectRef.m_type)
+        ObjectRef(const ObjectRef& other)
+            : AtomicCounter(static_cast<const AtomicCounter&>(other))
+            , m_type(other.m_type)
         {
-            m_type->AddRef();
         }
-        ObjectRef(const ObjectRef&& objectRef) : m_type(objectRef.m_type)
+        ObjectRef(ObjectRef&& other)
+            : AtomicCounter(static_cast<AtomicCounter&>(other))
+            , m_type(other.m_type)
         {
-            m_type->AddRef();
+            other.m_type = nullptr;
+            other.m_refCount = nullptr;
         }
         ~ObjectRef()
         {
-            if (m_type && !m_type->RemoveRef())
+            if (m_type && !RemoveRef())
             {
                 delete m_type;
                 m_type = nullptr;
             }
         }
-        ObjectRef& operator=(const ObjectRef& objectRef)
+        ObjectRef& operator=(const ObjectRef& other)
         {
-            m_type = objectRef.m_type;
-            m_type->AddRef();
+            m_type = other.m_type;
+            m_refCount = other.m_refCount;
+            AddRef();
             return *this;
         }
-        ObjectRef& operator=(const ObjectRef&& objectRef)
+        ObjectRef& operator=(ObjectRef&& other)
         {
             // I dont know if this even works
-            m_type = objectRef.m_type;
+            m_type = other.m_type;
+            m_refCount = m_refCount;
+            other.m_type = nullptr;
+            other.m_refCount = nullptr;
+        }
+        Bool operator==(const ObjectRef& other) const
+        {
+            if (m_type == other.m_type)
+            {
+                return true;
+            }
+            return false;
         }
         T* operator->()
         {
@@ -102,11 +143,9 @@ namespace engine
             return m_type;
         }
         template<typename U>
-        explicit operator ObjectRef<U>()
-        {
-            static_assert(std::is_convertible<T*, U*>::value, "Can only cast on releted types.");
-            return ObjectRef<U>(static_cast<U*>(m_type));
-        }
+        ObjectRef(ObjectRef<U>& other)
+            : AtomicCounter(static_cast<AtomicCounter&>(other))
+            , m_type(static_cast<U*>(other.Get())) {}
     private:
         T* m_type;
     };
@@ -117,21 +156,12 @@ namespace engine
         return ObjectRef<T>( new T(std::forward<Args>(args)...));
     }
 
+    // make it less bad
     template<typename To, typename From >
     ObjectRef<To> ObjectRefCast(ObjectRef<From>& base)
     {
         static_assert(std::is_convertible<From*, To*>::value, "Can only cast on releted types.");
-        return ObjectRef<To>(static_cast<To*>(base.Get()));
+        return ObjectRef<To>(base);
     }
-
-    class Referenceable
-    {
-    public:
-        virtual ~Referenceable() {}
-        void AddRef() const { ++m_refCount; }
-        Uint32 RemoveRef() const { return --m_refCount; }
-    private:
-        mutable Uint32 m_refCount = 0;
-    };
 
 } // namespace engine

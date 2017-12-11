@@ -5,7 +5,7 @@
 
 namespace engine {
 
-    class IRenderer: public virtual Referenceable
+    class IRenderer
     {
     public:
         virtual ~IRenderer() {}

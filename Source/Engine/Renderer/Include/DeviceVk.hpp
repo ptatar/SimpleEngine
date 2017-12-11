@@ -9,7 +9,7 @@
 
 namespace engine
 {
-   
+
     class SemaphoreHandler;
     class SurfaceHandler;
     class SwapchainHandler;
@@ -31,11 +31,17 @@ namespace engine
     class DeviceVk
     {
     public:
-        DeviceVk() {};
+        DeviceVk()
+            : m_CreateDebugReportCallback(nullptr)
+            , m_DestroyDebugReportCallback(nullptr)
+            , m_debugCallback(0) {};
+
         ~DeviceVk() {};
 
         Bool Initialize();
+
         void Shutdown();
+
 #if defined(PLATFORM_WINDOWS)
         Result<SurfaceHandler> CreateSurface(IWindowSurface32* windowSurface);
 #elif defined(PLATFORM_LINUX)
@@ -43,25 +49,70 @@ namespace engine
 #endif
 
         void ClearScreenTest(VkSwapchainKHR swaochain);
+
         Result<SwapchainHandler> CreateSwapchain(SwapchainCreateInfo& createInfo);
+
         Result<SemaphoreHandler> CreateSemaphore();
 
         Result<CommandPoolHandler> CreateCommandPool();
-        Result<std::vector<VkCommandBuffer>> AllocateCommandBuffers(VkSwapchainKHR swapchain, VkCommandPool commandPool);
+
+        Result<std::vector<VkCommandBuffer>> AllocateCommandBuffers(VkSwapchainKHR swapchain,
+                                                                    VkCommandPool commandPool);
 
         void DestroySemaphore(VkSemaphore semaphore) { vkDestroySemaphore(m_device, semaphore, nullptr); }
+
         void DestroySurface(VkSurfaceKHR surface) { vkDestroySurfaceKHR(m_instance, surface, nullptr); }
+
         void DestroySwapchain(VkSwapchainKHR swapchain) { vkDestroySwapchainKHR(m_device, swapchain, nullptr); }
+
         void DestroyCommandPool(VkCommandPool commandPool) { vkDestroyCommandPool(m_device, commandPool, nullptr); }
 
+        std::vector<VkPresentModeKHR> GetSupporedPresentModes(VkSurfaceKHR surface) const;
+
+        std::vector<VkSurfaceFormatKHR> GetSupportedSurfaceFormats(VkSurfaceKHR surface) const;
+
+        Bool CheckAdapterSurfaceSupport(VkSurfaceKHR surface);
+
+        Bool GetSurfaceCapabilities(VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR& capabilities) const;
+
     private:
+
         std::string AdapterPropertiesToString(const VkPhysicalDeviceProperties& adapterProperties) const;
+
         std::string AdapterTypeToString(const VkPhysicalDeviceType& adpaterType) const;
+
         std::string QueueFamilyToString(const VkQueueFamilyProperties& queueFamily) const;
+
         std::vector<const char*> GetRequiredInstanceExtension() const;
-        Bool CheckExtensionSupport(std::vector<const char*>& requiredExtensions, std::vector<VkExtensionProperties>& availableExtensions);
+
+        std::vector<const char*> GetRequiredInstanceLayers() const;
+
+        Bool CheckExtensionSupport(std::vector<const char*>& requiredExtensions,
+                                   std::vector<VkExtensionProperties>& availableExtensions);
+
         Bool CheckInstanceExtensionsSupport(std::vector<const char*>& requiredExtensions);
-        Bool CheckDeviceExtensionsSupport(VkPhysicalDevice& adapter, std::vector<const char*>& requiredExtensions);
+
+        Bool CheckDeviceExtensionsSupport(VkPhysicalDevice& adapter,
+                                          std::vector<const char*>& requiredExtensions);
+
+        Bool CheckInstanceLayersSupport(std::vector<const char*>& requiredLayers) const;
+
+        Bool SetupDebugCallback();
+
+        void FinalizeDebugCallback();
+
+        static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugReportFlagsEXT flags,
+                                                            VkDebugReportObjectTypeEXT objType,
+                                                            uint64_t obj,
+                                                            size_t location,
+                                                            int32_t code,
+                                                            const char* layerPrefix,
+                                                            const char* msg,
+                                                            void* userData);
+
+        std::vector<const char*> GetRequiredFunctionNames() const;
+
+        Bool LoadFunctionPointers();
 
     private:
         VkInstance m_instance;
@@ -69,6 +120,10 @@ namespace engine
         VkPhysicalDevice m_adapter;
         VkCommandBuffer m_commandBuffer;
         Uint32 m_queueFamilyIndex;
+
+        PFN_vkCreateDebugReportCallbackEXT m_CreateDebugReportCallback;
+        PFN_vkDestroyDebugReportCallbackEXT m_DestroyDebugReportCallback;
+        VkDebugReportCallbackEXT m_debugCallback;
     }; // DeviceVK
 
     // I don't think it was even worth to write this thing
@@ -106,7 +161,7 @@ namespace engine
                 return NAME(); \
             } \
         } \
-        TYPE Get() const \
+        TYPE& Get() \
         { \
             return m_type; \
         } \
