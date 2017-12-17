@@ -24,7 +24,7 @@ namespace engine
 
     WindowX::~WindowX()
     {
-        Shutdown();
+        Finalize();
     }
 
     Int32 WindowX::Initialize( Uint32 poxX, Uint32 posY, Uint32 wndWidth, Uint32 wndHeight)
@@ -46,6 +46,7 @@ namespace engine
         XSetWMProtocols(m_display , m_window, &m_shutdownAtom, 1);
 
         XSelectInput(m_display, m_window, ExposureMask);
+        m_fileDescriptor = ConnectionNumber(m_display);
         m_width = wndWidth;
         m_height = wndHeight;
         XSync(m_display, false);
@@ -80,42 +81,37 @@ namespace engine
 
     Bool WindowX::HandleEvents()
     {
-        Int32 fd = ConnectionNumber(m_display);
         fd_set fds;
         struct timeval tv;
-
         XEvent event;
-        while(1)
-        {
-            FD_ZERO(&fds);
-            FD_SET(fd, &fds);
-            tv.tv_usec = 50000;
-            tv.tv_sec = 0;
+        FD_ZERO(&fds);
+        FD_SET(m_fileDescriptor, &fds);
+        tv.tv_usec = 60000;
+        tv.tv_sec = 0;
 
-            Int32 numReadsFds = select(fd+1, &fds, 0, 0, &tv);
-            if (numReadsFds)
+        Int32 numReadsFds = select(m_fileDescriptor + 1, &fds, 0, 0, &tv);
+        if (numReadsFds)
+        {
+            while(XPending(m_display))
             {
-                while(XPending(m_display))
+                XNextEvent(m_display, &event);
+                switch(event.type)
                 {
-                    XNextEvent(m_display, &event);
-                    switch(event.type)
-                    {
-                        case Expose:
-                            break;
-                        case ClientMessage:
-                            return false;
-                    }
+                    case Expose:
+                        break;
+                    case ClientMessage:
+                        return false;
                 }
             }
-            if (m_shutdown)
-            {
-                return false;
-            }
+        }
+        if (m_shutdown)
+        {
+            return false;
         }
         return true;
     }
 
-    void WindowX::Shutdown()
+    void WindowX::Finalize()
     {
         // TO check thread this should be run from main thread
         if (!m_initialized)
@@ -123,13 +119,12 @@ namespace engine
             return;
         }
 
-        OnShutdown();
         if (m_show)
         {
             Hide();
         }
 
-        m_shutdown = true;
+        Shutdown();
         while(IsRunning())
         {
             Sleep(TimeUnits::MakeMiliseconds(200));

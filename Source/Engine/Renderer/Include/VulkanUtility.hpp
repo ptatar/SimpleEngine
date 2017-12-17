@@ -16,19 +16,6 @@
 
 namespace engine
 {
-    enum class Status
-    {
-        Success,
-        Failure,
-    };
-    template <typename T>
-    struct Result
-    {
-        Result(Status _status): status(_status) {}
-        Result(Status _status, T& _value): status(_status), value(_value) {}
-        Result(Status _status, T&& _value): status(_status), value(std::move(_value)) {}
-        Status status;
-        T value;
-    };
+
 
 } // namespace engine

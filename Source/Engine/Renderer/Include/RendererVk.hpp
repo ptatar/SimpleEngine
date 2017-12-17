@@ -19,11 +19,15 @@ namespace engine
     {
     public:
         RendererVk() {}
+
         ~RendererVk() {}
 
         Bool Initialize() override;
-        void Shutdown() override;
+
+        void Finalize() override;
+
         void Update() override;
+
     #if defined(PLATFORM_WINDOWS)
         Bool CreateSurface(IWindowSurface32* windowSurface) override;
     #elif defined(PLATFORM_LINUX)
@@ -41,11 +45,20 @@ namespace engine
 
         // ISurfaceEventListener
         virtual void OnResize(Uint32 width, Uint32 height) override {}
+
         virtual void OnReposition(Uint32 x, Uint32 y) override {}
+
         virtual void OnShow() override {}
+
         virtual void OnHide() override {}
+
         virtual void OnFullscreen() override {}
-        virtual void OnShutdown() override {}
+
+        virtual void OnShutdown() override { Shutdown(); }
+
+        void ClearScreen();
+
+        void Present();
 
     private:
         DeviceVk m_device;

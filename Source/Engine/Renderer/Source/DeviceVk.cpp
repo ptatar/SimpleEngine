@@ -12,6 +12,32 @@ namespace engine
 
     Bool DeviceVk::Initialize()
     {
+        if (!CreateInstance())
+        {
+            return false;
+        }
+
+        if (!LoadFunctionPointers())
+        {
+            return false;
+        }
+
+        if (!SetupDebugCallback())
+        {
+            return false;
+        }
+
+        if (!CreateDevice())
+        {
+            return false;
+        }
+
+
+        return true;
+    }
+
+    Bool DeviceVk::CreateInstance()
+    {
         std::vector<const char*> requiredInstanceExtension = GetRequiredInstanceExtension();
         if (!CheckInstanceExtensionsSupport(requiredInstanceExtension))
         {
@@ -55,18 +81,13 @@ namespace engine
             return false;
         }
 
-        if (!LoadFunctionPointers())
-        {
-            return false;
-        }
+        return true;
+    }
 
-        if (!SetupDebugCallback())
-        {
-            return false;
-        }
-
+    Bool DeviceVk::CreateDevice()
+    {
         Uint32 adapterCount;
-        result = vkEnumeratePhysicalDevices(m_instance, &adapterCount, NULL);
+        VkResult result = vkEnumeratePhysicalDevices(m_instance, &adapterCount, NULL);
         if (result != VK_SUCCESS)
         {
             LOGE("Vk physical devices enumeration failure: %d", result);
@@ -122,8 +143,7 @@ namespace engine
         {
             LOGI("Queue Family %d\n%s", i, QueueFamilyToString(queueFamilyProperties[i]).c_str());
             if (queueFamilyProperties[i].queueCount > 0 &&
-                queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT &&
-                queueFamilyIndex == queuePropertiesCount)
+                queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
             {
                 queueFamilyIndex = i;
             }
@@ -164,11 +184,10 @@ namespace engine
             LOGE("Device creation failure: %d", result);
             return false;
         }
-
         return true;
     }
 
-    void DeviceVk::Shutdown()
+    void DeviceVk::Finalize()
     {
         vkDestroyDevice(m_device, nullptr);
         vkDestroyInstance(m_instance, nullptr);
@@ -188,7 +207,7 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Surface creation failure: %d", result);
-            return Status::Failure;
+            return Status::Error;
         }
         return Result<SurfaceHandler>(Status::Success, SurfaceHandler(this, surface));
     }
@@ -206,7 +225,7 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Surface creation failure: %d", result);
-            return Status::Failure;
+            return Status::Error;
         }
 
         return Result<SurfaceHandler>(Status::Success, SurfaceHandler(this, surface));
@@ -253,7 +272,7 @@ namespace engine
         if(result != VK_SUCCESS)
         {
             LOGE("Swapchain creation failed: %d", result);
-            return Status::Failure;
+            return Status::Error;
         }
         return Result<SwapchainHandler>(Status::Success, SwapchainHandler(this, swapchain));
     }
@@ -270,7 +289,7 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Semaphore creation failure: %d", result);
-            return Status::Failure;
+            return Status::Error;
         }
         return Result<SemaphoreHandler>(Status::Success, SemaphoreHandler(this, semaphore));
     }
@@ -288,7 +307,7 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Command Pool creation failed: %d", result);
-            return Status::Failure;
+            return Status::Error;
         }
         return Result<CommandPoolHandler>(Status::Success, CommandPoolHandler(this, commandPool));
     }
@@ -300,7 +319,7 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Swapchain image count query failed: %d", imageCount);
-            return Status::Failure;
+            return Status::Error;
         }
 
         std::vector<VkCommandBuffer> commandBuffers(imageCount);
@@ -315,7 +334,7 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Command Buffers allocation failed: %d", result);
-            return Status::Failure;
+            return Status::Error;
         }
 
         return Result<std::vector<VkCommandBuffer>>(Status::Success, commandBuffers);
@@ -630,6 +649,45 @@ namespace engine
         }
 
         return true;
+    }
+
+    Status DeviceVk::AcquireSwapchainImage(Swapchain& swapchain, TimeUnits& timeout)
+    {
+        Uint32 imageIndex;
+        VkResult result = vkAcquireNextImageKHR(m_device,
+                                                swapchain.GetSwapchain(),
+                                                timeout.GetNanoseconds(),
+                                                swapchain.GetSemaphore(),
+                                                VK_NULL_HANDLE,
+                                                &imageIndex);
+        switch(result)
+        {
+            case VK_SUCCESS:
+                swapchain.AddImageIndex(imageIndex);
+                return Status::Success;
+            case VK_TIMEOUT:
+                return Status::Timeout;
+            case VK_SUBOPTIMAL_KHR:
+                LOGW("Swapchain should be recreated.");
+                return Status::OutDated;
+            case VK_ERROR_OUT_OF_DATE_KHR:
+                LOGW("Swapchain must be recreated.");
+                return Status::OutDated;
+            default:
+                LOGE("AcquireNextImageKHR failed: %d", result);
+                ASSERT(false);
+                return Status::Error;
+        }
+    }
+
+    Status DeviceVk::Swapchain::AcquireImage(TimeUnits& timeout)
+    {
+        return m_device->AcquireSwapchainImage(*this, timeout);
+    }
+
+    void DeviceVk::Swapchain::PresentImage()
+    {
+
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL DeviceVk::DebugCallback(VkDebugReportFlagsEXT flags,

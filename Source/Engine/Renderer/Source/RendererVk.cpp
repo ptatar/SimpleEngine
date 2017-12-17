@@ -10,9 +10,9 @@ namespace engine
         return m_device.Initialize(); // remove device from renderer
     }
 
-    void RendererVk::Shutdown()
+    void RendererVk::Finalize()
     {
-        m_device.Shutdown();
+        m_device.Finalize();
     }
 
     void RendererVk::Update()
@@ -174,7 +174,9 @@ namespace engine
 
     Bool RendererVk::Work()
     {
-        return false;
+        ClearScreen();
+        Present();
+        return true;
     }
 
     Bool RendererVk::CheckPresentModeSupported(const std::vector<VkPresentModeKHR>& presentModes,
@@ -202,5 +204,13 @@ namespace engine
             }
         }
         return false;
+    }
+
+    void RendererVk::ClearScreen()
+    {
+    }
+
+    void RendererVk::Present()
+    {
     }
 }

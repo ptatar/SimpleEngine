@@ -16,7 +16,7 @@ namespace engine
         virtual ~IWindow() {};
         virtual void Show() = 0;
         virtual void Hide() = 0;
-        virtual void Shutdown() = 0;
+        virtual void Finalize() = 0;
         virtual Uint32 GetWidth() = 0;
         virtual Uint32 GetHeight() = 0;
         virtual Bool IsFullscreen() = 0;

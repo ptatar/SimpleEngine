@@ -34,6 +34,28 @@ namespace engine
     static_assert(sizeof(Double) == 8, "Invalid type size");
     static_assert(sizeof(Bool)   == 1, "Invalid type size");
 
+    enum class Status
+    {
+        Success = 0,
+        Error,
+        Timeout,
+        OutDated,
+        Invalid,
+
+    };
+
+    template <typename T>
+    struct Result
+    {
+        Result(Status _status): status(_status) {}
+        Result(Status _status, T& _value): status(_status), value(_value) {}
+        Result(Status _status, T&& _value): status(_status), value(std::move(_value)) {}
+        Status status;
+        T value;
+        operator Bool() const { return status == Status::Success; }
+        operator T() const { return value; }
+    };
+
     template<typename T>
     struct Extent
     {

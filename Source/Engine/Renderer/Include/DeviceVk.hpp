@@ -14,6 +14,8 @@ namespace engine
     class SurfaceHandler;
     class SwapchainHandler;
     class CommandPoolHandler;
+    class SwapchainWrapper;
+    class TimeUnits;
 
     struct SwapchainCreateInfo
     {
@@ -31,6 +33,33 @@ namespace engine
     class DeviceVk
     {
     public:
+
+        class Swapchain
+        {
+            public:
+                Swapchain();
+
+                ~Swapchain();
+
+                Status AcquireImage(TimeUnits& timeUnits);
+
+                void PresentImage();
+
+            private:
+                VkSwapchainKHR GetSwapchain() { return m_swapchain; }
+
+                VkSemaphore GetSemaphore() { return m_semaphore; }
+
+                void AddImageIndex(Uint32 imageIndex) { m_currentImageIndex = imageIndex; }
+
+            private:
+                DeviceVk* m_device;
+                VkSwapchainKHR m_swapchain;
+                VkSemaphore m_semaphore;
+                Uint32 m_currentImageIndex; // TODO maybe list of images if we acquire more then one image
+                friend DeviceVk;
+        };
+
         DeviceVk()
             : m_CreateDebugReportCallback(nullptr)
             , m_DestroyDebugReportCallback(nullptr)
@@ -40,7 +69,11 @@ namespace engine
 
         Bool Initialize();
 
-        void Shutdown();
+        Bool CreateInstance();
+
+        Bool CreateDevice();
+
+        void Finalize();
 
 #if defined(PLATFORM_WINDOWS)
         Result<SurfaceHandler> CreateSurface(IWindowSurface32* windowSurface);
@@ -114,6 +147,8 @@ namespace engine
 
         Bool LoadFunctionPointers();
 
+        Status AcquireSwapchainImage(Swapchain& swapchain, TimeUnits& timemout);
+
     private:
         VkInstance m_instance;
         VkDevice m_device;
@@ -125,6 +160,7 @@ namespace engine
         PFN_vkDestroyDebugReportCallbackEXT m_DestroyDebugReportCallback;
         VkDebugReportCallbackEXT m_debugCallback;
     }; // DeviceVK
+
 
     // I don't think it was even worth to write this thing
 #define CREATE_HANDLER(NAME, TYPE, DESTRUCTOR) \

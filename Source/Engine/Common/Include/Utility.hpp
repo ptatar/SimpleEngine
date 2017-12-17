@@ -10,14 +10,23 @@ namespace engine {
     class TimeUnits
     {
         public:
-            static TimeUnits MakeSeconds(Uint32 seconds);
+            static TimeUnits MakeSeconds(Uint64 seconds);
 
-            static TimeUnits MakeMiliseconds(Uint32 miliseconds);
+            static TimeUnits MakeMiliseconds(Uint64 miliseconds);
 
-            static TimeUnits MakeMicroseconds(Uint32 microseconds);
+            static TimeUnits MakeMicroseconds(Uint64 microseconds);
+
+            static TimeUnits MakeNanoseconds(Uint64 nanoseconds);
 
             Uint64 GetUnits() const { return m_units; };
 
+            Uint64 GetSeconds() const { return m_units / 1000 / 1000 / 1000; }
+
+            Uint64 GetMiliseconds() const { return m_units / 1000 / 1000; }
+
+            Uint64 GetMicroseconds() const { return m_units / 1000; }
+
+            Uint64 GetNanoseconds() const { return m_units; }
         private:
             TimeUnits(Uint64 units): m_units(units) {}
 
