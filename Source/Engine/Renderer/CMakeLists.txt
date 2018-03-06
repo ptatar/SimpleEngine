@@ -18,16 +18,24 @@ if(${PLATFORM_WINDOWS})
 elseif(${PLATFORM_LINUX})
     set(RENDERER_LIB_SRC
         ${RENDERER_LIB_SRC_DIR}/DeviceVk.cpp
-        ${RENDERER_LIB_SRC_DIR}/RendererVk.cpp
         ${RENDERER_LIB_INC_DIR}/DeviceVk.hpp
-        ${RENDERER_LIB_INC_DIR}/RendererVk.hpp
         ${RENDERER_LIB_INC_DIR}/IRenderer.hpp
+        ${RENDERER_LIB_INC_DIR}/RendererVk.hpp
+        ${RENDERER_LIB_SRC_DIR}/RendererVk.cpp
         ${RENDERER_LIB_INC_DIR}/RendererManager.hpp
         ${RENDERER_LIB_SRC_DIR}/RendererManager.cpp
-        ${RENDERER_LIB_INC_DIR}/RendererManager.hpp
         ${RENDERER_LIB_INC_DIR}/VulkanUtility.hpp
         ${RENDERER_LIB_SRC_DIR}/VulkanUtility.cpp
         ${RENDERER_LIB_INC_DIR}/XlibInclude.hpp
+        ${RENDERER_LIB_INC_DIR}/ICommandBuffer.hpp
+        ${RENDERER_LIB_INC_DIR}/CommandBufferVk.hpp
+        ${RENDERER_LIB_SRC_DIR}/CommandBufferVk.cpp
+        ${RENDERER_LIB_INC_DIR}/ISwapchain.hpp
+        ${RENDERER_LIB_INC_DIR}/SwapchainVk.hpp
+        ${RENDERER_LIB_SRC_DIR}/SwapchainVk.cpp
+        ${RENDERER_LIB_INC_DIR}/IImage.hpp
+        ${RENDERER_LIB_INC_DIR}/ImageVk.hpp
+        ${RENDERER_LIB_SRC_DIR}/ImageVk.cpp
     )
 else()
     message(FATAL_ERROR "Unknown platform")

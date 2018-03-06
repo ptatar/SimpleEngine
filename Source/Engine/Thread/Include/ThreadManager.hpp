@@ -49,6 +49,7 @@ namespace engine
         void NotifyIdle(Worker* worker);
         void Shutdown();
         void Finish();
+        Bool IsFinished() const;
         void Sleep();
 
     private:

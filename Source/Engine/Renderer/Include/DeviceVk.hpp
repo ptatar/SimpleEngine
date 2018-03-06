@@ -5,17 +5,19 @@
 
 #include "WindowSurface.hpp"
 #include "VulkanUtility.hpp"
-
+#include "CommandBufferVk.hpp"
+#include "SwapchainVk.hpp"
 
 namespace engine
 {
 
-    class SemaphoreHandler;
-    class SurfaceHandler;
-    class SwapchainHandler;
-    class CommandPoolHandler;
+    class SemaphoreH;
+    class SurfaceH;
+    class CommandPoolH;
+    class ImageViewH;
     class SwapchainWrapper;
     class TimeUnits;
+    class CommandDispatcher;
 
     struct SwapchainCreateInfo
     {
@@ -25,6 +27,7 @@ namespace engine
         VkSurfaceTransformFlagBitsKHR transformation;
         Uint32 imageWidth;
         Uint32 imageHeight;
+        Uint32 imageCount;
         VkImageUsageFlags usage;
         VkPresentModeKHR presentationMode;
         VkSurfaceKHR surface;
@@ -32,33 +35,8 @@ namespace engine
 
     class DeviceVk
     {
+        CLASS_NOT_COPYABLE(DeviceVk);
     public:
-
-        class Swapchain
-        {
-            public:
-                Swapchain();
-
-                ~Swapchain();
-
-                Status AcquireImage(TimeUnits& timeUnits);
-
-                void PresentImage();
-
-            private:
-                VkSwapchainKHR GetSwapchain() { return m_swapchain; }
-
-                VkSemaphore GetSemaphore() { return m_semaphore; }
-
-                void AddImageIndex(Uint32 imageIndex) { m_currentImageIndex = imageIndex; }
-
-            private:
-                DeviceVk* m_device;
-                VkSwapchainKHR m_swapchain;
-                VkSemaphore m_semaphore;
-                Uint32 m_currentImageIndex; // TODO maybe list of images if we acquire more then one image
-                friend DeviceVk;
-        };
 
         DeviceVk()
             : m_CreateDebugReportCallback(nullptr)
@@ -73,24 +51,25 @@ namespace engine
 
         Bool CreateDevice();
 
+        ObjectRef<CommandDispatcher> CreateCommandDispatcher();
+
         void Finalize();
 
 #if defined(PLATFORM_WINDOWS)
-        Result<SurfaceHandler> CreateSurface(IWindowSurface32* windowSurface);
+        Result<SurfaceH> CreateSurface(IWindowSurface32* windowSurface);
 #elif defined(PLATFORM_LINUX)
-        Result<SurfaceHandler> CreateSurface(IWindowSurfaceX* windowSurface);
+        SurfaceH CreateSurface(IWindowSurfaceX* windowSurface);
 #endif
+        ObjectRef<SwapchainVk> CreateSwapchain(SwapchainCreateInfo& createInfo);
 
-        void ClearScreenTest(VkSwapchainKHR swaochain);
+        SemaphoreH CreateSemaphore();
 
-        Result<SwapchainHandler> CreateSwapchain(SwapchainCreateInfo& createInfo);
+        CommandPoolH CreateCommandPool();
 
-        Result<SemaphoreHandler> CreateSemaphore();
+        VkQueue GetQueue();
 
-        Result<CommandPoolHandler> CreateCommandPool();
-
-        Result<std::vector<VkCommandBuffer>> AllocateCommandBuffers(VkSwapchainKHR swapchain,
-                                                                    VkCommandPool commandPool);
+        std::vector<ObjectRef<CommandBufferVk>> AllocateCommandBuffers(Uint32 count,
+                                                                     VkCommandPool commandPool);
 
         void DestroySemaphore(VkSemaphore semaphore) { vkDestroySemaphore(m_device, semaphore, nullptr); }
 
@@ -99,6 +78,10 @@ namespace engine
         void DestroySwapchain(VkSwapchainKHR swapchain) { vkDestroySwapchainKHR(m_device, swapchain, nullptr); }
 
         void DestroyCommandPool(VkCommandPool commandPool) { vkDestroyCommandPool(m_device, commandPool, nullptr); }
+
+        void DestroyImageView(VkImageView imageView) { vkDestroyImageView(m_device, imageView, nullptr); }
+
+        void DestroyImage(VkImage image) { vkDestroyImage(m_device, image, nullptr); }
 
         std::vector<VkPresentModeKHR> GetSupporedPresentModes(VkSurfaceKHR surface) const;
 
@@ -147,7 +130,13 @@ namespace engine
 
         Bool LoadFunctionPointers();
 
-        Status AcquireSwapchainImage(Swapchain& swapchain, TimeUnits& timemout);
+        Status AcquireSwapchainImage(SwapchainVk& swapchain, TimeUnits& timemout);
+
+        ImageViewH CreateImageView(VkImage image);
+
+        void BeginCommandBuffer(CommandBufferVk& commandBuffer);
+
+        void EndCommandBuffer(CommandBufferVk& commandBuffer);
 
     private:
         VkInstance m_instance;
@@ -159,7 +148,40 @@ namespace engine
         PFN_vkCreateDebugReportCallbackEXT m_CreateDebugReportCallback;
         PFN_vkDestroyDebugReportCallbackEXT m_DestroyDebugReportCallback;
         VkDebugReportCallbackEXT m_debugCallback;
+
+        friend CommandBufferVk;
+        friend SwapchainVk;
     }; // DeviceVK
+
+    class CommandDispatcher
+    {
+        enum QueueType
+        {
+            Graphic,
+            Transfer,
+            Comput,
+            SparseBinding,
+        };
+        class CommandQueueGroup
+        {
+            public:
+                CommandQueueGroup() {}
+                ~CommandQueueGroup() {}
+            private:
+                VkQueue m_queue;
+                Uint32 m_count;
+        };
+
+        public:
+            CommandDispatcher(DeviceVk* device): m_device(device) {}
+
+            ~CommandDispatcher() {}
+
+
+        private:
+            DeviceVk* m_device;
+            VkQueue m_queue;
+    };
 
 
     // I don't think it was even worth to write this thing
@@ -167,15 +189,15 @@ namespace engine
     class NAME \
     { \
     public: \
-        NAME(): m_device(nullptr) {} \
+        NAME(): m_device(nullptr), m_type(VK_NULL_HANDLE) {} \
         NAME(DeviceVk* device, TYPE type): m_device(device), m_type(type) {} \
+        NAME(const NAME&) = delete; \
         NAME(NAME&& rs) \
         { \
-            m_type = rs.m_type; \
             m_device = rs.m_device; \
+            m_type = rs.m_type; \
             rs.m_device = nullptr; \
         } \
-        NAME(const NAME&) = delete; \
         ~NAME() \
         { \
             if(m_device) \
@@ -183,33 +205,31 @@ namespace engine
                 m_device->DESTRUCTOR(m_type); \
             } \
         } \
-        NAME operator=(const NAME&) = delete; \
-        NAME operator=(NAME&& rs) \
+        NAME& operator=(const NAME&) = delete; \
+        NAME& operator=(NAME&& rs) \
         { \
-            if(rs.m_device) \
-            { \
-                DeviceVk* ptr = rs.m_device; \
-                rs.m_device = nullptr; \
-                return NAME(ptr, rs.m_type); \
-            } \
-            else \
-            { \
-                return NAME(); \
-            } \
+          m_device = rs.m_device; \
+          rs.m_device = nullptr; \
+          m_type = rs.m_type; \
+          return *this; \
         } \
-        TYPE& Get() \
+        inline TYPE& Get() \
         { \
             return m_type; \
+        } \
+        operator Bool() \
+        { \
+            return m_type != VK_NULL_HANDLE;\
         } \
     private: \
         TYPE m_type; \
         DeviceVk* m_device; \
-    }
+    };
 
-    CREATE_HANDLER(SemaphoreHandler, VkSemaphore, DestroySemaphore);
-    CREATE_HANDLER(SurfaceHandler, VkSurfaceKHR, DestroySurface);
-    CREATE_HANDLER(SwapchainHandler, VkSwapchainKHR, DestroySwapchain);
-    CREATE_HANDLER(CommandPoolHandler, VkCommandPool, DestroyCommandPool);
+    CREATE_HANDLER(SemaphoreH, VkSemaphore, DestroySemaphore);
+    CREATE_HANDLER(SurfaceH, VkSurfaceKHR, DestroySurface);
+    CREATE_HANDLER(CommandPoolH, VkCommandPool, DestroyCommandPool);
+    CREATE_HANDLER(ImageViewH, VkImageView, DestroyImageView);
 
 #undef CREATE_HANDLER
 

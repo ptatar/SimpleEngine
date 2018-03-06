@@ -32,7 +32,6 @@ namespace engine
             return false;
         }
 
-
         return true;
     }
 
@@ -187,6 +186,14 @@ namespace engine
         return true;
     }
 
+    ObjectRef<CommandDispatcher> DeviceVk::CreateCommandDispatcher()
+    {
+        ASSERT(!m_adapter);
+        ObjectRef<CommandDispatcher> commandDispatcher = MakeObjectRef<CommandDispatcher>(this);
+
+        return commandDispatcher;
+    }
+
     void DeviceVk::Finalize()
     {
         vkDestroyDevice(m_device, nullptr);
@@ -194,7 +201,7 @@ namespace engine
     }
 
 #if defined(PLATFORM_WINDOWS)
-    Result<SurfaceHandler> DeviceVk::CreateSurface(IWindowSurface32* windowSurface)
+    Result<SurfaceH> DeviceVk::CreateSurface(IWindowSurface32* windowSurface)
     {
         VkSurfaceKHR surface;
         VkWin32SurfaceCreateInfoKHR surfaceCreateInfo;
@@ -209,10 +216,10 @@ namespace engine
             LOGE("Surface creation failure: %d", result);
             return Status::Error;
         }
-        return Result<SurfaceHandler>(Status::Success, SurfaceHandler(this, surface));
+        return Result<SurfaceH>(Status::Success, SurfaceH(this, surface));
     }
 #elif defined(PLATFORM_LINUX)
-    Result<SurfaceHandler> DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
+    SurfaceH DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
     {
         VkSurfaceKHR surface;
         VkXlibSurfaceCreateInfoKHR surfaceCreateInfo;
@@ -225,34 +232,21 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Surface creation failure: %d", result);
-            return Status::Error;
+            return SurfaceH();
         }
 
-        return Result<SurfaceHandler>(Status::Success, SurfaceHandler(this, surface));
+        return SurfaceH(this, surface);
     }
 #endif
 
-    void DeviceVk::ClearScreenTest(VkSwapchainKHR swapchain)
+    ObjectRef<SwapchainVk> DeviceVk::CreateSwapchain(SwapchainCreateInfo& createInfo)
     {
-        VkCommandBufferBeginInfo commandBufferBeginInfo;
-        commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        commandBufferBeginInfo.pNext = nullptr;
-        commandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        commandBufferBeginInfo.pInheritanceInfo = nullptr;
-
-        VkClearColorValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-
-    }
-
-    Result<SwapchainHandler> DeviceVk::CreateSwapchain(SwapchainCreateInfo& createInfo)
-    {
-
         VkSwapchainCreateInfoKHR swapchainCreateInfo;
         swapchainCreateInfo.sType                 = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchainCreateInfo.pNext                 = nullptr;
         swapchainCreateInfo.flags                 = 0;
         swapchainCreateInfo.surface               = createInfo.surface;
-        swapchainCreateInfo.minImageCount         = 2;
+        swapchainCreateInfo.minImageCount         = createInfo.imageCount;
         swapchainCreateInfo.imageFormat           = createInfo.surfaceFormat;
         swapchainCreateInfo.imageColorSpace       = createInfo.colorSpace;
         swapchainCreateInfo.imageExtent           = VkExtent2D{createInfo.imageWidth, createInfo.imageHeight};
@@ -267,17 +261,72 @@ namespace engine
         swapchainCreateInfo.clipped               = VK_TRUE;
         swapchainCreateInfo.oldSwapchain          = 0;
 
-        VkSwapchainKHR swapchain;
-        VkResult result = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &swapchain);
+        VkSwapchainKHR swapchainHandle;
+        VkResult result = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &swapchainHandle);
         if(result != VK_SUCCESS)
         {
             LOGE("Swapchain creation failed: %d", result);
-            return Status::Error;
+            return MakeObjectRef<SwapchainVk>();
         }
-        return Result<SwapchainHandler>(Status::Success, SwapchainHandler(this, swapchain));
+
+        ObjectRef<SwapchainVk> swapchain = MakeObjectRef<SwapchainVk>(
+                this,
+                swapchainHandle,
+                createInfo.imageWidth,
+                createInfo.imageHeight,
+                createInfo.imageCount);
+
+        Uint32 imageCount;
+        result = vkGetSwapchainImagesKHR(m_device, swapchainHandle, &imageCount, nullptr);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("vkGetSwapchainImagesKHR failure: %d", result);
+            return MakeObjectRef<SwapchainVk>();
+        }
+
+        std::vector<VkImage> images(imageCount);
+        result = vkGetSwapchainImagesKHR(m_device, swapchainHandle, &imageCount, images.data());
+        if (result != VK_SUCCESS)
+        {
+            LOGE("vkGetSwapchainImagesKHR failure: %d", result);
+            return MakeObjectRef<SwapchainVk>();
+        }
+
+        auto& swapchainImages = swapchain->m_images;
+        for (int i = 0; i < images.size(); i++)
+        {
+            VkImageViewCreateInfo info;
+            info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            info.pNext = nullptr;
+            info.flags = 0;
+            info.image = images[i];
+            info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            info.format = createInfo.surfaceFormat;
+            info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            info.subresourceRange.baseMipLevel = 0;
+            info.subresourceRange.levelCount = 1;
+            info.subresourceRange.baseArrayLayer = 0;
+            info.subresourceRange.layerCount = 1;
+
+            VkImageView view;
+            result = vkCreateImageView(m_device, &info, nullptr, &view);
+            if (result != VK_SUCCESS)
+            {
+                LOGE("vkCreateImageView failure: %d", result);
+                return MakeObjectRef<SwapchainVk>();
+            }
+
+            swapchainImages.Emplace(i, this, images[i], view);
+        }
+
+        return swapchain;
     }
 
-    Result<SemaphoreHandler> DeviceVk::CreateSemaphore()
+    SemaphoreH DeviceVk::CreateSemaphore()
     {
         VkSemaphoreCreateInfo semaphoreCreateInfo;
         semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -289,12 +338,12 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Semaphore creation failure: %d", result);
-            return Status::Error;
+            return SemaphoreH();
         }
-        return Result<SemaphoreHandler>(Status::Success, SemaphoreHandler(this, semaphore));
+        return SemaphoreH(this, semaphore);
     }
 
-    Result<CommandPoolHandler> DeviceVk::CreateCommandPool()
+    CommandPoolH DeviceVk::CreateCommandPool()
     {
         VkCommandPoolCreateInfo commandPoolCreateInfo;
         commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -307,46 +356,52 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Command Pool creation failed: %d", result);
-            return Status::Error;
+            return CommandPoolH(nullptr, VK_NULL_HANDLE);
         }
-        return Result<CommandPoolHandler>(Status::Success, CommandPoolHandler(this, commandPool));
+        return CommandPoolH(this, commandPool);
     }
 
-    Result<std::vector<VkCommandBuffer>> DeviceVk::AllocateCommandBuffers(VkSwapchainKHR swapchain, VkCommandPool commandPool)
+    VkQueue DeviceVk::GetQueue()
     {
-        Uint32 imageCount;
-        VkResult result = vkGetSwapchainImagesKHR(m_device, swapchain, &imageCount, nullptr);
-        if (result != VK_SUCCESS)
-        {
-            LOGE("Swapchain image count query failed: %d", imageCount);
-            return Status::Error;
-        }
+        VkQueue queue;
+        vkGetDeviceQueue(m_device, m_queueFamilyIndex, 0, &queue);
+        return queue;
+    }
 
-        std::vector<VkCommandBuffer> commandBuffers(imageCount);
-        VkCommandBufferAllocateInfo commandBufferAllocateInfo;
-        commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        commandBufferAllocateInfo.pNext = nullptr;
-        commandBufferAllocateInfo.commandPool = commandPool;
-        commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        commandBufferAllocateInfo.commandBufferCount = imageCount;
+    std::vector<ObjectRef<CommandBufferVk>> DeviceVk::AllocateCommandBuffers(Uint32 count,
+                                                                           VkCommandPool commandPool)
+    {
+        std::vector<VkCommandBuffer> commandBuffers(count);
+        VkCommandBufferAllocateInfo info;
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        info.pNext = nullptr;
+        info.commandPool = commandPool;
+        info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        info.commandBufferCount = count;
 
-        result = vkAllocateCommandBuffers(m_device, &commandBufferAllocateInfo, commandBuffers.data());
+        VkResult result = vkAllocateCommandBuffers(m_device, &info, commandBuffers.data());
         if (result != VK_SUCCESS)
         {
             LOGE("Command Buffers allocation failed: %d", result);
-            return Status::Error;
+            return std::vector<ObjectRef<CommandBufferVk>>();
         }
 
-        return Result<std::vector<VkCommandBuffer>>(Status::Success, commandBuffers);
+        std::vector<ObjectRef<CommandBufferVk>> out(count);
+        for (Uint32 i = 0; i < count; i++)
+        {
+            out[i]->m_commandBuffer = commandBuffers[i];
+        }
+
+        return out;
     }
 
     std::vector<VkPresentModeKHR> DeviceVk::GetSupporedPresentModes(VkSurfaceKHR surface) const
     {
         Uint32 presentModeCount = 0;
         VkResult result = vkGetPhysicalDeviceSurfacePresentModesKHR(m_adapter,
-                                                           surface,
-                                                           &presentModeCount,
-                                                           nullptr);
+                                                                    surface,
+                                                                    &presentModeCount,
+                                                                    nullptr);
 
         if (result != VK_SUCCESS)
         {
@@ -651,7 +706,7 @@ namespace engine
         return true;
     }
 
-    Status DeviceVk::AcquireSwapchainImage(Swapchain& swapchain, TimeUnits& timeout)
+    Status DeviceVk::AcquireSwapchainImage(SwapchainVk& swapchain, TimeUnits& timeout)
     {
         Uint32 imageIndex;
         VkResult result = vkAcquireNextImageKHR(m_device,
@@ -663,7 +718,7 @@ namespace engine
         switch(result)
         {
             case VK_SUCCESS:
-                swapchain.AddImageIndex(imageIndex);
+                swapchain.AddImage(imageIndex);
                 return Status::Success;
             case VK_TIMEOUT:
                 return Status::Timeout;
@@ -678,16 +733,6 @@ namespace engine
                 ASSERT(false);
                 return Status::Error;
         }
-    }
-
-    Status DeviceVk::Swapchain::AcquireImage(TimeUnits& timeout)
-    {
-        return m_device->AcquireSwapchainImage(*this, timeout);
-    }
-
-    void DeviceVk::Swapchain::PresentImage()
-    {
-
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL DeviceVk::DebugCallback(VkDebugReportFlagsEXT flags,

@@ -9,7 +9,7 @@ if (BUILD_TYPE STREQUAL "DEBUG")
     add_definitions(-DDEBUG_BUILD)
     message("Debug build")
 elseif (BUILD_TYPE STREQUAL "RELEASE")
-    add_definitions(-DRELEASE_BUILD)
+    add_definitions(-DRELEASE_BUILD -DUSE_COMMON_INTERFACE)
     message("Release build")
 endif()
 

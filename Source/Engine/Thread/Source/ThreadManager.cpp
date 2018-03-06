@@ -132,6 +132,11 @@ namespace engine
         }
     }
 
+    Bool ThreadManager::IsFinished() const
+    {
+        return m_idleWorkers.size() == m_workers.size();
+    }
+
     void ThreadManager::Sleep()
     {
         std::this_thread::sleep_for(std::chrono::seconds(1));

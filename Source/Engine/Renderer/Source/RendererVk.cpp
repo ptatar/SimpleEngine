@@ -15,9 +15,18 @@ namespace engine
         m_device.Finalize();
     }
 
-    void RendererVk::Update()
+    ObjectRef<ICommandBuffer> RendererVk::CreateCommandBuffer()
     {
+        // change it
+        auto commandBuffer = m_device.AllocateCommandBuffers();
+        return ObjectRefCast<ICommandBuffer, CommandBuffer>(commandBuffer);
     }
+
+    ObjectRef<ISwapchain> RendererVk::GetSwapchain()
+    {
+        return ObjectRefCast<ISwapchain, SwapchainVk>(m_swapchain);
+    }
+
 
 #if defined(PLATFORM_WINDOWS)
     Bool RendererVk::CreateSurface(IWindowSurface32* windowSurface)
@@ -51,9 +60,9 @@ namespace engine
         auto commandPoolResult = m_device.CreateCommandPool();
         ASSERT_RETURN(commandPoolResult.status == Status::Success);
 
-        auto commandBuffersResult = m_device.AllocateCommandBuffers(swapchainResult.value.Get(),
+        m_commandBuffers = m_device.AllocateCommandBuffers(swapchainResult.value.Get(),
                                                                     commandPoolResult.value.Get());
-        ASSERT_RETURN(commandBuffersResult.status == Status::Success);
+        ASSERT_RETURN(commandBuffer.size() > 0);
 
 
         m_renderSurface = std::move(surfaceResult.value);
@@ -61,7 +70,6 @@ namespace engine
         m_semaphoreRenderingFinished = std::move(semaphoreRenderingResult.value);
         m_swapchain = std::move(swapchainResult.value);
         m_commandPool = std::move(commandPoolResult.value);
-        m_commandBuffers = std::move(commandBuffersResult.value);
 
         return true;
     }
@@ -70,21 +78,20 @@ namespace engine
 
     Bool RendererVk::CreateSurface(IWindowSurfaceX* windowSurface)
     {
-        auto surfaceResult = m_device.CreateSurface(windowSurface);
-        ASSERT_RETURN(surfaceResult.status == Status::Success);
-        VkSurfaceKHR& surface = surfaceResult.value.Get();
+        m_renderSurface = m_device.CreateSurface(windowSurface);
+        ASSERT_RETURN(m_renderSurface);
+        VkSurfaceKHR& surface = m_renderSurface.Get();
 
         if(!m_device.CheckAdapterSurfaceSupport(surface))
         {
             return false;
         }
 
-        auto semaphoreImageResult = m_device.CreateSemaphore();
-        ASSERT_RETURN(semaphoreImageResult.status == Status::Success);
+        auto semaphoreImage = m_device.CreateSemaphore();
+        ASSERT_RETURN(semaphoreImage);
 
-
-        auto semaphoreRenderingResult = m_device.CreateSemaphore();
-        ASSERT_RETURN(semaphoreRenderingResult.status == Status::Success);
+        auto semaphoreRendering = m_device.CreateSemaphore();
+        ASSERT_RETURN(semaphoreRendering);
 
 
         VkPresentModeKHR targetPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
@@ -133,39 +140,33 @@ namespace engine
             return false;
         }
 
-        SwapchainCreateInfo swapchainCreateInfo;
-        swapchainCreateInfo.colorSpace = targetColorSpace;
-        swapchainCreateInfo.surfaceFormat = targetFormat;
-        swapchainCreateInfo.imagesCount = imageCount;
-        swapchainCreateInfo.transformation = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-        swapchainCreateInfo.imageWidth = surfaceWidth;
-        swapchainCreateInfo.imageHeight = surfaceHeight;
-        swapchainCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        swapchainCreateInfo.presentationMode = targetPresentMode;
-        swapchainCreateInfo.surface = surface;
+        SwapchainCreateInfo info;
+        info.colorSpace = targetColorSpace;
+        info.surfaceFormat = targetFormat;
+        info.imagesCount = imageCount;
+        info.transformation = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+        info.imageWidth = surfaceWidth;
+        info.imageHeight = surfaceHeight;
+        info.imageCount = 2;
+        info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        info.presentationMode = targetPresentMode;
+        info.surface = surface;
 
-        auto swapchainResult = m_device.CreateSwapchain(swapchainCreateInfo);
-        ASSERT_RETURN(swapchainResult.status == Status::Success);
+        m_swapchain = m_device.CreateSwapchain(info);
+        ASSERT_RETURN(m_swapchain);
 
-        auto commandPoolResult = m_device.CreateCommandPool();
-        if (commandPoolResult.status != Status::Success)
+        auto commandPool = m_device.CreateCommandPool();
+        if (commandPool)
         {
             return false;
         }
 
-        auto commandBuffersResult = m_device.AllocateCommandBuffers(swapchainResult.value.Get(),
-                                                                    commandPoolResult.value.Get());
-        if (commandBuffersResult.status != Status::Success)
+        m_commandBuffers = m_device.AllocateCommandBuffers(m_swapchain->GetImageCount(),
+                                                           commandPool.Get());
+        if (m_commandBuffers.size() != m_swapchain->GetImageCount())
         {
             return false;
         }
-
-        m_renderSurface = std::move(surfaceResult.value);
-        m_semaphoreImageReady = std::move(semaphoreImageResult.value);
-        m_semaphoreRenderingFinished = std::move(semaphoreRenderingResult.value);
-        m_swapchain = std::move(swapchainResult.value);
-        m_commandPool = std::move(commandPoolResult.value);
-        m_commandBuffers = std::move(commandBuffersResult.value);
 
         return true;
     }
@@ -174,10 +175,22 @@ namespace engine
 
     Bool RendererVk::Work()
     {
-        ClearScreen();
-        Present();
+        // for now this should be good engouh
+        if (!m_swapchain->GetAvailableImageCount())
+        {
+            Status status = m_swapchain->AcquireImage(m_swapchainTimeout);
+            if (status != Status::Success)
+            {
+                return true;
+            }
+        }
+        CommandBuffer* commandBuffer = nullptr;
+        //m_commandQueue.PopCommandBuffer(commandBuffer);
+        //m_swapchain->PresentImage();
         return true;
     }
+
+
 
     Bool RendererVk::CheckPresentModeSupported(const std::vector<VkPresentModeKHR>& presentModes,
                                                VkPresentModeKHR target) const
@@ -189,6 +202,7 @@ namespace engine
                 return true;
             }
         }
+
         return false;
     }
 
@@ -203,6 +217,7 @@ namespace engine
                     return true;
             }
         }
+
         return false;
     }
 

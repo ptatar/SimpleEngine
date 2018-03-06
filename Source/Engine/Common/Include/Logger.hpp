@@ -11,13 +11,24 @@
 //TODO
 namespace logger {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 template<typename...Args>
 void Write(const char* funcName, int line, const char* str, Args...args) {
-	static const int bufferSize = 2048;
-	static char buffer[bufferSize];
+    int argNum = sizeof...(args);
+    if (argNum)
+    {
+        static const int bufferSize = 2048;
+        static char buffer[bufferSize];
 
-	snprintf(buffer, bufferSize, str, args...);
-	std::cout << funcName << " : " << line << "  " << buffer << "\n";
+        snprintf(buffer, bufferSize, str, args...);
+        std::cout << funcName << " : " << line << "  " << buffer << "\n";
+    }
+    else
+    {
+         std::cout << funcName << " : " << line << "  " << str << "\n";
+    }
 }
-
+#pragma GCC diagnostic push
 } // namespace logger

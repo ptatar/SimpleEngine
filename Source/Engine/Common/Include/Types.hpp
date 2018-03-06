@@ -7,6 +7,12 @@
 #include "Logger.hpp"
 #include "Assert.hpp"
 
+#if defined(USE_COMMON_INTERFACE)
+    #define COMMON_INTERFACE(name) : public name
+#else
+    #define COMMON_INTEFACE(name)
+#endif
+
 namespace engine
 {
 
@@ -34,6 +40,11 @@ namespace engine
     static_assert(sizeof(Double) == 8, "Invalid type size");
     static_assert(sizeof(Bool)   == 1, "Invalid type size");
 
+#define CLASS_NOT_COPYABLE(CLASSNAME) \
+    private: \
+        CLASSNAME(const CLASSNAME&) = delete; \
+        CLASSNAME operator=(CLASSNAME&) = delete; \
+
     enum class Status
     {
         Success = 0,
@@ -41,7 +52,6 @@ namespace engine
         Timeout,
         OutDated,
         Invalid,
-
     };
 
     template <typename T>
@@ -77,99 +87,116 @@ namespace engine
 
     class AtomicCounter
     {
-    public:
-        AtomicCounter():m_refCount(nullptr) {}
-        AtomicCounter(std::atomic<Uint32>* refCount): m_refCount(refCount) {}
-        AtomicCounter(const AtomicCounter& other):m_refCount(other.m_refCount)
-        {
-            AddRef();
-        }
-        virtual ~AtomicCounter() {}
-        void Initialize()
-        {
-            m_refCount = new std::atomic<Uint32>();
-            ASSERT(m_refCount);
-        }
-        Uint32 AddRef() const { return m_refCount->fetch_add(1); }
-        Uint32 RemoveRef() const { return m_refCount->fetch_sub(1); }
-        Uint32 Get() const { return m_refCount->load(); }
-        Bool Valid() const { return m_refCount; }
+        public:
+            AtomicCounter():m_refCount(nullptr) {}
+            AtomicCounter(std::atomic<Uint32>* refCount): m_refCount(refCount) {}
+            AtomicCounter(const AtomicCounter& other):m_refCount(other.m_refCount)
+            {
+                AddRef();
+            }
+            virtual ~AtomicCounter() {}
+            void Initialize()
+            {
+                m_refCount = new std::atomic<Uint32>();
+                ASSERT(m_refCount);
+            }
+            Uint32 AddRef() const { return m_refCount->fetch_add(1); }
+            Uint32 RemoveRef() const { return m_refCount->fetch_sub(1); }
+            Uint32 Get() const { return m_refCount->load(); }
+            Bool Valid() const { return m_refCount; }
 
-    protected:
-        std::atomic<Uint32>* m_refCount;
+        protected:
+            std::atomic<Uint32>* m_refCount;
     };
 
     // Maybe rewrite it to aux ref counting
     template<typename T>
     class ObjectRef: protected AtomicCounter
     {
-    public:
-        ObjectRef(T* type) : m_type(type)
-        {
-            Initialize();
-            AddRef();
-        }
-        ObjectRef(const ObjectRef& other)
-            : AtomicCounter(static_cast<const AtomicCounter&>(other))
-            , m_type(other.m_type)
-        {
-        }
-        ObjectRef(ObjectRef&& other)
-            : AtomicCounter(static_cast<AtomicCounter&>(other))
-            , m_type(other.m_type)
-        {
-            other.m_type = nullptr;
-            other.m_refCount = nullptr;
-        }
-        ~ObjectRef()
-        {
-            if (m_type && !RemoveRef())
+        public:
+            ObjectRef(): m_type(nullptr) {}
+
+            ObjectRef(T* type): m_type(type)
             {
-                delete m_type;
-                m_type = nullptr;
+                Initialize();
+                AddRef();
             }
-        }
-        ObjectRef& operator=(const ObjectRef& other)
-        {
-            m_type = other.m_type;
-            m_refCount = other.m_refCount;
-            AddRef();
-            return *this;
-        }
-        ObjectRef& operator=(ObjectRef&& other)
-        {
-            // I dont know if this even works
-            m_type = other.m_type;
-            m_refCount = m_refCount;
-            other.m_type = nullptr;
-            other.m_refCount = nullptr;
-        }
-        Bool operator==(const ObjectRef& other) const
-        {
-            if (m_type == other.m_type)
+
+            ObjectRef(const ObjectRef& other)
+                : AtomicCounter(static_cast<const AtomicCounter&>(other))
+                , m_type(other.m_type)
+            {}
+
+            ObjectRef(ObjectRef&& other)
+                : AtomicCounter(static_cast<AtomicCounter&>(other))
+                , m_type(other.m_type)
             {
-                return true;
+                other.m_type = nullptr;
+                other.m_refCount = nullptr;
             }
-            return false;
-        }
-        T* operator->()
-        {
-            return m_type;
-        }
-        Bool Valid() const
-        {
-            return m_type;
-        }
-        T* Get()
-        {
-            return m_type;
-        }
-        template<typename U>
-        ObjectRef(ObjectRef<U>& other)
-            : AtomicCounter(static_cast<AtomicCounter&>(other))
-            , m_type(static_cast<U*>(other.Get())) {}
-    private:
-        T* m_type;
+
+            ~ObjectRef()
+            {
+                if (m_type && !RemoveRef())
+                {
+                    delete m_type;
+                    m_type = nullptr;
+                }
+            }
+
+            ObjectRef& operator=(const ObjectRef& other)
+            {
+                m_type = other.m_type;
+                m_refCount = other.m_refCount;
+                AddRef();
+                return *this;
+            }
+
+            ObjectRef& operator=(ObjectRef&& other)
+            {
+                // I dont know if this even works
+                m_type = other.m_type;
+                m_refCount = m_refCount;
+                other.m_type = nullptr;
+                other.m_refCount = nullptr;
+            }
+
+            Bool operator==(const ObjectRef& other) const
+            {
+                if (m_type == other.m_type)
+                {
+                    return true;
+                }
+                return false;
+            }
+
+            T* operator->()
+            {
+                return m_type;
+            }
+
+            operator Bool()
+            {
+                return m_type != nullptr;
+            }
+
+            Bool Valid() const
+            {
+                return m_type;
+            }
+
+            T* Get()
+            {
+                return m_type;
+            }
+
+            template<typename U>
+            ObjectRef(ObjectRef<U>& other)
+                : AtomicCounter(static_cast<AtomicCounter&>(other))
+                , m_type(static_cast<U*>(other.Get())) {}
+
+        private:
+            T* m_type;
     };
 
     template<class T, typename ...Args >

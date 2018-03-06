@@ -17,6 +17,17 @@ int main()
     window->Show();
     //Sleep(TimeUnits::MakeSeconds(10));
     //window->Shutdown();
+    while(threadManager.IsFinished())
+    {
+        auto swapchain = renderer->GetSwapchain();
+        auto timeout = TimeUnits::MakeSeconds(1000000);
+        swapchain->AcquireImage(timeout); // INFINITY
+        auto commandBuffer = renderer->CreateCommandBuffer();
+        commandBuffer->Begin();
+        commandBuffer->Clear(swapchain->GetCurrentImage(), ImageAspect::Color);
+        commandBuffer->Present();
+        commandBuffer->End();
+    }
     threadManager.Finish();
     //system.MainLoop();
     //system.Shutdown();

@@ -18,6 +18,8 @@ namespace engine {
 
             static TimeUnits MakeNanoseconds(Uint64 nanoseconds);
 
+            TimeUnits(): m_units(0) {}
+
             Uint64 GetUnits() const { return m_units; };
 
             Uint64 GetSeconds() const { return m_units / 1000 / 1000 / 1000; }

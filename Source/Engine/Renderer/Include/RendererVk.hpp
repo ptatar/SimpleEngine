@@ -5,6 +5,10 @@
 #include "IRenderer.hpp"
 #include "WindowSurface.hpp"
 #include "IJob.hpp"
+#include "Utility.hpp"
+
+#include <deque>
+#include <mutex>
 
 namespace engine
 {
@@ -26,7 +30,11 @@ namespace engine
 
         void Finalize() override;
 
-        void Update() override;
+        void Submit(CommandBuffer* commandBuffer);
+
+        ObjectRef<ICommandBuffer> CreateCommandBuffer() override;
+
+        ObjectRef<ISwapchain> GetSwapchain() override;
 
     #if defined(PLATFORM_WINDOWS)
         Bool CreateSurface(IWindowSurface32* windowSurface) override;
@@ -34,6 +42,8 @@ namespace engine
         Bool CreateSurface(IWindowSurfaceX* windowSurface) override;
     #endif
         Bool Work() override;
+
+        void PushCommandBuffer(CommandBuffer& commandBuffer);
 
     private:
         Bool CheckPresentModeSupported(const std::vector<VkPresentModeKHR>& presentModes,
@@ -54,19 +64,23 @@ namespace engine
 
         virtual void OnFullscreen() override {}
 
-        virtual void OnShutdown() override { Shutdown(); }
+        virtual void OnShutdown() override { /*Shutdown();*/ }
 
         void ClearScreen();
 
         void Present();
 
+        Status PopCommandBuffer(CommandBuffer& commandBuffer);
+
     private:
         DeviceVk m_device;
-        SurfaceHandler m_renderSurface;
-        SemaphoreHandler m_semaphoreImageReady;
-        SemaphoreHandler m_semaphoreRenderingFinished;
-        SwapchainHandler m_swapchain;
-        CommandPoolHandler m_commandPool;
-        std::vector<VkCommandBuffer> m_commandBuffers;
+        SurfaceH m_renderSurface;
+        SemaphoreH m_semaphoreImageReady;
+        SemaphoreH m_semaphoreRenderingFinished;
+        CommandPoolH m_commandPool;
+        VkQueue m_queue;
+        ObjectRef<SwapchainVk> m_swapchain;
+        std::vector<ObjectRef<CommandBuffer>> m_commandBuffers;
+        TimeUnits m_swapchainTimeout;
     };
 } // namespace engine
