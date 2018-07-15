@@ -156,7 +156,7 @@ namespace engine
             {
                 // I dont know if this even works
                 m_type = other.m_type;
-                m_refCount = m_refCount;
+                m_refCount = other.m_refCount;
                 other.m_type = nullptr;
                 other.m_refCount = nullptr;
             }
@@ -197,6 +197,44 @@ namespace engine
 
         private:
             T* m_type;
+    };
+
+    template<typename T>
+    class RingBuffer
+    {
+        public:
+            RingBuffer(): m_index(0), m_size(0), m_buffer(nullptr) {}
+            RingBuffer(Uint32 size): m_index(0), m_size(size), m_buffer(new T[size]) { ASSERT(m_buffer); }
+
+            ~RingBuffer()
+            {
+                delete[] m_buffer;
+                m_buffer = nullptr;
+            }
+
+            inline T& GetNext()
+            {
+                ASSERT(m_buffer);
+                return m_buffer[m_index++%m_size];
+            }
+
+            inline T& Peek()
+            {
+                ASSERT(m_buffer);
+                return m_buffer[m_index];
+            }
+
+            inline void Next()
+            {
+                m_index += 1;
+            }
+
+        private:
+            Uint32 m_index;
+
+            Uint32 m_size;
+
+            T* m_buffer;
     };
 
     template<class T, typename ...Args >

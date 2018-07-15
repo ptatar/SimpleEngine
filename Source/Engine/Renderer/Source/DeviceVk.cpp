@@ -2,6 +2,8 @@
 
 #include "Logger.hpp"
 #include "Utility.hpp"
+#include "CommandBufferVk.hpp"
+#include "SwapchainVk.hpp"
 
 #include <sstream>
 #include <vector>
@@ -148,13 +150,14 @@ namespace engine
             }
         }
 
+
         if (queueFamilyIndex >= queuePropertiesCount)
         {
             LOGE("Adapter queues don't fulfil minimal requirements");
             return false;
         }
         m_queueFamilyIndex = queueFamilyIndex;
-        LOGI("Selected queue family index %d", m_queueFamilyIndex);
+        LOGI("Selected command queue family index %d", m_queueFamilyIndex);
 
         Float queuePriorities = 1.0f;
         VkDeviceQueueCreateInfo queueCreateInfo;
@@ -183,6 +186,8 @@ namespace engine
             LOGE("Device creation failure: %d", result);
             return false;
         }
+
+        m_commandQueue = GetQueue(m_queueFamilyIndex);
         return true;
     }
 
@@ -219,7 +224,7 @@ namespace engine
         return Result<SurfaceH>(Status::Success, SurfaceH(this, surface));
     }
 #elif defined(PLATFORM_LINUX)
-    SurfaceH DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
+    SurfaceG DeviceVk::CreateSurface(IWindowSurfaceX* windowSurface)
     {
         VkSurfaceKHR surface;
         VkXlibSurfaceCreateInfoKHR surfaceCreateInfo;
@@ -232,10 +237,10 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Surface creation failure: %d", result);
-            return SurfaceH();
+            return SurfaceG();
         }
 
-        return SurfaceH(this, surface);
+        return SurfaceG(this, surface);
     }
 #endif
 
@@ -295,6 +300,13 @@ namespace engine
         auto& swapchainImages = swapchain->m_images;
         for (int i = 0; i < images.size(); i++)
         {
+            SemaphoreG& semaphore = swapchain->m_semaphoreRing.GetNext();
+            semaphore = CreateSemaphore();
+            if (!semaphore)
+            {
+                return MakeObjectRef<SwapchainVk>();
+            }
+
             VkImageViewCreateInfo info;
             info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             info.pNext = nullptr;
@@ -326,7 +338,8 @@ namespace engine
         return swapchain;
     }
 
-    SemaphoreH DeviceVk::CreateSemaphore()
+
+    SemaphoreG DeviceVk::CreateSemaphore()
     {
         VkSemaphoreCreateInfo semaphoreCreateInfo;
         semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -338,17 +351,34 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Semaphore creation failure: %d", result);
-            return SemaphoreH();
+            return SemaphoreG();
         }
-        return SemaphoreH(this, semaphore);
+        return SemaphoreG(this, semaphore);
     }
 
-    CommandPoolH DeviceVk::CreateCommandPool()
+    FenceG DeviceVk::CreateFence()
+    {
+        VkFenceCreateInfo info;
+        info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        info.pNext = nullptr;;
+        info.flags = 0;
+        VkFence fence;
+        VkResult result = vkCreateFence(m_device, &info, nullptr, &fence);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Fence creation failure: %d", result);
+            return FenceG();
+        }
+        return FenceG(this, fence);
+    }
+
+
+    CommandPoolG DeviceVk::CreateCommandPool()
     {
         VkCommandPoolCreateInfo commandPoolCreateInfo;
         commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         commandPoolCreateInfo.pNext = nullptr;
-        commandPoolCreateInfo.flags = 0;
+        commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         commandPoolCreateInfo.queueFamilyIndex = m_queueFamilyIndex;
 
         VkCommandPool commandPool;
@@ -356,15 +386,15 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("Command Pool creation failed: %d", result);
-            return CommandPoolH(nullptr, VK_NULL_HANDLE);
+            return CommandPoolG(nullptr, VK_NULL_HANDLE);
         }
-        return CommandPoolH(this, commandPool);
+        return CommandPoolG(this, commandPool);
     }
 
-    VkQueue DeviceVk::GetQueue()
+    VkQueue DeviceVk::GetQueue(Uint32 queueFamilyIndex)
     {
         VkQueue queue;
-        vkGetDeviceQueue(m_device, m_queueFamilyIndex, 0, &queue);
+        vkGetDeviceQueue(m_device, queueFamilyIndex, 0, &queue);
         return queue;
     }
 
@@ -389,7 +419,17 @@ namespace engine
         std::vector<ObjectRef<CommandBufferVk>> out(count);
         for (Uint32 i = 0; i < count; i++)
         {
-            out[i]->m_commandBuffer = commandBuffers[i];
+            SemaphoreG semaphore = CreateSemaphore();
+            if (!semaphore)
+            {
+                return std::vector<ObjectRef<CommandBufferVk>>();
+            }
+            FenceG fence = CreateFence();
+            if (!fence)
+            {
+                return std::vector<ObjectRef<CommandBufferVk>>();
+            }
+            out[i] = MakeObjectRef<CommandBufferVk>(this, commandBuffers[i], semaphore, fence);
         }
 
         return out;
@@ -482,6 +522,43 @@ namespace engine
         }
 
         return true;
+    }
+
+    void DeviceVk::SubmitQueue(ObjectRef<CommandBufferVk>& commandBuffer)
+    {
+        vkResetFences(m_device, 1, &commandBuffer->m_fence.Get());
+        VkSubmitInfo info;
+        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        info.pNext = nullptr;
+        info.waitSemaphoreCount = 0;
+        info.pWaitSemaphores = nullptr;
+        info.pWaitDstStageMask = nullptr;
+        info.commandBufferCount = 1;
+        info.pCommandBuffers =  &commandBuffer->m_commandBuffer;
+        info.signalSemaphoreCount = 1;
+        info.pSignalSemaphores = &commandBuffer->m_semaphore.Get();
+        VkResult result = vkQueueSubmit(m_commandQueue, 1, &info, commandBuffer->m_fence.Get());
+        ASSERT(result == VK_SUCCESS);
+        commandBuffer->ChangeState(CommandBufferVk::State::Submitted);
+    }
+
+    Status DeviceVk::WaitForFence(FenceG& fence, const TimeUnits& timeout)
+    {
+        VkResult result = vkWaitForFences(m_device, 1, &fence.Get(), true, timeout.GetNanoseconds());
+        if (result == VK_SUCCESS)
+        {
+            return Status::Success;
+        }
+        else if (result == VK_TIMEOUT)
+        {
+            LOGW("Fence %lld wait timeout", fence.Get());
+            return Status::Timeout;
+        }
+        else
+        {
+            LOGE("Fence %lld wait error %d", fence.Get(), result);
+            return Status::Error;
+        }
     }
 
 
@@ -706,18 +783,21 @@ namespace engine
         return true;
     }
 
-    Status DeviceVk::AcquireSwapchainImage(SwapchainVk& swapchain, TimeUnits& timeout)
+    Status DeviceVk::AcquireSwapchainImage(SwapchainVk& swapchain)
     {
         Uint32 imageIndex;
+        SemaphoreG& semaphore = swapchain.m_semaphoreRing.GetNext();
+
         VkResult result = vkAcquireNextImageKHR(m_device,
                                                 swapchain.GetSwapchain(),
-                                                timeout.GetNanoseconds(),
-                                                swapchain.GetSemaphore(),
+                                                INT64_MAX,
+                                                semaphore.Get(),
                                                 VK_NULL_HANDLE,
                                                 &imageIndex);
         switch(result)
         {
             case VK_SUCCESS:
+                swapchain.m_images[imageIndex].AddDependency(SemaphoreH(semaphore));
                 swapchain.AddImage(imageIndex);
                 return Status::Success;
             case VK_TIMEOUT:

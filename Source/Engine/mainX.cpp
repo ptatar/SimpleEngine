@@ -4,6 +4,8 @@
 
 #include "Utility.hpp"
 
+#include "RendererVk.hpp"
+
 using namespace engine;
 
 int main()
@@ -17,16 +19,36 @@ int main()
     window->Show();
     //Sleep(TimeUnits::MakeSeconds(10));
     //window->Shutdown();
-    while(threadManager.IsFinished())
+    auto commandBuffer = renderer->CreateCommandBuffer();
+    auto swapchain = renderer->GetSwapchain();
+    Uint32 imageCount = swapchain->GetImageCount();
+    RingBuffer<ObjectRef<CommandBufferVk>> commandRingBuffer(imageCount);
+    for (Uint32 i = 0; i < imageCount; i++)
     {
-        auto swapchain = renderer->GetSwapchain();
-        auto timeout = TimeUnits::MakeSeconds(1000000);
-        swapchain->AcquireImage(timeout); // INFINITY
-        auto commandBuffer = renderer->CreateCommandBuffer();
+        ObjectRef<CommandBufferVk>& commandBuffer = commandRingBuffer.GetNext();
+        commandBuffer = renderer->CreateCommandBuffer();
+        if (!commandBuffer)
+        {
+            // TODO shutdown threads
+            return 1;
+        }
+    }
+
+    while(!threadManager.IsFinished())
+    {
+        auto& commandBuffer = commandRingBuffer.GetNext();
+        swapchain->AcquireImage();
+        if(commandBuffer->Wait(TimeUnits::MakeSeconds(1)) != Status::Success)
+        {
+            // TODO shutdown threads
+            return 1;
+        }
         commandBuffer->Begin();
         commandBuffer->Clear(swapchain->GetCurrentImage(), ImageAspect::Color);
-        commandBuffer->Present();
+        commandBuffer->PrepereForPresent(swapchain->GetCurrentImage());
         commandBuffer->End();
+        renderer->Submit(commandBuffer);
+        swapchain->PresentImage(commandBuffer);
     }
     threadManager.Finish();
     //system.MainLoop();

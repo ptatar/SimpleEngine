@@ -1,18 +1,21 @@
 #pragma once
 
 #include "IRenderer.hpp"
+//#include "RendererVk.hpp"
 #include "WindowSurface.hpp"
 #include "ThreadManager.hpp"
 
 namespace engine
 {
+    class RendererVk;
+
     class RendererManager
     {
     public:
         RendererManager(ThreadManager* threadManager): m_threadManager(threadManager) {}
         ~RendererManager() {}
 
-        ObjectRef<IRenderer> GetRenderer(IWindowSurface* surface);
+        ObjectRef<RendererVk> GetRenderer(IWindowSurface* surface);
 
     private:
         ThreadManager* m_threadManager;

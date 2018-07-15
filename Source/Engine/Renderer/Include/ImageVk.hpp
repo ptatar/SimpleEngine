@@ -2,6 +2,7 @@
 
 #include "IImage.hpp"
 #include "VulkanUtility.hpp"
+#include "Handle.hpp"
 
 
 namespace engine
@@ -35,6 +36,12 @@ namespace engine
 
             VkImageLayout GetLayout() const { return m_layout; }
 
+            void ChangeLayout(VkImageLayout layout);
+
+            inline void AddDependency(const SemaphoreH& semaphore) { m_dependency = semaphore; }
+
+            inline SemaphoreH& GetDependency() { return m_dependency; }
+
         private:
             DeviceVk* m_device;
 
@@ -45,6 +52,8 @@ namespace engine
             VkImageView m_view;
 
             VkImageLayout m_layout;
+
+            SemaphoreH m_dependency;
 
             friend DeviceVk;
 

@@ -1,25 +1,14 @@
 #include "CommandBufferVk.hpp"
 
 #include "SwapchainVk.hpp"
+#include "DeviceVk.hpp"
 
 namespace engine
 {
 
     void CommandBufferVk::Begin()
     {
-        /*
-        VkImageMemoryBarrier write2ReadBarrier;
-        write2ReadBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        write2ReadBarrier.pNext = nullptr;
-        write2ReadBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        write2ReadBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        write2ReadBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        write2ReadBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        write2ReadBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        write2ReadBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        write2ReadBarrier.image = renderTarget;
-        write2ReadBarrier.subresourceRange = imageSubresourceRange;
-
+        ASSERT(m_state == State::Initialized || m_state == State::Submitted);
         VkCommandBufferBeginInfo info;
         info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         info.pNext = nullptr;
@@ -27,46 +16,16 @@ namespace engine
         info.pInheritanceInfo = nullptr;
 
         VkResult result = vkBeginCommandBuffer(m_commandBuffer, &info);
-        if (result == VK_SUCCESS)
+        if (result != VK_SUCCESS)
         {
             ASSERT(false);
             return;
         }
 
-        vkCmdPipelineBarrier(
-                m_commandBuffer,
-                VK_PIPELINE_STAGE_TRANSFER_BIT,
-                VK_PIPELINE_STAGE_TRANSFER_BIT,
-                0,
-                0,
-                nullptr,
-                0,
-                nullptr,
-                1,
-                &read2WriteBarrier);
-
-
-
-        vkCmdPipelineBarrier(
-                m_commandBuffer,
-                VK_PIPELINE_STAGE_TRANSFER_BIT,
-                VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                0,
-                0,
-                nullptr,
-                0,
-                nullptr,
-                1,
-                &write2ReadBarrier);
-                */
-        VkCommandBufferBeginInfo info;
-        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        info.pNext = nullptr;
-        info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-        info.pInheritanceInfo = nullptr;
+        m_state = State::Recording;
     }
 
-    void CommandBufferVk::OutputImage(Swapchain* swapchain)
+    void CommandBufferVk::OutputImage(SwapchainVk* swapchain)
     {
         /*
         VkImageSubresourceRange imageSubresourceRange = {
@@ -95,27 +54,73 @@ namespace engine
 
     void CommandBufferVk::End()
     {
+        ASSERT(m_state == State::Recording);
         vkEndCommandBuffer(m_commandBuffer);
+        m_state = State::Ready;
     }
 
     void CommandBufferVk::Reset()
     {
         vkResetCommandBuffer(m_commandBuffer, 0);
+        m_state = State::Initialized;
     }
 
-    void CommandBufferVk::Clear(Image& image, ImageAspect imageAspect)
+    Status CommandBufferVk::Wait(const TimeUnits& timeout)
     {
+        ASSERT(m_state == State::Submitted || m_state == State::Initialized);
+        if (m_state == State::Initialized)
+        {
+            return Status::Success;
+        }
+        else
+        {
+            return m_device->WaitForFence(m_fence, timeout);
+        }
+    }
+
+    void CommandBufferVk::Clear(ImageVk& image, ImageAspect imageAspect)
+    {
+        ASSERT(m_state == State::Recording);
         static_assert(static_cast<Uint32>(ImageAspect::Color) == VK_IMAGE_ASPECT_COLOR_BIT, "Type mismatch");
         static_assert(static_cast<Uint32>(ImageAspect::Depth) == VK_IMAGE_ASPECT_DEPTH_BIT, "Type mismatch");
         static_assert(static_cast<Uint32>(ImageAspect::Stencil) == VK_IMAGE_ASPECT_STENCIL_BIT, "Type mismatch");
 
-        VkImageSubresourceRange imageSubresourceRange = {
+        VkImageSubresourceRange imageSubresourceRange =
+        {
             static_cast<Uint32>(imageAspect),
             0,
             1,
             0,
             1
         };
+
+        if(image.GetLayout() != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        {
+            VkImageMemoryBarrier barrierToClear =
+            {
+                VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                nullptr,
+                VK_ACCESS_MEMORY_READ_BIT,
+                VK_ACCESS_TRANSFER_WRITE_BIT,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_QUEUE_FAMILY_IGNORED,
+                VK_QUEUE_FAMILY_IGNORED,
+                image.GetImage(),
+                imageSubresourceRange
+            };
+
+            vkCmdPipelineBarrier(m_commandBuffer,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                 0,
+                                 0,
+                                 nullptr,
+                                 0,
+                                 nullptr,
+                                 1,
+                                 &barrierToClear);
+        }
 
         VkClearColorValue color = { 1.0f, 0.0f, 0.0f, 1.0f };
 
@@ -126,7 +131,51 @@ namespace engine
                 &color,
                 1,
                 &imageSubresourceRange);
-        //vkCmdClearColorImage(m_commandBuffer,
+
+    }
+
+    void CommandBufferVk::PrepereForPresent(ImageVk& image)
+    {
+        ASSERT(m_state == State::Recording);
+        VkImageSubresourceRange imageSubresourceRange =
+        {
+            VK_IMAGE_ASPECT_COLOR_BIT,
+            0,
+            1,
+            0,
+            1
+        };
+            VkImageMemoryBarrier barrierClearToPresent =
+            {
+                VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,     // VkStructureType  sType
+                nullptr,                                    // const void*      pNext
+                VK_ACCESS_TRANSFER_WRITE_BIT,               // VkAccessFlags    srcAccessMask
+                VK_ACCESS_MEMORY_READ_BIT,                  // VkAccessFlags    dstAccessMask
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,       // VkImageLayout    oldLayout
+                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,            // VkImageLayout    newLayout
+                VK_QUEUE_FAMILY_IGNORED,                    // uint32_t         srcQueueFamilyIndex
+                VK_QUEUE_FAMILY_IGNORED,                    // uint32_t         dstQueueFamilyIndex
+                image.GetImage(),                           // VkImage          image
+                imageSubresourceRange
+            };
+
+            vkCmdPipelineBarrier(m_commandBuffer,
+                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                 VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                 0,
+                                 0,
+                                 nullptr,
+                                 0,
+                                 nullptr,
+                                 1,
+                                 &barrierClearToPresent);
+    }
+
+    void CommandBufferVk::InsertImageMemoryBarrier(ImageVk& image,
+                                              VkImageSubresourceRange& imageSubresourceRange,
+                                              VkImageLayout layout)
+    {
+        //vkCmdPipelineBarrier(m_commandBuffer, srcLayout,
     }
 
 } //namespace engine

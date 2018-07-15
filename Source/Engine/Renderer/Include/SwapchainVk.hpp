@@ -6,11 +6,13 @@
 #include "ImageVk.hpp"
 
 #include "Array.hpp"
+#include "Handle.hpp"
 #include <deque>
 
 namespace engine
 {
     class DeviceVk;
+    class CommandBufferVk;
 
     class SwapchainVk//: public ISwapchain
     {
@@ -22,13 +24,18 @@ namespace engine
                 , m_swapchain(swapchain)
                 , m_width(width)
                 , m_height(height)
-                , m_images(imageCount){}
+                , m_images(imageCount)
+                , m_semaphoreRing(imageCount) {}
 
             ~SwapchainVk();
 
-            Status AcquireImage(TimeUnits& timeUnits);
+            Status AcquireImage();
 
-            void PresentImage(VkQueue queue);
+            void PresentImage(ObjectRef<CommandBufferVk>& commandBuffer);
+
+            void SyncPresentImage(ObjectRef<CommandBufferVk>& commandBuffer);
+
+            void WaitFor(ObjectRef<CommandBufferVk>& commandBuffer);
 
             Uint32 GetImageCount() const { return m_images.Size(); };
 
@@ -43,8 +50,6 @@ namespace engine
         private:
             VkSwapchainKHR GetSwapchain() { return m_swapchain; }
 
-            VkSemaphore GetSemaphore() { return m_semaphore; }
-
             void AddImage(Uint32 imageIndex);
 
         private:
@@ -52,11 +57,11 @@ namespace engine
 
             VkSwapchainKHR m_swapchain;
 
-            VkSemaphore m_semaphore;
-
             std::deque<Uint32> m_availableImages;
 
             Array<ImageVk> m_images;
+
+            RingBuffer<SemaphoreG> m_semaphoreRing;
 
             Uint32 m_width;
 

@@ -5,7 +5,7 @@
 namespace engine
 {
 
-    ObjectRef<IRenderer> RendererManager::GetRenderer(IWindowSurface* surface)
+    ObjectRef<RendererVk> RendererManager::GetRenderer(IWindowSurface* surface)
     {
         if(surface->GetWindowType() == WindowType::WindowX)
         {
@@ -23,7 +23,8 @@ namespace engine
             auto job = ObjectRefCast<IJob, RendererVk>(renderer);
             m_threadManager->Execute(job);
             auto listener = ObjectRefCast<IJob, RendererVk>(renderer);
-            return ObjectRefCast<IRenderer, RendererVk>(renderer);
+            //return ObjectRefCast<IRenderer, RendererVk>(renderer);
+            return renderer;
         }
 
         ASSERT(true);

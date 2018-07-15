@@ -1,5 +1,7 @@
 #include "RendererVk.hpp"
 
+#include "CommandBufferVk.hpp"
+#include "SwapchainVk.hpp"
 #include "Utility.hpp"
 
 namespace engine
@@ -7,7 +9,18 @@ namespace engine
 
     Bool RendererVk::Initialize()
     {
-        return m_device.Initialize(); // remove device from renderer
+        if(!m_device.Initialize())
+        {
+            return false;
+        }
+
+        m_commandPool = m_device.CreateCommandPool();
+        if (!m_commandPool)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     void RendererVk::Finalize()
@@ -15,16 +28,23 @@ namespace engine
         m_device.Finalize();
     }
 
-    ObjectRef<ICommandBuffer> RendererVk::CreateCommandBuffer()
+    void RendererVk::Submit(ObjectRef<CommandBufferVk>& commandBuffer)
     {
-        // change it
-        auto commandBuffer = m_device.AllocateCommandBuffers();
-        return ObjectRefCast<ICommandBuffer, CommandBuffer>(commandBuffer);
+        m_device.SubmitQueue(commandBuffer);
     }
 
-    ObjectRef<ISwapchain> RendererVk::GetSwapchain()
+    ObjectRef<CommandBufferVk> RendererVk::CreateCommandBuffer()
     {
-        return ObjectRefCast<ISwapchain, SwapchainVk>(m_swapchain);
+        // change it
+        auto commandBuffers = m_device.AllocateCommandBuffers(1, m_commandPool.Get());
+        //return ObjectRefCast<ICommandBuffer, CommandBufferVk>(commandBuffers[0]);
+        return commandBuffers[0];
+    }
+
+    ObjectRef<SwapchainVk> RendererVk::GetSwapchain()
+    {
+        //return ObjectRefCast<ISwapchain, SwapchainVk>(m_swapchain);
+        return m_swapchain;
     }
 
 
@@ -54,11 +74,11 @@ namespace engine
         swapchainCreateInfo.surface          = surfaceResult.value.Get();
 
 
-        auto swapchainResult = m_device.CreateSwapchain(swapchainCreateInfo);
-        ASSERT_RETURN(swapchainResult.status == Status::Success);
+        m_swapchain = m_device.CreateSwapchain(swapchainCreateInfo);
+        ASSERT_RETURN(m_swapchain);
 
-        auto commandPoolResult = m_device.CreateCommandPool();
-        ASSERT_RETURN(commandPoolResult.status == Status::Success);
+        m_commandPool = m_device.CreateCommandPool();
+        ASSERT_RETURN(commandPool);
 
         m_commandBuffers = m_device.AllocateCommandBuffers(swapchainResult.value.Get(),
                                                                     commandPoolResult.value.Get());
@@ -68,9 +88,6 @@ namespace engine
         m_renderSurface = std::move(surfaceResult.value);
         m_semaphoreImageReady = std::move(semaphoreImageResult.value);
         m_semaphoreRenderingFinished = std::move(semaphoreRenderingResult.value);
-        m_swapchain = std::move(swapchainResult.value);
-        m_commandPool = std::move(commandPoolResult.value);
-
         return true;
     }
 
@@ -148,7 +165,7 @@ namespace engine
         info.imageWidth = surfaceWidth;
         info.imageHeight = surfaceHeight;
         info.imageCount = 2;
-        info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         info.presentationMode = targetPresentMode;
         info.surface = surface;
 
@@ -156,8 +173,9 @@ namespace engine
         ASSERT_RETURN(m_swapchain);
 
         auto commandPool = m_device.CreateCommandPool();
-        if (commandPool)
+        if (!commandPool)
         {
+            LOGE("Invalid command pool");
             return false;
         }
 
@@ -165,6 +183,7 @@ namespace engine
                                                            commandPool.Get());
         if (m_commandBuffers.size() != m_swapchain->GetImageCount())
         {
+            LOGE("Invalid command buffers");
             return false;
         }
 
@@ -176,18 +195,18 @@ namespace engine
     Bool RendererVk::Work()
     {
         // for now this should be good engouh
-        if (!m_swapchain->GetAvailableImageCount())
-        {
-            Status status = m_swapchain->AcquireImage(m_swapchainTimeout);
-            if (status != Status::Success)
-            {
-                return true;
-            }
-        }
-        CommandBuffer* commandBuffer = nullptr;
+        //if (!m_swapchain->GetAvailableImageCount())
+        //{
+            //Status status = m_swapchain->AcquireImage();
+            //if (status != Status::Success)
+            //{
+            //    return true;
+            //}
+        //}
+        //CommandBuffer* commandBuffer = nullptr;
         //m_commandQueue.PopCommandBuffer(commandBuffer);
         //m_swapchain->PresentImage();
-        return true;
+        return false;
     }
 
 

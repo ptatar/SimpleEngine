@@ -13,14 +13,12 @@ namespace engine
     };
 
     WindowX::WindowX()
-        : m_initialized(false)
-        , m_display(nullptr)
+        : m_display(nullptr)
         , m_window(0)
         , m_screen(0)
         , m_width(0)
         , m_height(0)
-        , m_shutdown(false)
-        , m_show(false) {}
+        , m_state(WindowState::NotInitialized) {}
 
     WindowX::~WindowX()
     {
@@ -50,7 +48,8 @@ namespace engine
         m_width = wndWidth;
         m_height = wndHeight;
         XSync(m_display, false);
-        m_initialized = true;
+
+        SetState(WindowState::Initialized);
 
         return 0;
     }
@@ -61,7 +60,7 @@ namespace engine
     {
         XMapWindow(m_display, m_window);
         XFlush(m_display);
-        m_show = true;
+        SetState(WindowState::Show);
         for(auto& listener: m_surfaceEventListeners)
         {
             listener->OnShow();
@@ -72,7 +71,7 @@ namespace engine
     {
         XUnmapWindow(m_display, m_window);
         XFlush(m_display);
-        m_show = false;
+        UnsetState(WindowState::Show);
         for(auto& listener: m_surfaceEventListeners)
         {
             listener->OnHide();
@@ -100,12 +99,14 @@ namespace engine
                     case Expose:
                         break;
                     case ClientMessage:
+                        SetState(WindowState::Terminal);
                         return false;
                 }
             }
         }
-        if (m_shutdown)
+        if (IsShutdown()) // not sure about this
         {
+            SetState(WindowState::Terminal);
             return false;
         }
         return true;
@@ -114,12 +115,12 @@ namespace engine
     void WindowX::Finalize()
     {
         // TO check thread this should be run from main thread
-        if (!m_initialized)
+        if (!CheckState(WindowState::Initialized))
         {
             return;
         }
 
-        if (m_show)
+        if (CheckState(WindowState::Show))
         {
             Hide();
         }

@@ -6,12 +6,18 @@
 #include "WindowSurface.hpp"
 #include "IJob.hpp"
 #include "Utility.hpp"
+#include "SwapchainVk.hpp"
+#include "CommandBufferVk.hpp"
 
 #include <deque>
 #include <mutex>
 
 namespace engine
 {
+    //class CommandBufferVk;
+    //class SwapchainVk;
+
+
     class CommandRecorder: public IJob
     {
     public:
@@ -19,31 +25,31 @@ namespace engine
         ~CommandRecorder();
     };
 
-    class RendererVk: public IRenderer, public ISurfaceEventListener, public IJob
+    class RendererVk: /*public IRenderer,*/ public ISurfaceEventListener, public IJob
     {
     public:
         RendererVk() {}
 
         ~RendererVk() {}
 
-        Bool Initialize() override;
+        Bool Initialize();
 
-        void Finalize() override;
+        void Finalize();
 
-        void Submit(CommandBuffer* commandBuffer);
+        void Submit(ObjectRef<CommandBufferVk>& commandBuffer);
 
-        ObjectRef<ICommandBuffer> CreateCommandBuffer() override;
+        ObjectRef<CommandBufferVk> CreateCommandBuffer();
 
-        ObjectRef<ISwapchain> GetSwapchain() override;
+        ObjectRef<SwapchainVk> GetSwapchain();
 
     #if defined(PLATFORM_WINDOWS)
         Bool CreateSurface(IWindowSurface32* windowSurface) override;
     #elif defined(PLATFORM_LINUX)
-        Bool CreateSurface(IWindowSurfaceX* windowSurface) override;
+        Bool CreateSurface(IWindowSurfaceX* windowSurface);
     #endif
         Bool Work() override;
 
-        void PushCommandBuffer(CommandBuffer& commandBuffer);
+        //void PushCommandBuffer(CommandBuffer& commandBuffer);
 
     private:
         Bool CheckPresentModeSupported(const std::vector<VkPresentModeKHR>& presentModes,
@@ -70,17 +76,23 @@ namespace engine
 
         void Present();
 
-        Status PopCommandBuffer(CommandBuffer& commandBuffer);
+        //Status PopCommandBuffer(CommandBuffer& commandBuffer);
 
     private:
         DeviceVk m_device;
-        SurfaceH m_renderSurface;
-        SemaphoreH m_semaphoreImageReady;
-        SemaphoreH m_semaphoreRenderingFinished;
-        CommandPoolH m_commandPool;
-        VkQueue m_queue;
+
+        SurfaceG m_renderSurface;
+
+        SemaphoreG m_semaphoreImageReady;
+
+        SemaphoreG m_semaphoreRenderingFinished;
+
+        CommandPoolG m_commandPool;
+
         ObjectRef<SwapchainVk> m_swapchain;
-        std::vector<ObjectRef<CommandBuffer>> m_commandBuffers;
+
+        std::vector<ObjectRef<CommandBufferVk>> m_commandBuffers;
+
         TimeUnits m_swapchainTimeout;
     };
 } // namespace engine

@@ -36,6 +36,8 @@ elseif(${PLATFORM_LINUX})
         ${RENDERER_LIB_INC_DIR}/IImage.hpp
         ${RENDERER_LIB_INC_DIR}/ImageVk.hpp
         ${RENDERER_LIB_SRC_DIR}/ImageVk.cpp
+        ${RENDERER_LIB_INC_DIR}/Handle.hpp
+        ${RENDERER_LIB_SRC_DIR}/Handle.cpp
     )
 else()
     message(FATAL_ERROR "Unknown platform")
@@ -51,7 +53,7 @@ target_include_directories(RENDERER_LIB PRIVATE ${COMMON_LIB_INC_DIR}
                                         PRIVATE ${THREAD_LIB_INC_DIR}
                                         PUBLIC ${RENDERER_LIB_INC_DIR}
                                         PRIVATE ${X11_INCLUDE_DIRS}
-                                        PRIVATE ${Vulkan_INCLUDE_DIRS}
+                                        PUBLIC ${Vulkan_INCLUDE_DIRS}
                                         )
 
 if(${PLATFORM_LINUX})
