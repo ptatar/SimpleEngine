@@ -530,9 +530,9 @@ namespace engine
         VkSubmitInfo info;
         info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         info.pNext = nullptr;
-        info.waitSemaphoreCount = 0;
-        info.pWaitSemaphores = nullptr;
-        info.pWaitDstStageMask = nullptr;
+        info.waitSemaphoreCount = commandBuffer->m_dependency.size();
+        info.pWaitSemaphores = reinterpret_cast<VkSemaphore*>(commandBuffer->m_dependency.data());
+        info.pWaitDstStageMask = commandBuffer->m_dependencyStage.data();
         info.commandBufferCount = 1;
         info.pCommandBuffers =  &commandBuffer->m_commandBuffer;
         info.signalSemaphoreCount = 1;

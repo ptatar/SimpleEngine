@@ -58,10 +58,19 @@ namespace engine
         { \
             public: \
             NAME(): m_handle(VK_NULL_HANDLE) {} \
+            NAME(const NAME& other): m_handle(other.m_handle) {} \
             NAME(GUARD_TYPE& guard): m_handle(guard.Get()) {} \
-            operator HANDLE_TYPE() \
+            operator HANDLE_TYPE() const \
             { \
                 return m_handle; \
+            } \
+            bool operator <(const NAME& other) const \
+            { \
+                return m_handle < other.m_handle; \
+            } \
+            bool operator >(const NAME& other) const \
+            { \
+                return m_handle > other.m_handle; \
             } \
             private: \
                 HANDLE_TYPE m_handle; \
@@ -74,15 +83,24 @@ namespace engine
         { \
             public: \
             NAME(): m_handle(VK_NULL_HANDLE) {} \
+            NAME(const NAME& other): m_handle(other.m_handle) {} \
             NAME(GUARD_TYPE& guard): m_handle(guard.Get()) {} \
-            operator HANDLE_TYPE() \
+            operator HANDLE_TYPE() const \
             { \
                 return m_handle; \
             } \
+            bool operator <(const NAME& other) const \
+            { \
+                return m_handle < other.m_handle; \
+            } \
+            bool operator >(const NAME& other) const \
+            { \
+                return m_handle > other.m_handle; \
+            } \
             private: \
                 HANDLE_TYPE m_handle; \
-        };
-
+        }; \
+        static_assert(sizeof(NAME) == sizeof(HANDLE_TYPE), ""#NAME" different size than "#HANDLE_TYPE);
 #endif
 
     CREATE_HANDLE(SemaphoreH, SemaphoreG, VkSemaphore);

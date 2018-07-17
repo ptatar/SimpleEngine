@@ -23,6 +23,8 @@ namespace engine
         }
 
         m_state = State::Recording;
+        m_dependency.clear();
+        m_dependencySet.clear();
     }
 
     void CommandBufferVk::OutputImage(SwapchainVk* swapchain)
@@ -132,6 +134,8 @@ namespace engine
                 1,
                 &imageSubresourceRange);
 
+        AddDependency(image.GetDependency(), VK_PIPELINE_STAGE_TRANSFER_BIT);
+
     }
 
     void CommandBufferVk::PrepereForPresent(ImageVk& image)
@@ -145,30 +149,34 @@ namespace engine
             0,
             1
         };
-            VkImageMemoryBarrier barrierClearToPresent =
-            {
-                VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,     // VkStructureType  sType
-                nullptr,                                    // const void*      pNext
-                VK_ACCESS_TRANSFER_WRITE_BIT,               // VkAccessFlags    srcAccessMask
-                VK_ACCESS_MEMORY_READ_BIT,                  // VkAccessFlags    dstAccessMask
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,       // VkImageLayout    oldLayout
-                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,            // VkImageLayout    newLayout
-                VK_QUEUE_FAMILY_IGNORED,                    // uint32_t         srcQueueFamilyIndex
-                VK_QUEUE_FAMILY_IGNORED,                    // uint32_t         dstQueueFamilyIndex
-                image.GetImage(),                           // VkImage          image
-                imageSubresourceRange
-            };
 
-            vkCmdPipelineBarrier(m_commandBuffer,
-                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                 VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                 0,
-                                 0,
-                                 nullptr,
-                                 0,
-                                 nullptr,
-                                 1,
-                                 &barrierClearToPresent);
+        VkImageMemoryBarrier barrierClearToPresent =
+        {
+            VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,     // VkStructureType  sType
+            nullptr,                                    // const void*      pNext
+            VK_ACCESS_TRANSFER_WRITE_BIT,               // VkAccessFlags    srcAccessMask
+            VK_ACCESS_MEMORY_READ_BIT,                  // VkAccessFlags    dstAccessMask
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,       // VkImageLayout    oldLayout
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,            // VkImageLayout    newLayout
+            VK_QUEUE_FAMILY_IGNORED,                    // uint32_t         srcQueueFamilyIndex
+            VK_QUEUE_FAMILY_IGNORED,                    // uint32_t         dstQueueFamilyIndex
+            image.GetImage(),                           // VkImage          image
+            imageSubresourceRange
+        };
+
+        vkCmdPipelineBarrier(m_commandBuffer,
+                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                             VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                             0,
+                             0,
+                             nullptr,
+                             0,
+                             nullptr,
+                             1,
+                             &barrierClearToPresent);
+
+        AddDependency(image.GetDependency(), VK_PIPELINE_STAGE_TRANSFER_BIT);
+
     }
 
     void CommandBufferVk::InsertImageMemoryBarrier(ImageVk& image,
@@ -176,6 +184,17 @@ namespace engine
                                               VkImageLayout layout)
     {
         //vkCmdPipelineBarrier(m_commandBuffer, srcLayout,
+    }
+
+    void CommandBufferVk::AddDependency(const SemaphoreH& semaphore, VkPipelineStageFlags pipelineStageFlag)
+    {
+        // TODO little overkill but will do for now
+        const auto ret = m_dependencySet.insert(semaphore);
+        if (ret.second)
+        {
+            m_dependency.push_back(semaphore);
+            m_dependencyStage.push_back(pipelineStageFlag);
+        }
     }
 
 } //namespace engine

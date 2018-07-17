@@ -4,6 +4,9 @@
 #include "VulkanUtility.hpp"
 #include "Handle.hpp"
 
+#include <vector>
+#include <set>
+
 namespace engine
 {
 
@@ -56,6 +59,8 @@ namespace engine
 
             void ChangeState(State state) { m_state = state; }
 
+            void AddDependency(const SemaphoreH& semaphore, const VkPipelineStageFlags stageFlag);
+
         private:
             DeviceVk* m_device;
             State m_state;
@@ -63,6 +68,9 @@ namespace engine
             VkCommandBuffer m_commandBuffer;
             SemaphoreG m_semaphore;
             FenceG m_fence;
+            std::vector<SemaphoreH> m_dependency;
+            std::set<SemaphoreH> m_dependencySet;
+            std::vector<VkPipelineStageFlags> m_dependencyStage;
 
         friend DeviceVk;
     }; // class CommandBuffer
