@@ -111,62 +111,14 @@ namespace engine
         ASSERT_RETURN(semaphoreRendering);
 
 
-        VkPresentModeKHR targetPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
-        if (!CheckPresentModeSupported(m_device.GetSupporedPresentModes(surface),
-                                       targetPresentMode))
-        {
-            return false;
-        }
 
-        VkColorSpaceKHR targetColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        VkFormat targetFormat = VK_FORMAT_B8G8R8A8_UNORM;
-
-        if (!CheckSurfaceFormatSupport(m_device.GetSupportedSurfaceFormats(surface),
-                                       targetColorSpace,
-                                       targetFormat))
-        {
-            LOGE("Could not find supported surface");
-            return false;
-        }
-
-        VkSurfaceCapabilitiesKHR surfaceCapabilities;
-        ASSERT_RETURN(m_device.GetSurfaceCapabilities(surface, surfaceCapabilities));
-
-        Uint32 surfaceWidth = windowSurface->GetSurfaceExtent().width;
-        Uint32 surfaceHeight = windowSurface->GetSurfaceExtent().height;
-
-        if(surfaceWidth > surfaceCapabilities.maxImageExtent.width ||
-           surfaceHeight > surfaceCapabilities.maxImageExtent.height)
-        {
-            LOGE("Invalid surface extents");
-            return false;
-        }
-
-        if(surfaceWidth < surfaceCapabilities.minImageExtent.width ||
-           surfaceHeight < surfaceCapabilities.minImageExtent.height)
-        {
-            LOGE("Invalid surface extents");
-            return false;
-        }
-
-        Uint32 imageCount = 2;
-        if(imageCount > surfaceCapabilities.maxImageCount ||
-           imageCount < surfaceCapabilities.minImageCount)
-        {
-            LOGE("Invalid image count");
-            return false;
-        }
 
         SwapchainCreateInfo info;
-        info.colorSpace = targetColorSpace;
-        info.surfaceFormat = targetFormat;
-        info.imagesCount = imageCount;
-        info.transformation = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-        info.imageWidth = surfaceWidth;
-        info.imageHeight = surfaceHeight;
-        info.imageCount = 2;
+        info.surfaceFormat = ImageFormat::BGRA_8_UN;
+        info.imagesCount = 2;
+        info.imageWidth = windowSurface->GetSurfaceExtent().width;
+        info.imageHeight = windowSurface->GetSurfaceExtent().height;
         info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-        info.presentationMode = targetPresentMode;
         info.surface = surface;
 
         m_swapchain = m_device.CreateSwapchain(info);
@@ -209,36 +161,6 @@ namespace engine
         return false;
     }
 
-
-
-    Bool RendererVk::CheckPresentModeSupported(const std::vector<VkPresentModeKHR>& presentModes,
-                                               VkPresentModeKHR target) const
-    {
-        for(auto& mode: presentModes)
-        {
-            if(target == mode)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    Bool RendererVk::CheckSurfaceFormatSupport(const std::vector<VkSurfaceFormatKHR>& surfaceFormats,
-                                               VkColorSpaceKHR colorSpace,
-                                               VkFormat format) const
-    {
-        for(auto& surface: surfaceFormats)
-        {
-            if(surface.colorSpace == colorSpace && surface.format == format)
-            {
-                    return true;
-            }
-        }
-
-        return false;
-    }
 
     void RendererVk::ClearScreen()
     {

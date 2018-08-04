@@ -8,9 +8,11 @@
 #include "Utility.hpp"
 #include "SwapchainVk.hpp"
 #include "CommandBufferVk.hpp"
+#include "FileManager.hpp"
 
 #include <deque>
 #include <mutex>
+#include <unordered_map>
 
 namespace engine
 {
@@ -34,6 +36,8 @@ namespace engine
 
         Bool Initialize();
 
+        Bool InitializeShaders();
+
         void Finalize();
 
         void Submit(ObjectRef<CommandBufferVk>& commandBuffer);
@@ -52,12 +56,6 @@ namespace engine
         //void PushCommandBuffer(CommandBuffer& commandBuffer);
 
     private:
-        Bool CheckPresentModeSupported(const std::vector<VkPresentModeKHR>& presentModes,
-                                       VkPresentModeKHR target) const;
-
-        Bool CheckSurfaceFormatSupport(const std::vector<VkSurfaceFormatKHR>& surfaceFormats,
-                                      VkColorSpaceKHR colorSpace,
-                                      VkFormat format) const;
 
         // ISurfaceEventListener
         virtual void OnResize(Uint32 width, Uint32 height) override {}
@@ -83,16 +81,12 @@ namespace engine
 
         SurfaceG m_renderSurface;
 
-        SemaphoreG m_semaphoreImageReady;
-
-        SemaphoreG m_semaphoreRenderingFinished;
-
         CommandPoolG m_commandPool;
 
         ObjectRef<SwapchainVk> m_swapchain;
 
         std::vector<ObjectRef<CommandBufferVk>> m_commandBuffers;
 
-        TimeUnits m_swapchainTimeout;
+        std::unordered_map<std::string, ShaderG> m_shaderMap;
     };
 } // namespace engine

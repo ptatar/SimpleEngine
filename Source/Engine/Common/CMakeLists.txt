@@ -1,17 +1,17 @@
-set(COMMON_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Source)
-set(COMMON_LIB_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Include)
-set(LIBRARY_INC_DIR ${COMMON_LIB_INC_DIR} PARENT_SCOPE)
+set(COMMON_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Source)
+set(COMMON_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Include)
+set(LIBRARY_INC_DIR ${COMMON_INC_DIR} PARENT_SCOPE)
 
-set(COMMON_LIB_SRC
-    ${COMMON_LIB_INC_DIR}/Types.hpp
-    ${COMMON_LIB_INC_DIR}/Utility.hpp
-    ${COMMON_LIB_INC_DIR}/Logger.hpp
-    ${COMMON_LIB_INC_DIR}/DArray.hpp
-    ${COMMON_LIB_INC_DIR}/Assert.hpp
-    ${COMMON_LIB_SRC_DIR}/DArray.cpp
-    ${COMMON_LIB_SRC_DIR}/Utility.cpp
+set(COMMON_SRC
+    ${COMMON_INC_DIR}/Types.hpp
+    ${COMMON_INC_DIR}/Utility.hpp
+    ${COMMON_INC_DIR}/Logger.hpp
+    ${COMMON_INC_DIR}/DArray.hpp
+    ${COMMON_INC_DIR}/Assert.hpp
+    ${COMMON_SRC_DIR}/DArray.cpp
+    ${COMMON_SRC_DIR}/Utility.cpp
 )
 
-add_library(COMMON_LIB STATIC ${COMMON_LIB_SRC})
+add_library(COMMON STATIC ${COMMON_SRC})
 
-target_include_directories(COMMON_LIB PUBLIC ${COMMON_LIB_INC_DIR})
+target_include_directories(COMMON PUBLIC ${COMMON_INC_DIR})
