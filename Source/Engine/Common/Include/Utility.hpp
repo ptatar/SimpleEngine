@@ -3,7 +3,8 @@
 #include "Types.hpp"
 #include "Assert.hpp"
 
-namespace engine {
+namespace engine
+{
 
     void Yield();
 

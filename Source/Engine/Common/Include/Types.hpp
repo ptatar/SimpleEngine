@@ -251,4 +251,12 @@ namespace engine
         return ObjectRef<To>(base);
     }
 
+    template <class T>
+    Bool IsSet(const T& type)
+    {
+        return static_cast<Uint32>(type) != 0;
+    }
+
+
+
 } // namespace engine
