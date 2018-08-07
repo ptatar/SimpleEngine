@@ -36,6 +36,8 @@ elseif(${PLATFORM_LINUX})
         ${RENDERER_INC_DIR}/IImage.hpp
         ${RENDERER_INC_DIR}/ImageVk.hpp
         ${RENDERER_SRC_DIR}/ImageVk.cpp
+        ${RENDERER_INC_DIR}/StateCacheVk.hpp
+        ${RENDERER_SRC_DIR}/StateCacheVk.cpp
         ${RENDERER_INC_DIR}/Handle.hpp
         ${RENDERER_SRC_DIR}/Handle.cpp
     )
@@ -48,6 +50,7 @@ add_library(RENDERER STATIC ${RENDERER_SRC})
 target_link_libraries(RENDERER PRIVATE COMMON
                                PRIVATE THREAD
                                PRIVATE ${Vulkan_LIBRARIES})
+
 
 target_include_directories(RENDERER PRIVATE ${COMMON_INC_DIR}
                                     PRIVATE ${THREAD_INC_DIR}

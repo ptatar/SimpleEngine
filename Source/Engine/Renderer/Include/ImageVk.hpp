@@ -20,11 +20,12 @@ namespace engine
                 , m_view(VK_NULL_HANDLE)
                 , m_layout(VK_IMAGE_LAYOUT_UNDEFINED) {}
 
-            ImageVk(DeviceVk* device, VkImage image, VkImageView view)
+            ImageVk(DeviceVk* device, VkImage image, VkImageView view, const ImageDesc& imageDesc)
                 : m_image(image)
                 , m_view(view)
                 , m_device(device)
-                , m_layout(VK_IMAGE_LAYOUT_UNDEFINED){}
+                , m_layout(VK_IMAGE_LAYOUT_UNDEFINED)
+                , m_imageDesc(imageDesc){}
 
             ~ImageVk();
 

@@ -114,7 +114,7 @@ namespace engine
 
 
         SwapchainCreateInfo info;
-        info.surfaceFormat = ImageFormat::BGRA_8_UN;
+        info.surfaceFormat = ImageFormat::B8G8R8A8_Unorm;
         info.imagesCount = 2;
         info.imageWidth = windowSurface->GetSurfaceExtent().width;
         info.imageHeight = windowSurface->GetSurfaceExtent().height;

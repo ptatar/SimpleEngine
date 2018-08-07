@@ -17,6 +17,7 @@ namespace engine
     CREATE_HANDLE_DESTRUCTOR(CommandPoolG, VkCommandPool, DestroyCommandPool);
     CREATE_HANDLE_DESTRUCTOR(ImageViewG, VkImageView, DestroyImageView);
     CREATE_HANDLE_DESTRUCTOR(FenceG, VkFence, DestroyFence);
+    CREATE_HANDLE_DESTRUCTOR(ShaderG, VkShaderModule, DestroyShader);
 
 #undef CREATE_HANDLER_DESTRUCTOR
 

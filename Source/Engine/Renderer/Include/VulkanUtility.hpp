@@ -16,6 +16,9 @@
 
 namespace engine
 {
+    enum class ImageFormat;
+
+    VkFormat ImageFormat2NativeFormat(ImageFormat format);
 
 
 } // namespace engine

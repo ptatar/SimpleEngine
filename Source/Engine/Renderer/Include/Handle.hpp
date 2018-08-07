@@ -47,6 +47,7 @@ namespace engine
     CREATE_GUARD(CommandPoolG, VkCommandPool, DestroyCommandPool);
     CREATE_GUARD(ImageViewG, VkImageView, DestroyImageView);
     CREATE_GUARD(FenceG, VkFence, DestroyFence);
+    CREATE_GUARD(ShaderG, VkShaderModule, DestroyShader);
 
 
 #undef CREATE_GUARD
@@ -108,6 +109,7 @@ namespace engine
     CREATE_HANDLE(CommandPoolH, CommandPoolG, VkCommandPool);
     CREATE_HANDLE(ImageViewH, ImageViewG, VkImageView);
     CREATE_HANDLE(FenceH, FenceG, VkFence);
+    CREATE_HANDLE(ShaderH, ShaderG, VkShaderModule);
 
 #undef CREATE_HANDLE
 

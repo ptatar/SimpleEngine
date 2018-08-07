@@ -6,6 +6,7 @@
 #include "WindowSurface.hpp"
 #include "VulkanUtility.hpp"
 #include "Handle.hpp"
+#include "IImage.hpp"
 
 namespace engine
 {
@@ -24,7 +25,7 @@ namespace engine
     struct SwapchainCreateInfo
     {
         VkColorSpaceKHR colorSpace;
-        VkFormat surfaceFormat;
+        ImageFormat surfaceFormat;
         Uint32 imagesCount;
         VkSurfaceTransformFlagBitsKHR transformation;
         Uint32 imageWidth;
@@ -73,6 +74,8 @@ namespace engine
         std::vector<ObjectRef<CommandBufferVk>> AllocateCommandBuffers(Uint32 count,
                                                                      VkCommandPool commandPool);
 
+        ShaderG CreateShader(const std::vector<Uint8>& data);
+
         void DestroySemaphore(VkSemaphore semaphore) { vkDestroySemaphore(m_device, semaphore, nullptr); }
 
         void DestroySurface(VkSurfaceKHR surface) { vkDestroySurfaceKHR(m_instance, surface, nullptr); }
@@ -86,6 +89,8 @@ namespace engine
         void DestroyImage(VkImage image) { vkDestroyImage(m_device, image, nullptr); }
 
         void DestroyFence(VkFence fence) { vkDestroyFence(m_device, fence, nullptr); }
+
+        void DestroyShader(VkShaderModule shader) { vkDestroyShaderModule(m_device, shader, nullptr); }
 
         std::vector<VkPresentModeKHR> GetSupporedPresentModes(VkSurfaceKHR surface) const;
 
