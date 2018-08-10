@@ -47,6 +47,12 @@ namespace engine
         virtual Uint32 GetPosition() const = 0;
 
         virtual void SetPosition(Uint32 position, Direction direction = Direction::Begin) = 0;
+
+        virtual const std::string& GetFileName() const = 0;
+
+        virtual Bool Load() = 0;
+
+        virtual void Unload() = 0;
     };
 
     class IOutputFile
@@ -63,6 +69,8 @@ namespace engine
             virtual Uint32 GetPosition() const = 0;
 
             virtual void SetPosition(Uint32 position, Direction direction) = 0;
+
+            virtual const std::string& GetFileName() const = 0;
     };
 
 } // namespace engine

@@ -1,11 +1,15 @@
 #pragma once
 
-#include <VulkanUtility.hpp>
+#include "Types.hpp"
+#include "Array.hpp"
+#include "VulkanUtility.hpp"
 
 #include <list>
-
+#include <vector>
 namespace engine
 {
+
+    class SwapchainVk;
 
     class StateVk
     {
@@ -15,6 +19,8 @@ namespace engine
             ~StateVk() {}
 
             void Default();
+
+            void SetAttachments(ObjectRef<SwapchainVk>& swapchain);
 
         private:
             VkPipelineVertexInputStateCreateInfo m_vertexInputInfo;
@@ -31,9 +37,11 @@ namespace engine
 
             VkPipelineMultisampleStateCreateInfo m_multisampleInfo;
 
-            VkPipelineColorBlendAttachmentState m_colorBlendAttachmentInfo;
+            std::vector<VkPipelineColorBlendAttachmentState> m_colorBlendAttachments;
 
-            VkPipelineColorBlendStateCreateInfo m_colorBlendStateCreateInfo;
+            Array<Float> m_blendConstants;
+
+            VkPipelineColorBlendStateCreateInfo m_colorBlendStateInfo;
     };
 
 

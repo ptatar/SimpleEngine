@@ -16,6 +16,15 @@ namespace engine
                 m_data = new T[size];
             }
 
+            Array(std::initializer_list<T> initList)
+            {
+                Uint32 i = 0;
+                for(auto it = initList.begin(); it < initList.end(); it++)
+                {
+                    m_data[i++] = *it;
+                }
+            }
+
             ~Array()
             {
                 delete[] m_data;
@@ -40,6 +49,11 @@ namespace engine
             inline Uint32 Size() const
             {
                 return m_size;
+            }
+
+            inline T* Data()
+            {
+                return m_data;
             }
 
         private:

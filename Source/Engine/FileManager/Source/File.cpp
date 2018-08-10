@@ -21,6 +21,8 @@ namespace engine
             m_file.seekg(0, std::ios_base::end);
             m_size = m_file.tellg();
             m_file.seekg(m_position);
+
+            m_fileName = name;
             return true;
         }
         else
@@ -47,6 +49,24 @@ namespace engine
     }
 
 
+    Bool InputFile::Load()
+    {
+        m_buffer.resize(m_size);
+        Bool ret = Read(m_buffer.data(), m_size);
+        if(ret)
+        {
+            LOGW("File loading failed. Clearing buffer");
+            m_buffer.clear();
+        }
+        return ret;
+    }
+
+    void InputFile::Unload()
+    {
+        m_buffer.clear();
+    }
+
+
     Bool OutputFile::Open(const std::string& name, FileMode fileMode)
     {
         if (fileMode == FileMode::Ate)
@@ -65,6 +85,8 @@ namespace engine
             m_file.seekp(0, std::ios_base::end);
             m_size = m_file.tellp();
             m_file.seekp(m_position);
+
+            m_fileName = name;
             return true;
         }
         else

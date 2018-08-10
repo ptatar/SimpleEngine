@@ -3,6 +3,7 @@
 #include "IFile.hpp"
 
 #include <fstream>
+#include <vector>
 
 namespace engine
 {
@@ -29,6 +30,12 @@ namespace engine
                 m_file.seekg(m_position);
             };
 
+            virtual const std::string& GetFileName() const override { return m_fileName; }
+
+            virtual Bool Load() override;
+
+            virtual void Unload() override;
+
         private:
             std::ifstream m_file;
 
@@ -37,6 +44,10 @@ namespace engine
             Uint32 m_size;
 
             FileMode m_mode;
+
+            std::string m_fileName;
+
+            std::vector<Uint8> m_buffer;
     };
 
     class OutputFile: public IOutputFile
@@ -60,6 +71,8 @@ namespace engine
                 m_file.seekp(m_position);
             };
 
+            virtual const std::string& GetFileName() const override { return m_fileName; }
+
         private:
             std::ofstream m_file;
 
@@ -68,6 +81,8 @@ namespace engine
             Uint32 m_size;
 
             FileMode m_mode;
+
+            std::string m_fileName;
     };
 
 } // namespace engine
