@@ -11,4 +11,5 @@
     #undef Bool
     #undef Status
     #undef Success
+    #undef None
 #endif

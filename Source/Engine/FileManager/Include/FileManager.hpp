@@ -4,6 +4,7 @@
 #include "IFile.hpp"
 
 #include <unordered_map>
+#include <mutex>
 
 namespace engine
 {
@@ -16,11 +17,12 @@ namespace engine
 
             ObjectRef<IInputFile> OpenFile(const std::string& fileName);
 
-            void RegisterFile(IInputFile* file);
+            void RegisterFile(ObjectRef<IInputFile>& file);
             void UnregisterFile(IInputFile* file);
 
         private:
-            std::unordered_map<std::string, IInputFile*> m_fileMap;
+            std::unordered_map<std::string, ObjectRef<IInputFile>> m_fileMap;
+            std::mutex m_fileMapMx;
     };
 
 } // namespace engine

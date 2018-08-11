@@ -12,6 +12,7 @@ set(FILE_MANAGER_SRC
 
 add_library(FILE_MANAGER STATIC ${FILE_MANAGER_SRC})
 
-target_link_libraries(FILE_MANAGER COMMON)
+#target_link_libraries(FILE_MANAGER COMMON)
 
-target_include_directories(FILE_MANAGER PUBLIC ${FILE_MANAGER_INC_DIR})
+target_include_directories(FILE_MANAGER PUBLIC ${FILE_MANAGER_INC_DIR}
+                                        PRIVATE ${COMMON_INC_DIR})

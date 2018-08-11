@@ -1,7 +1,21 @@
 #include "File.hpp"
 
+#include "FileManager.hpp"
+
+#include <cstring>
+
 namespace engine
 {
+
+    InputFile::~InputFile()
+    {
+        if (m_file.is_open())
+        {
+            m_file.close();
+        }
+
+        m_fileManager->UnregisterFile(this);
+    }
 
     Bool InputFile::Open(const std::string& name, FileMode fileMode)
     {
@@ -23,6 +37,7 @@ namespace engine
             m_file.seekg(m_position);
 
             m_fileName = name;
+
             return true;
         }
         else
@@ -35,16 +50,26 @@ namespace engine
 
     Bool InputFile::Read(Uint8* output, Uint32 bytes)
     {
-        m_file.read(reinterpret_cast<char*>(output), bytes);
-        m_position = m_file.tellg();
-
-        if(m_file)
+        if (m_buffer.size())
         {
+            ASSERT(m_position < m_size);
+            ASSERT(m_position + bytes < m_size);
+            std::memcpy(output, m_buffer.data() + m_position, bytes);
             return true;
         }
         else
         {
-            return false;
+            m_file.read(reinterpret_cast<char*>(output), bytes);
+            m_position = m_file.tellg();
+
+            if(m_file)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 

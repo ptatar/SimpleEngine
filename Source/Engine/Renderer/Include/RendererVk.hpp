@@ -8,7 +8,6 @@
 #include "Utility.hpp"
 #include "SwapchainVk.hpp"
 #include "CommandBufferVk.hpp"
-#include "FileManager.hpp"
 
 #include <deque>
 #include <mutex>

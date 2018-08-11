@@ -8,12 +8,20 @@
 namespace engine
 {
 
+    class FileManager;
+
     class InputFile: public IInputFile
     {
         public:
-            InputFile() {}
+            InputFile(FileManager* fileManager)
+                : m_position(0)
+                , m_size(0)
+                , m_mode(FileMode::None)
+                , m_fileName()
+                , m_buffer()
+                , m_fileManager(fileManager) {}
 
-            virtual ~InputFile() { m_file.close(); }
+            virtual ~InputFile();
 
             virtual Bool Open(const std::string& name, FileMode fileMode) override;
 
@@ -48,6 +56,8 @@ namespace engine
             std::string m_fileName;
 
             std::vector<Uint8> m_buffer;
+
+            FileManager* m_fileManager;
     };
 
     class OutputFile: public IOutputFile

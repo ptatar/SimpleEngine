@@ -5,7 +5,7 @@
 namespace engine
 {
 
-    enum class FileMode: Uint32
+    enum class FileMode
     {
         None   = 0x00,
         Read   = 0x01,
@@ -15,13 +15,13 @@ namespace engine
     };
 
 
-    inline FileMode operator |(const FileMode& rs, const FileMode& ls)
+    static inline FileMode operator |(const FileMode& rs, const FileMode& ls)
     {
         return static_cast<FileMode>(static_cast<Uint32>(rs) | static_cast<Uint32>(ls));
     }
 
 
-    inline FileMode operator &(const FileMode& rs, const FileMode& ls)
+    static inline FileMode operator &(const FileMode& rs, const FileMode& ls)
     {
         return static_cast<FileMode>(static_cast<Uint32>(rs) | static_cast<Uint32>(ls));
     }

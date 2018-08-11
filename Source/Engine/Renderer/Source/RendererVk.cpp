@@ -4,6 +4,8 @@
 #include "SwapchainVk.hpp"
 #include "Utility.hpp"
 
+#include "FileManager.hpp"
+
 namespace engine
 {
 
