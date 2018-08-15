@@ -23,6 +23,8 @@ include(platform)
 include(compiler)
 include(functions)
 
-set(SOURCE_DIR "Source/Engine")
+set(SOURCE_DIR "Source")
+set(EXTERNAL_DIR "External")
 
+add_subdirectory(${EXTERNAL_DIR})
 add_subdirectory(${SOURCE_DIR})

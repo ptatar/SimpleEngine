@@ -38,6 +38,8 @@ elseif(${PLATFORM_LINUX})
         ${RENDERER_SRC_DIR}/ImageVk.cpp
         ${RENDERER_INC_DIR}/StateCacheVk.hpp
         ${RENDERER_SRC_DIR}/StateCacheVk.cpp
+        ${RENDERER_INC_DIR}/ShaderRegister.hpp
+        ${RENDERER_SRC_DIR}/ShaderRegister.cpp
         ${RENDERER_INC_DIR}/Handle.hpp
         ${RENDERER_SRC_DIR}/Handle.cpp
     )
