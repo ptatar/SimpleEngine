@@ -1,1 +1,3 @@
+set(SHADER_COOKER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ShaderCooker)
 
+add_subdirectory(${SHADER_COOKER_DIR})
