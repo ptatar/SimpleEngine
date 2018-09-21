@@ -23,9 +23,25 @@ int main(int argc, char** argv)
     {
         std::cout << "Arguments parsing error..." << std::endl;
     }
-    for(auto iter = arguments.Begin(); iter != arguments.End(); iter++)
+
+
+    const ArgumentMap& argumentMap = argumentParser.GetArgumentMap();
+
+    {   
+        const auto& valueMap = argumentMap.GetFullnameMap();
+        std::cout << "Argument fullname provided: \n";
+        for (auto iter = valueMap.begin(); iter != valueMap.end(); ++iter)
+        {
+            std::cout << iter->first << ", ";
+        }
+    }
     {
-        
+        const auto& valueMap = argumentMap.GetAbbreviationMap();
+        std::cout << "\n\nArgument abbreviation provided: \n";
+        for (auto iter = valueMap.begin(); iter != valueMap.end(); ++iter)
+        {
+            std::cout << iter->first << ", ";
+        }
     }
     return 0;
 }

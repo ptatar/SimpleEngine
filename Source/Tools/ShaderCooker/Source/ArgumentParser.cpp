@@ -16,6 +16,29 @@ Value* CreateValueFromType(ValueType type)
 }
 
 
+bool IsArgumentName(const std::string& str)
+{
+    if (str.size() > 0)
+    {
+        if (str[0] == '-')
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ValuePath::Parse(ArgumentForwardIter& iter)
+{
+    const std::string& str = *iter;
+    if (str.size() > 0 && !IsArgumentName(str))
+    {
+        
+    }
+    return false;
+}
+
+
 Value* ArgumentMap::GetByFullname(const std::string& fullname)
 {
     auto found = m_fullnameValueMap.find(fullname);
@@ -36,6 +59,7 @@ Value* ArgumentMap::GetByAbbreviation(const std::string& abbreviation)
     }
     return found->second;
 }
+
 
 bool ArgumentMap::AddValue(
         const std::string& fullname,

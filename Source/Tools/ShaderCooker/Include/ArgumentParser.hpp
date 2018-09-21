@@ -168,7 +168,7 @@ class ValuePath: public Value
     public:
         ValuePath(): Value(ValueType::Path) {}
 
-        virtual bool Parse(ArgumentForwardIter&) override { return true; };
+        virtual bool Parse(ArgumentForwardIter&) override;
 };
 
 
@@ -181,6 +181,10 @@ class ArgumentMap
         Value* GetByFullname(const std::string& fullname);
 
         Value* GetByAbbreviation(const std::string& abbreviation);
+
+        const std::map<std::string, Value*> GetFullnameMap() const { return m_fullnameValueMap; };
+
+        const std::map<std::string, Value*> GetAbbreviationMap() const { return m_abbreviationValueMap; }
 
     private:
         bool AddValue(
@@ -212,6 +216,8 @@ class ArgumentParser
                          ValueType type);
 
         bool Parse(const Arguments& arguments);
+
+        const ArgumentMap& GetArgumentMap() const { return m_argumentMap; };
 
     private:
         bool IsFullname(const std::string& name) const;
