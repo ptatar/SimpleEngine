@@ -1,6 +1,7 @@
 #include "ArgumentParser.hpp"
 
-#include <iostream>
+#include "Logger.hpp"
+
 #include <memory>
 #include <cstring>
 
@@ -33,7 +34,7 @@ bool ValuePath::Parse(ArgumentForwardIter& iter)
     const std::string& str = *iter;
     if (str.size() > 0 && !IsArgumentName(str))
     {
-        
+
     }
     return false;
 }
@@ -86,7 +87,7 @@ bool ArgumentParser::AddArgument(
         auto it = m_nameSet.find(name);
         if (it != m_nameSet.end())
         {
-            std::cout << "Error: Argument name already in use" << std::endl;
+            LOGE("Error: Argument name already in use");
             return false;
         }
     }
@@ -94,7 +95,7 @@ bool ArgumentParser::AddArgument(
         auto it = m_abbreviationSet.find(abbreviation);
         if (it != m_abbreviationSet.end())
         {
-            std::cout << "Error: Argument abbreviation already in use" << std::endl;
+            LOGE("Error: Argument abbreviation already in use");
             return false;
         }
     }
@@ -157,7 +158,7 @@ bool ArgumentParser::Parse(const Arguments& arguments)
         }
         else
         {
-            std::cout << "Invalid argument: " << *iter << std::endl;
+            LOGE("Invalid argument: %s", (*iter).c_str());
             return false;
         }
 
@@ -199,7 +200,7 @@ std::string ArgumentParser::GetFullname(const std::string& name) const
     }
     else
     {
-        std::cout << "Name is not a fullname" << std::endl;
+        LOGE("Name is not a fullname");
         return "";
     }
 }
@@ -213,7 +214,7 @@ std::string ArgumentParser::GetAbbreviation(const std::string& name) const
     }
     else
     {
-        std::cout << "Name is not a abbreviation" << std::endl;
+        LOGE("Name is not a abbreviation");
         return "";
     }
 }

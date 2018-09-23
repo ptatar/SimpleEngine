@@ -14,4 +14,6 @@ add_library(THREAD STATIC ${THREAD_SRC})
 target_link_libraries(THREAD COMMON
                              Threads::Threads) #not my var name
 
-target_include_directories(THREAD PUBLIC ${THREAD_INC_DIR})
+                         message(STATUS "Dupa${COMMON_INC_DIR}")
+target_include_directories(THREAD PUBLIC ${THREAD_INC_DIR}
+                                  PRIVATE ${COMMON_INC_DIR})

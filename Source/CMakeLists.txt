@@ -1,5 +1,8 @@
+set(COMMON_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Common)
 set(ENGINE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Engine)
 set(TOOLS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Tools)
+
+include_library(${COMMON_LIB_DIR} COMMON_INC_DIR)
 
 add_subdirectory(${ENGINE_DIR})
 add_subdirectory(${TOOLS_DIR})
