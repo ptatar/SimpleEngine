@@ -1,47 +1,60 @@
 #include "ArgumentParser.hpp"
 #include "ShaderCooker.hpp"
+#include "Logger.hpp"
+#include "Path.hpp"
 
 #include <iostream>
+
+const char* helpStr=
+"ShaderCooker help:\n\
+    --inputPath, -i  input directory for shader cooker\n\
+    --outputPath, -o output directory for shader cooker\n\
+    --help, -h       print help\n\
+";
 
 int main(int argc, char** argv)
 {
     Arguments arguments(argc, argv);
-    ArgumentParser argumentParser;
-    argumentParser.AddArgument(
-            "input",
-            "i",
-            "Input directory.",
-            ValueType::Path);
-    argumentParser.AddArgument(
-            "output",
-            "o",
-            "Output directory.",
-            ValueType::Path);
 
-    bool ret = argumentParser.Parse(arguments);
-    if (!ret)
+
+    Path inputPath;
+    Path outputPath;
+    for(auto iter = ++arguments.Begin(); iter != arguments.End(); iter++)
     {
-        std::cout << "Arguments parsing error..." << std::endl;
-    }
-
-
-    const ArgumentMap& argumentMap = argumentParser.GetArgumentMap();
-
-    {   
-        const auto& valueMap = argumentMap.GetFullnameMap();
-        std::cout << "Argument fullname provided: \n";
-        for (auto iter = valueMap.begin(); iter != valueMap.end(); ++iter)
+        if(ArgCmp(*iter, "--inputDir", "-i"))
         {
-            std::cout << iter->first << ", ";
+            inputPath = Path(*iter);
+        }
+        else if (ArgCmp(*iter, "--outputDir", "-o"))
+        {
+            outputPath = Path(*iter);
+        }
+        else if (ArgCmp(*iter, "--help", "-h"))
+        {
+            LOGI("%s", helpStr);
+            return 0;
+        }
+        else
+        {
+            LOGE("Invalid argument: %s", (*iter).c_str());
+            return -1;
         }
     }
+
+    if (!inputPath.IsValid())
     {
-        const auto& valueMap = argumentMap.GetAbbreviationMap();
-        std::cout << "\n\nArgument abbreviation provided: \n";
-        for (auto iter = valueMap.begin(); iter != valueMap.end(); ++iter)
-        {
-            std::cout << iter->first << ", ";
-        }
+        LOGE("Invalid input path: %s", inputPath.GetStr().c_str());
+        return -1;
     }
+
+    if (!outputPath.IsValid())
+    {
+        LOGE("Invalid output path: %s", inputPath.GetStr().c_str());
+        return -1;
+    }
+
+    ShaderCooker shaderCooker;
+    shaderCooker.Cook();
+
     return 0;
 }

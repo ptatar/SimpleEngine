@@ -4,7 +4,7 @@ set(SHADER_COOKER_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Include)
 set(SHADER_COOKER_SRC
     ${SHADER_COOKER_SRC_DIR}/main.cpp
     ${SHADER_COOKER_INC_DIR}/ArgumentParser.hpp
-    ${SHADER_COOKER_SRC_DIR}/ArgumentParser.cpp
+    ${SHADER_COOKER_INC_DIR}/ArgumentForwardIter.hpp
     ${SHADER_COOKER_INC_DIR}/ShaderCooker.hpp
     ${SHADER_COOKER_SRC_DIR}/ShaderCooker.cpp
     )
