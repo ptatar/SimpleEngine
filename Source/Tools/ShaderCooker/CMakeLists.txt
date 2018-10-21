@@ -11,7 +11,8 @@ set(SHADER_COOKER_SRC
 
 add_executable(SHADER_COOKER_EXE ${SHADER_COOKER_SRC})
 
-target_link_libraries(SHADER_COOKER_EXE COMMON)
+target_link_libraries(SHADER_COOKER_EXE COMMON
+                                        "-lstdc++fs")
 
 target_include_directories(SHADER_COOKER_EXE PRIVATE ${COMMON_INC_DIR})
 

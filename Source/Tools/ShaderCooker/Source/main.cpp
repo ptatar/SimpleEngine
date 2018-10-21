@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     }
 
     ShaderCooker shaderCooker;
-    shaderCooker.Cook();
+    shaderCooker.Cook(inputPath, outputPath);
 
     return 0;
 }

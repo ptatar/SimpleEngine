@@ -1,3 +1,7 @@
 set(RAPIDJSON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rapidjson)
+set(GLSLANG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glslang)
+set(SPIRV_TOOLS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SPIRV-Tools)
 
 add_subdirectory(${RAPIDJSON_DIR})
+add_subdirectory(${GLSLANG_DIR})
+add_subdirectory(${SPIRV_TOOLS_DIR})
