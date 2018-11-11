@@ -159,6 +159,7 @@ namespace engine
                 m_refCount = other.m_refCount;
                 other.m_type = nullptr;
                 other.m_refCount = nullptr;
+                return *this;
             }
 
             Bool operator==(const ObjectRef& other) const
@@ -192,7 +193,7 @@ namespace engine
 
             template<typename U>
             ObjectRef(ObjectRef<U>& other)
-                : AtomicCounter(static_cast<AtomicCounter&>(other))
+                : AtomicCounter(reinterpret_cast<AtomicCounter&>(other))
                 , m_type(static_cast<U*>(other.Get())) {}
 
         private:

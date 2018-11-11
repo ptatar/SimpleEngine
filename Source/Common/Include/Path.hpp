@@ -1,25 +1,40 @@
 #pragma once
 
+#include "Types.hpp"
+
 #include <string>
 
-class PathImpl;
-
-class Path
+namespace engine
 {
-    public:
-        Path();
 
-        ~Path() {}
+    class Path
+    {
+        public:
+            static char s_separator;
 
-        Path(const std::string& path);
+            Path();
 
-        Path(const Path& path);
+            ~Path() {}
 
-        const std::string& GetStr() const;
+            Path(const std::string& path);
 
-        bool IsValid() const;
+            Path(const Path& path);
 
-    private:
-        std::string m_path;
-        bool m_valid;
-};
+            const std::string& GetStr() const;
+
+            const char* GetCStr() const;
+
+            Uint32 GetSize() const;
+
+            bool IsValid() const;
+
+            Path GetSubPath(Uint32 idx) const;
+
+            Path operator+(const Path& path);
+
+        private:
+            std::string m_path;
+            bool m_valid;
+    };
+
+} // namespace engine

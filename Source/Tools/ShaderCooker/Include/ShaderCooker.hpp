@@ -1,12 +1,24 @@
 #pragma once
 
-class Path;
+#include "Path.hpp"
+#include "Types.hpp"
 
-class ShaderCooker
+#include <vector>
+
+namespace engine
 {
-    public:
-        ShaderCooker() {}
-        ~ShaderCooker() {}
-        bool Cook(const Path& input, const Path& output);
-    private:
-};
+
+    class ShaderCooker
+    {
+        public:
+            ShaderCooker() {}
+            ~ShaderCooker() {}
+            bool Cook(const Path& input, const Path& output);
+
+        private:
+            std::vector<engine::Uint32> CompileToSpirv(const Path& inputFile,
+                                                       const Path& outputFile);
+    };
+
+
+}

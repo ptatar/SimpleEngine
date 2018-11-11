@@ -12,6 +12,7 @@ set(COMMON_SRC
     ${COMMON_SRC_DIR}/DArray.cpp
     ${COMMON_SRC_DIR}/Utility.cpp
     ${COMMON_SRC_DIR}/Path.cpp
+    ${COMMON_SRC_DIR}/Logger.cpp
 )
 
 add_library(COMMON STATIC ${COMMON_SRC})

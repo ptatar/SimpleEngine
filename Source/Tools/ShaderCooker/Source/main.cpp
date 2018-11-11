@@ -5,10 +5,13 @@
 
 #include <iostream>
 
+using namespace engine;
+
 const char* helpStr=
 "ShaderCooker help:\n\
     --inputPath, -i  input directory for shader cooker\n\
     --outputPath, -o output directory for shader cooker\n\
+    --verbose, -v log more information\n\
     --help, -h       print help\n\
 ";
 
@@ -16,18 +19,31 @@ int main(int argc, char** argv)
 {
     Arguments arguments(argc, argv);
 
-
     Path inputPath;
     Path outputPath;
+    bool verbose = false;
     for(auto iter = ++arguments.Begin(); iter != arguments.End(); iter++)
     {
-        if(ArgCmp(*iter, "--inputDir", "-i"))
+        if(ArgCmp(*iter, "--inputPath", "-i"))
         {
-            inputPath = Path(*iter);
+            iter++;
+            if (iter != arguments.End())
+            {
+                inputPath = Path(*iter);
+            }
         }
-        else if (ArgCmp(*iter, "--outputDir", "-o"))
+        else if (ArgCmp(*iter, "--outputPath", "-o"))
         {
-            outputPath = Path(*iter);
+            iter++;
+            if (iter != arguments.End())
+            {
+                outputPath = Path(*iter);
+            }
+        }
+        else if (ArgCmp(*iter, "--verbose", "-v"))
+        {
+            verbose = true;
+            LOG_SET_THRESHOLD(LOG_THRESHOLD_DEBUG);
         }
         else if (ArgCmp(*iter, "--help", "-h"))
         {
@@ -40,6 +56,8 @@ int main(int argc, char** argv)
             return -1;
         }
     }
+
+    LOGI("Running shader cooker\n\tinputPath = %s\n\toutputPath = %s", inputPath.GetCStr(), outputPath.GetCStr());
 
     if (!inputPath.IsValid())
     {
