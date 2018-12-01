@@ -30,6 +30,8 @@ namespace engine
 
             Path GetSubPath(Uint32 idx) const;
 
+            std::string GetExtension() const;
+
             Path operator+(const Path& path);
 
         private:

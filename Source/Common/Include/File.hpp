@@ -13,17 +13,16 @@ namespace engine
     class InputFile: public IInputFile
     {
         public:
-            InputFile(FileManager* fileManager)
+            InputFile()
                 : m_position(0)
                 , m_size(0)
                 , m_mode(FileMode::None)
-                , m_fileName()
-                , m_buffer()
-                , m_fileManager(fileManager) {}
+                , m_filePath()
+                , m_buffer() {}
 
             virtual ~InputFile();
 
-            virtual Bool Open(const std::string& name, FileMode fileMode) override;
+            virtual Bool Open(const Path& path, FileMode fileMode = FileMode::None) override;
 
             virtual Bool Read(Uint8* output, Uint32 bytes) override;
 
@@ -38,11 +37,13 @@ namespace engine
                 m_file.seekg(m_position);
             };
 
-            virtual const std::string& GetFileName() const override { return m_fileName; }
+            virtual const Path& GetFilePath() const override { return m_filePath; }
 
             virtual Bool Load() override;
 
             virtual void Unload() override;
+
+            virtual const std::vector<Uint8>& GetBuffer() const { return m_buffer;}
 
         private:
             std::ifstream m_file;
@@ -53,11 +54,10 @@ namespace engine
 
             FileMode m_mode;
 
-            std::string m_fileName;
+            Path m_filePath;
 
             std::vector<Uint8> m_buffer;
 
-            FileManager* m_fileManager;
     };
 
     class OutputFile: public IOutputFile
@@ -67,7 +67,7 @@ namespace engine
 
             virtual ~OutputFile() { m_file.close(); }
 
-            virtual Bool Open(const std::string& name, FileMode fileMode) override;
+            virtual Bool Open(const Path& path, FileMode fileMode) override;
 
             virtual Bool Write(const Uint8* input, Uint32 bytes) override;
 
@@ -81,7 +81,7 @@ namespace engine
                 m_file.seekp(m_position);
             };
 
-            virtual const std::string& GetFileName() const override { return m_fileName; }
+            virtual const Path& GetFilePath() const override { return m_filePath; }
 
         private:
             std::ofstream m_file;
@@ -92,7 +92,7 @@ namespace engine
 
             FileMode m_mode;
 
-            std::string m_fileName;
+            Path m_filePath;
     };
 
 } // namespace engine

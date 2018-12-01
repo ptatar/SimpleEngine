@@ -72,6 +72,24 @@ namespace engine
         return out;
     }
 
+    std::string Path::GetExtension() const
+    {
+        size_t pos = m_path.rfind(".");
+        if (pos != std::string::npos)
+        {
+            if (pos < m_path.size())
+            {
+                return m_path.substr(pos);
+            }
+            else
+            {
+                return std::string();
+            }
+
+        }
+        return std::string();
+    }
+
 
     Path Path::operator+(const Path& path)
     {

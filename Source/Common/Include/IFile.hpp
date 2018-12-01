@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Types.hpp"
+#include "Path.hpp"
 
 namespace engine
 {
@@ -38,7 +39,7 @@ namespace engine
         public:
         virtual ~IInputFile() {}
 
-        virtual Bool Open(const std::string& name, FileMode mode) = 0;
+        virtual Bool Open(const Path& path, FileMode mode) = 0;
 
         virtual Bool Read(Uint8* output, Uint32 bytes) = 0;
 
@@ -48,7 +49,7 @@ namespace engine
 
         virtual void SetPosition(Uint32 position, Direction direction = Direction::Begin) = 0;
 
-        virtual const std::string& GetFileName() const = 0;
+        virtual const Path& GetFilePath() const = 0;
 
         virtual Bool Load() = 0;
 
@@ -60,7 +61,7 @@ namespace engine
         public:
             virtual ~IOutputFile() {}
 
-            virtual Bool Open(const std::string& name, FileMode fileMode) = 0;
+            virtual Bool Open(const Path& path, FileMode fileMode) = 0;
 
             virtual Bool Write(const Uint8* input, Uint32 bytes) = 0;
 
@@ -70,7 +71,7 @@ namespace engine
 
             virtual void SetPosition(Uint32 position, Direction direction) = 0;
 
-            virtual const std::string& GetFileName() const = 0;
+            virtual const Path& GetFilePath() const = 0;
     };
 
 } // namespace engine

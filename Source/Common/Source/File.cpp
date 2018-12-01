@@ -1,7 +1,5 @@
 #include "File.hpp"
 
-#include "FileManager.hpp"
-
 #include <cstring>
 
 namespace engine
@@ -14,18 +12,17 @@ namespace engine
             m_file.close();
         }
 
-        m_fileManager->UnregisterFile(this);
     }
 
-    Bool InputFile::Open(const std::string& name, FileMode fileMode)
+    Bool InputFile::Open(const Path& path, FileMode fileMode)
     {
         if (fileMode == FileMode::Ate)
         {
-            m_file.open(name.c_str(), std::ios::binary | std::ios::ate);
+            m_file.open(path.GetCStr(), std::ios::binary | std::ios::ate);
         }
         else
         {
-            m_file.open(name.c_str(), std::ios::binary);
+            m_file.open(path.GetCStr(), std::ios::binary);
         }
 
         if (m_file.is_open())
@@ -36,7 +33,7 @@ namespace engine
             m_size = m_file.tellg();
             m_file.seekg(m_position);
 
-            m_fileName = name;
+            m_filePath = path;
 
             return true;
         }
@@ -92,15 +89,15 @@ namespace engine
     }
 
 
-    Bool OutputFile::Open(const std::string& name, FileMode fileMode)
+    Bool OutputFile::Open(const Path& path, FileMode fileMode)
     {
         if (fileMode == FileMode::Ate)
         {
-            m_file.open(name.c_str(), std::ios::binary | std::ios::ate);
+            m_file.open(path.GetCStr(), std::ios::binary | std::ios::ate);
         }
         else
         {
-            m_file.open(name.c_str(), std::ios::binary);
+            m_file.open(path.GetCStr(), std::ios::binary);
         }
 
         if (m_file.is_open())
@@ -111,7 +108,7 @@ namespace engine
             m_size = m_file.tellp();
             m_file.seekp(m_position);
 
-            m_fileName = name;
+            m_filePath = path;
             return true;
         }
         else
