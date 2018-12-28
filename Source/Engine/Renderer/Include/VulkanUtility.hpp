@@ -20,5 +20,6 @@ namespace engine
 
     VkFormat ImageFormat2NativeFormat(ImageFormat format);
 
+    ImageFormat NativeFormat2ImageFormat(VkFormat format);
 
 } // namespace engine

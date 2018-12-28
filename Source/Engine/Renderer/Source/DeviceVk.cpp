@@ -246,14 +246,13 @@ namespace engine
 
     ObjectRef<SwapchainVk> DeviceVk::CreateSwapchain(SwapchainCreateInfo& createInfo)
     {
-        VkFormat nativeFormat = ImageFormat2NativeFormat(createInfo.surfaceFormat);
         VkSwapchainCreateInfoKHR swapchainCreateInfo;
         swapchainCreateInfo.sType                 = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchainCreateInfo.pNext                 = nullptr;
         swapchainCreateInfo.flags                 = 0;
         swapchainCreateInfo.surface               = createInfo.surface;
         swapchainCreateInfo.minImageCount         = createInfo.imageCount;
-        swapchainCreateInfo.imageFormat           = nativeFormat;
+        swapchainCreateInfo.imageFormat           = createInfo.surfaceFormat;
         swapchainCreateInfo.imageColorSpace       = createInfo.colorSpace;
         swapchainCreateInfo.imageExtent           = VkExtent2D{createInfo.imageWidth, createInfo.imageHeight};
         swapchainCreateInfo.imageArrayLayers      = 1;
@@ -290,7 +289,8 @@ namespace engine
             return MakeObjectRef<SwapchainVk>();
         }
 
-        ImageDesc imageDesc(createInfo.imageWidth, createInfo.imageHeight, createInfo.surfaceFormat);
+        ImageFormat format = NativeFormat2ImageFormat(createInfo.surfaceFormat);
+        ImageDesc imageDesc(createInfo.imageWidth, createInfo.imageHeight, format);
 
         std::vector<VkImage> images(imageCount);
         result = vkGetSwapchainImagesKHR(m_device, swapchainHandle, &imageCount, images.data());
@@ -316,7 +316,7 @@ namespace engine
             info.flags = 0;
             info.image = images[i];
             info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            info.format = nativeFormat;
+            info.format = createInfo.surfaceFormat;
             info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
             info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
             info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;

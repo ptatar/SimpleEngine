@@ -16,6 +16,10 @@ int main()
     WindowManager windowManager(&rendererManager, &threadManager);
     auto window = windowManager.CreateWindowInstance(0, 0, 800, 600);
     auto renderer = rendererManager.GetRenderer(window->GetSurface());
+    if (!renderer)
+    {
+        return 1;
+    }
     window->Show();
     //Sleep(TimeUnits::MakeSeconds(10));
     //window->Shutdown();

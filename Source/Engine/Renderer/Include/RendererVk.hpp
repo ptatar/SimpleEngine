@@ -8,6 +8,7 @@
 #include "Utility.hpp"
 #include "SwapchainVk.hpp"
 #include "CommandBufferVk.hpp"
+#include "ShaderManager.hpp"
 
 #include <deque>
 #include <mutex>
@@ -86,6 +87,8 @@ namespace engine
 
         std::vector<ObjectRef<CommandBufferVk>> m_commandBuffers;
 
-        std::unordered_map<std::string, ShaderG> m_shaderMap;
+        ShaderManager m_shaderManager;
+
+
     };
 } // namespace engine

@@ -112,16 +112,59 @@ namespace engine
         auto semaphoreRendering = m_device.CreateSemaphore();
         ASSERT_RETURN(semaphoreRendering);
 
+        Bool found = false;
+        VkFormat targetFormat = VK_FORMAT_B8G8R8A8_UNORM;
+        VkColorSpaceKHR targetSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+        std::vector<VkSurfaceFormatKHR> supportedFormats = m_device.GetSupportedSurfaceFormats(surface);
+        for(int i = 0; i < supportedFormats.size(); ++i)
+        {
+           if (supportedFormats[i].format == targetFormat && supportedFormats[i].colorSpace == targetSpace)
+           {
+               found = true;
+           }
+        }
 
+        if (found == false)
+        {
+            LOGE("Target format and color space not supported: fmt: %d cs:", targetFormat, targetSpace);
+        }
 
+        VkSurfaceCapabilitiesKHR surfaceCapabilities;
+        if (!m_device.GetSurfaceCapabilities(surface, surfaceCapabilities))
+        {
+            return false;
+        }
+
+        Uint32 targetImageCount = 2;
+        Uint32 targetWidth = windowSurface->GetSurfaceExtent().width;
+        Uint32 targetHeight = windowSurface->GetSurfaceExtent().height;
+
+        if (targetImageCount < surfaceCapabilities.minImageCount ||
+            targetImageCount > surfaceCapabilities.maxImageCount)
+        {
+            LOGE("Unsupported image count: %d", targetImageCount);
+            return false;
+        }
+
+        if (targetWidth < surfaceCapabilities.minImageExtent.width ||
+            targetWidth > surfaceCapabilities.maxImageExtent.width ||
+            targetHeight < surfaceCapabilities.minImageExtent.height ||
+            targetHeight > surfaceCapabilities.maxImageExtent.height)
+        {
+            LOGE("Unsupported image extents: w:%d h:%d", targetWidth, targetHeight);
+            return false;
+        }
 
         SwapchainCreateInfo info;
-        info.surfaceFormat = ImageFormat::B8G8R8A8_Unorm;
-        info.imagesCount = 2;
+        info.surfaceFormat = targetFormat;
+        info.imageCount = targetImageCount;
         info.imageWidth = windowSurface->GetSurfaceExtent().width;
         info.imageHeight = windowSurface->GetSurfaceExtent().height;
         info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        info.presentationMode = VK_PRESENT_MODE_FIFO_KHR;
         info.surface = surface;
+        info.colorSpace = targetSpace;
+        info.transformation = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 
         m_swapchain = m_device.CreateSwapchain(info);
         ASSERT_RETURN(m_swapchain);

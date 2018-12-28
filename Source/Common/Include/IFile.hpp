@@ -8,11 +8,13 @@ namespace engine
 
     enum class FileMode
     {
-        None   = 0x00,
-        Read   = 0x01,
-        Write  = 0x02,
-        Ate    = 0x04,
-        Append = 0x08,
+        None    = 0x00,
+        Read    = 0x01,
+        Write   = 0x02,
+        Ate     = 0x04,
+        Append  = 0x08,
+        CreateD = 0x10,
+        CreateF = 0x20,
     };
 
 
@@ -21,10 +23,9 @@ namespace engine
         return static_cast<FileMode>(static_cast<Uint32>(rs) | static_cast<Uint32>(ls));
     }
 
-
     static inline FileMode operator &(const FileMode& rs, const FileMode& ls)
     {
-        return static_cast<FileMode>(static_cast<Uint32>(rs) | static_cast<Uint32>(ls));
+        return static_cast<FileMode>(static_cast<Uint32>(rs) & static_cast<Uint32>(ls));
     }
 
     enum class Direction

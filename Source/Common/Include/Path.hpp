@@ -10,13 +10,13 @@ namespace engine
     class Path
     {
         public:
-            static char s_separator;
+            static const char s_separator;
 
             Path();
 
             ~Path() {}
 
-            Path(const std::string& path);
+            Path(const std::string& path, bool isDirectory = false);
 
             Path(const Path& path);
 
@@ -32,7 +32,11 @@ namespace engine
 
             std::string GetExtension() const;
 
-            Path operator+(const Path& path);
+            std::string GetDirectory() const;
+
+            Bool IsDirectory() const;
+
+            Path operator+(const Path& path) const;
 
         private:
             std::string m_path;

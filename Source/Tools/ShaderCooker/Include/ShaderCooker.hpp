@@ -31,7 +31,9 @@ namespace engine
                                             const std::string& fileName,
                                             ShaderType type) const;
 
-            ShaderType GetShaderType(const Path& file) const;
+            bool WriteOutputFile(const Path& path, const std::vector<Uint32>& binary);
+
+            ShaderType GetShaderType(const Path& filePath) const;
     };
 
 

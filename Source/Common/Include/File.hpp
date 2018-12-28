@@ -67,7 +67,7 @@ namespace engine
 
             virtual ~OutputFile() { m_file.close(); }
 
-            virtual Bool Open(const Path& path, FileMode fileMode) override;
+            virtual Bool Open(const Path& path, FileMode fileMode = FileMode::None) override;
 
             virtual Bool Write(const Uint8* input, Uint32 bytes) override;
 

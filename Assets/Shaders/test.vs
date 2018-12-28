@@ -1,11 +1,9 @@
 #version 450
 
-struct MatrixState
+layout(std140, binding=0) uniform MatrixState
 {
     mat4 mvp;
-};
-
-layout(std140, binding=0) u_matrixState;
+} u_matrixState;
 
 layout(location = 0) in vec3 i_position;
 
@@ -15,6 +13,6 @@ layout(location = 0) out vec4 o_color;
 
 void main()
 {
-    gl_Position = u_matrixState.mvp * i_position;
-    v_color = a_color;
+    gl_Position = u_matrixState.mvp * vec4(i_position, 1.0);
+    o_color = i_color;
 }

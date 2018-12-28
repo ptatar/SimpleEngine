@@ -1,6 +1,7 @@
 #include "File.hpp"
 
 #include <cstring>
+#include <filesystem>
 
 namespace engine
 {
@@ -91,14 +92,19 @@ namespace engine
 
     Bool OutputFile::Open(const Path& path, FileMode fileMode)
     {
-        if (fileMode == FileMode::Ate)
+        std::ios::openmode openMode = std::ios::binary;
+        if (Any(fileMode & FileMode::Ate))
         {
-            m_file.open(path.GetCStr(), std::ios::binary | std::ios::ate);
+            openMode |= std::ios::ate;
         }
-        else
+
+        if (Any(fileMode & FileMode::CreateD))
         {
-            m_file.open(path.GetCStr(), std::ios::binary);
+            std::string dir = path.GetDirectory();
+            std::filesystem::create_directories(dir);
         }
+
+        m_file.open(path.GetCStr(), openMode);
 
         if (m_file.is_open())
         {

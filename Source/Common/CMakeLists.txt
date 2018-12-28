@@ -20,4 +20,6 @@ set(COMMON_SRC
 
 add_library(COMMON STATIC ${COMMON_SRC})
 
+target_link_libraries(COMMON "-lstdc++fs")
+
 target_include_directories(COMMON PUBLIC ${COMMON_INC_DIR})

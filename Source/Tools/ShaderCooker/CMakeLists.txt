@@ -12,7 +12,7 @@ set(SHADER_COOKER_SRC
 add_executable(SHADER_COOKER_EXE ${SHADER_COOKER_SRC})
 
 target_link_libraries(SHADER_COOKER_EXE COMMON
-                                        "-lstdc++fs")
+                                        shaderc)
 
 target_include_directories(SHADER_COOKER_EXE PRIVATE ${COMMON_INC_DIR}
                                              PRIVATE ${SHADER_COOKER_INC_DIR}
@@ -30,7 +30,6 @@ set(FULLNAME "${NAME_STEM}")
 set(COOK_SHADER_SCRIPT_SOURCE "\
 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${FULLNAME} \
 --inputPath ${ASSETS_INPUT_DIRECTORY}/Shaders \
---outputPath ${ASSETS_OUTPUT_DIRECTORY}/Shaders\
-")
+--outputPath ${ASSETS_OUTPUT_DIRECTORY}/Shaders")
 
 file(WRITE "${SCRIPTS_OUTPUT_DIRECTORY}/CookShaders.sh" ${COOK_SHADER_SCRIPT_SOURCE})

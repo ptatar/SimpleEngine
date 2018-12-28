@@ -25,8 +25,7 @@ namespace engine
     struct SwapchainCreateInfo
     {
         VkColorSpaceKHR colorSpace;
-        ImageFormat surfaceFormat;
-        Uint32 imagesCount;
+        VkFormat surfaceFormat;
         VkSurfaceTransformFlagBitsKHR transformation;
         Uint32 imageWidth;
         Uint32 imageHeight;

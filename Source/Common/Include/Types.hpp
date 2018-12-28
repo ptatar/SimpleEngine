@@ -258,6 +258,10 @@ namespace engine
         return static_cast<Uint32>(type) != 0;
     }
 
-
+    template<typename EnumType>
+    Bool Any(EnumType enumType)
+    {
+        return static_cast<Uint32>(enumType) > 0;
+    }
 
 } // namespace engine

@@ -4,7 +4,7 @@
 #include "File.hpp"
 #include "Assert.hpp"
 
-#include "shaderc.hpp"
+#include "shaderc/shaderc.hpp"
 
 #include <filesystem>
 #include <cstring>
@@ -22,7 +22,17 @@ namespace engine
             {
                 Path inputFile(p.path().c_str());
                 Path outputFile = inputFile.GetSubPath(input.GetSize());
+                outputFile = output + outputFile;
                 std::vector<Uint32> binary = ProcessFile(inputFile, outputFile);
+                if (!binary.size())
+                {
+                    return false;
+                }
+
+                if (!WriteOutputFile(outputFile, binary))
+                {
+                    return false;
+                }
             }
         }
         return true;
@@ -33,19 +43,19 @@ namespace engine
         const Path& inputFile,
         const Path& outputFile)
     {
-        std::vector<Uint32> out;
         LOGI("File %s | %s", inputFile.GetCStr(), outputFile.GetCStr());
         std::string source = LoadFile(inputFile);
         if (source.size() > 0)
         {
             ShaderType type = GetShaderType(inputFile);
             std::vector<Uint32> binary = CompileFile(source, inputFile.GetCStr(), type);
+            return binary;
         }
         else
         {
             LOGE("Could not read file: %s", inputFile.GetCStr());
+            return {};
         }
-        return out;
     }
 
     std::string ShaderCooker::LoadFile(const Path& filePath) const
@@ -94,6 +104,23 @@ namespace engine
         }
 
         return {module.cbegin(), module.cend()};
+    }
+
+    bool ShaderCooker::WriteOutputFile(const Path& filePath, const std::vector<Uint32>& binary)
+    {
+        OutputFile outputFile;
+        if (!outputFile.Open(filePath, FileMode::CreateD))
+        {
+            LOGE("Could not open output file: %s", filePath.GetCStr());
+            return false;
+        }
+
+        if(!outputFile.Write(reinterpret_cast<const Uint8*>(binary.data()), binary.size() * sizeof(Uint32)))
+        {
+            LOGE("Output file write error: %s", filePath.GetCStr());
+            return false;
+        }
+        return true;
     }
 
     ShaderType ShaderCooker::GetShaderType(const Path& path) const

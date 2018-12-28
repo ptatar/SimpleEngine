@@ -5,11 +5,11 @@ namespace engine
 
 #ifndef DIRECTORY_SEPARATOR
     #ifdef PLATFORM_WINDOWS
-        char Path::s_separator = '\\';
+        const char Path::s_separator = '\\';
     #elif PLATFORM_LINUX
-        char Path::s_separator = '/';
+        const char Path::s_separator = '/';
     #else
-        char Path::s_separator = '/';
+        const char Path::s_separator = '/';
     #endif
 #endif
 
@@ -18,7 +18,7 @@ namespace engine
     }
 
 
-    Path::Path(const std::string& path): m_path(path), m_valid(true)
+    Path::Path(const std::string& path, bool isDirectory): m_path(path), m_valid(true)
     {
         // TODO validation
         for (int i = 0; i < m_path.size(); ++i)
@@ -36,6 +36,14 @@ namespace engine
                 {
                     m_path[i] = s_separator;
                 }
+            }
+        }
+
+        if (isDirectory)
+        {
+            if (m_path[m_path.size() - 1] != s_separator)
+            {
+                m_path += s_separator;
             }
         }
     }
@@ -77,21 +85,40 @@ namespace engine
         size_t pos = m_path.rfind(".");
         if (pos != std::string::npos)
         {
-            if (pos < m_path.size())
+            if (pos + 1 < m_path.size())
             {
-                return m_path.substr(pos);
-            }
-            else
-            {
-                return std::string();
+                return m_path.substr(pos + 1);
             }
 
         }
-        return std::string();
+        return {};
+    }
+
+    std::string Path::GetDirectory() const
+    {
+        size_t pos = m_path.rfind(s_separator);
+        if (pos != std::string::npos)
+        {
+            return m_path.substr(0, pos);
+        }
+
+        return {};
+    }
+
+    Bool Path::IsDirectory() const
+    {
+        if (m_path.size())
+        {
+            return m_path[m_path.size() - 1] == s_separator;
+        }
+        else
+        {
+            return false;
+        }
     }
 
 
-    Path Path::operator+(const Path& path)
+    Path Path::operator+(const Path& path) const
     {
         Path out;
         if (m_path[m_path.size() - 1] == s_separator ||

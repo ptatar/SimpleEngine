@@ -29,7 +29,7 @@ int main(int argc, char** argv)
             iter++;
             if (iter != arguments.End())
             {
-                inputPath = Path(*iter);
+                inputPath = Path(*iter, true);
             }
         }
         else if (ArgCmp(*iter, "--outputPath", "-o"))
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
             iter++;
             if (iter != arguments.End())
             {
-                outputPath = Path(*iter);
+                outputPath = Path(*iter, true);
             }
         }
         else if (ArgCmp(*iter, "--verbose", "-v"))

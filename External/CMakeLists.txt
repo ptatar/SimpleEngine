@@ -7,6 +7,6 @@ add_subdirectory(${RAPIDJSON_DIR})
 
 set(SHADERC_SKIP_INSTALL ON)
 set(SHADERC_SKIP_TESTS ON)
-add_subdirectory(${SHADERC_DIR})
 
-set(SHADERC_INC_DIR ${SHADERC_DIR}/libshaderc/include/shaderc PARENT_SCOPE)
+add_subdirectory(${SHADERC_DIR})
+set(SHADERC_INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaderc/libshaderc/include/" PARENT_SCOPE)
