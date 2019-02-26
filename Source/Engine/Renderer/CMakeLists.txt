@@ -42,6 +42,8 @@ elseif(${PLATFORM_LINUX})
         ${RENDERER_SRC_DIR}/ShaderManager.cpp
         ${RENDERER_INC_DIR}/ShaderVk.hpp
         ${RENDERER_SRC_DIR}/ShaderVk.cpp
+        ${RENDERER_INC_DIR}/GeometryVk.hpp
+        ${RENDERER_SRC_DIR}/GeometryVk.cpp
         ${RENDERER_INC_DIR}/Handle.hpp
         ${RENDERER_SRC_DIR}/Handle.cpp
     )

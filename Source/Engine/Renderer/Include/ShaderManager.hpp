@@ -1,4 +1,5 @@
 #include "Types.hpp"
+#include "Path.hpp"
 #include "ShaderVk.hpp"
 
 #include <unordered_map>
@@ -11,10 +12,13 @@ namespace engine
     class ShaderManager
     {
         public:
-            ShaderManager();
-            ~ShaderManager();
+            ShaderManager() {};
+            ~ShaderManager() {};
 
             Bool Initialize();
+
+        private:
+            Bool CreateShaderCache(const Path& shaderPath);
 
         private:
             DeviceVk* m_device;

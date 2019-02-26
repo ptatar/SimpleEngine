@@ -1,6 +1,7 @@
 #include "ThreadManager.hpp"
 #include "WindowManager.hpp"
 #include "RendererManager.hpp"
+#include "Config.hpp"
 
 #include "Utility.hpp"
 
@@ -14,7 +15,16 @@ int main()
     threadManager.Initialize(2, 4);
     RendererManager rendererManager(&threadManager);
     WindowManager windowManager(&rendererManager, &threadManager);
-    auto window = windowManager.CreateWindowInstance(0, 0, 800, 600);
+    Config& config = Config::GetInstance();
+    Path configPath("config.json");
+    if (!config.Initialize(configPath))
+    {
+        LOGE("Config initialization failed!");
+        return 1;
+    }
+    Uint32 width = config.GetUint32Value("window_width");
+    Uint32 height = config.GetUint32Value("window_height");
+    auto window = windowManager.CreateWindowInstance(0, 0, width, height);
     auto renderer = rendererManager.GetRenderer(window->GetSurface());
     if (!renderer)
     {
@@ -38,11 +48,11 @@ int main()
         }
     }
 
-    while(!threadManager.IsFinished())
+    while((!window->IsTerminal()))
     {
         auto& commandBuffer = commandRingBuffer.GetNext();
         swapchain->AcquireImage();
-        if(commandBuffer->Wait(TimeUnits::MakeSeconds(1)) != Status::Success)
+        if(commandBuffer->Wait(TimeUnits::MakeSeconds(100000)) != Status::Success)
         {
             // TODO shutdown threads
             return 1;

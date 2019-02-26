@@ -37,6 +37,13 @@ namespace engine
                 return m_data[index];
             }
 
+            inline const T& operator[](Uint32 index) const
+            {
+                ASSERT(index < m_size);
+                return m_data[index];
+            }
+
+
             template<typename... Args>
             void Emplace(Uint32 index, Args&&... args)
             {

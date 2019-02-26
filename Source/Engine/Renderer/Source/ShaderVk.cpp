@@ -21,6 +21,9 @@ namespace engine
                 return "Hull";
             case ShaderType::Domain:
                 return "Domain";
+            default:
+                ASSERT(false);
+                return "Vertex";
         }
     }
 

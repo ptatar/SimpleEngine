@@ -23,7 +23,7 @@ namespace engine
     {
         public:
             ShaderVk(DeviceVk* device, const std::string& name, ShaderType type);
-            ~ShaderVk();
+            ~ShaderVk() {};
             Bool Initialize(const std::vector<Uint8>& binary);
 
         private:

@@ -25,13 +25,9 @@ namespace engine
             std::vector<engine::Uint32> ProcessFile(const Path& inputFile,
                                                     const Path& outputFile);
 
-            std::string LoadFile(const Path& filePath) const;
-
             std::vector<Uint32> CompileFile(const std::string& source,
                                             const std::string& fileName,
                                             ShaderType type) const;
-
-            bool WriteOutputFile(const Path& path, const std::vector<Uint32>& binary);
 
             ShaderType GetShaderType(const Path& filePath) const;
     };

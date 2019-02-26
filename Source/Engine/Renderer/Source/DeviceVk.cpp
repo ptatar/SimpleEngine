@@ -462,6 +462,86 @@ namespace engine
     }
 
 
+    void DeviceVk::CreateRenderPass(const ObjectRef<SwapchainVk>& swapchain)
+    {
+
+        // TODO CLEAR THIS
+        ASSERT(swapchain->GetImageCount());
+        const ImageVk& image = swapchain->GetImage(0);
+        VkFormat format = ImageFormat2NativeFormat(image.GetImageDesc().format);
+        VkAttachmentDescription attDesc =
+        {
+            0,                                // VkAttachmentDescriptionFlags    flags;
+            format,                           // VkFormat                        format;
+            VK_SAMPLE_COUNT_1_BIT,            // VkSampleCountFlagBits           samples;
+            VK_ATTACHMENT_LOAD_OP_CLEAR,      // VkAttachmentLoadOp              loadOp;
+            VK_ATTACHMENT_STORE_OP_STORE,     // VkAttachmentStoreOp             storeOp;
+            VK_ATTACHMENT_LOAD_OP_DONT_CARE,  // VkAttachmentLoadOp              stencilLoadOp;
+            VK_ATTACHMENT_STORE_OP_DONT_CARE, // VkAttachmentStoreOp             stencilStoreOp;
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,  // VkImageLayout                   initialLayout;
+            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR   // VkImageLayout                   finalLayout;
+        };
+
+        VkAttachmentReference colorAttRef =
+        {
+            0,                                       // uint32_t         attachment;
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL // VkImageLayout    layout;
+        };
+
+        VkSubpassDescription spDesc =
+        {
+            0,                               // VkSubpassDescriptionFlags       flags;
+            VK_PIPELINE_BIND_POINT_GRAPHICS, // VkPipelineBindPoint             pipelineBindPoint;
+            0,                               // uint32_t                        inputAttachmentCount;
+            nullptr,                         // const VkAttachmentReference*    pInputAttachments;
+            1,                               // uint32_t                        colorAttachmentCount;
+            &colorAttRef,                    // const VkAttachmentReference*    pColorAttachments;
+            nullptr,                         // const VkAttachmentReference*    pResolveAttachments;
+            nullptr,                         // const VkAttachmentReference*    pDepthStencilAttachment;
+            0,                               // uint32_t                        preserveAttachmentCount;
+            nullptr                          // const uint32_t*                 pPreserveAttachments;
+
+        };
+
+        VkRenderPass renderPass;
+        VkRenderPassCreateInfo info =
+        {
+            VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO, //VkStructureType                   sType;
+            nullptr,                                   //const void*                       pNext;
+            0,                                         //VkRenderPassCreateFlags           flags;
+            1,                                         //uint32_t                          attachmentCount;
+            &attDesc,                                  //const VkAttachmentDescription*    pAttachments;
+            1,                                         //uint32_t                          subpassCount;
+            &spDesc,                                   //const VkSubpassDescription*       pSubpasses;
+            0,                                         //uint32_t                          dependencyCount;
+            nullptr                                    //const VkSubpassDependency*        pDependencies;
+        };
+        VkResult result = vkCreateRenderPass(m_device, &info, nullptr, &renderPass);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("CreateRenderPass failure: %d", result);
+            return;
+        }
+    }
+
+
+    void DeviceVk::CreateFrameBuffer()
+    {
+        VkFramebufferCreateInfo info =
+        {
+            VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO, // VkStructureType             sType;
+            nullptr, // const void*                 pNext;
+            0, // VkFramebufferCreateFlags    flags;
+            // VkRenderPass                renderPass;
+            // uint32_t                    attachmentCount;
+            // const VkImageView*          pAttachments;
+            // uint32_t                    width;
+            // uint32_t                    height;
+            // uint32_t                    layers;
+        };
+    }
+
+
     std::vector<VkPresentModeKHR> DeviceVk::GetSupporedPresentModes(VkSurfaceKHR surface) const
     {
         Uint32 presentModeCount = 0;

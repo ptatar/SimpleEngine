@@ -10,16 +10,6 @@ namespace engine
 
     class IRenderer;
 
-    enum WindowState
-    {
-        NotInitialized = 0,
-        Initialized    = 1 << 1,
-        Show           = 1 << 2,
-        Hide           = 1 << 3,
-        Fullscreen     = 1 << 4,
-        Terminal       = 1 << 5,
-    };
-
     class IWindow
     {
     public:
@@ -37,11 +27,11 @@ namespace engine
 
         virtual Bool IsFullscreen() = 0;
 
+        virtual Bool IsShow() = 0;
+
+        virtual Bool IsTerminal() = 0;
+
         virtual IWindowSurface* GetSurface() = 0;
-
-        virtual WindowState GetState() const = 0;
-
-        virtual Bool CheckState(WindowState) const = 0;
 
     };
 

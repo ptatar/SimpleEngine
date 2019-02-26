@@ -11,15 +11,23 @@ set(COMMON_SRC
     ${COMMON_INC_DIR}/Path.hpp
     ${COMMON_INC_DIR}/IFile.hpp
     ${COMMON_INC_DIR}/File.hpp
+    ${COMMON_INC_DIR}/FileUtility.hpp
+    ${COMMON_INC_DIR}/Config.hpp
+    ${COMMON_INC_DIR}/ConfigImpl.hpp
     ${COMMON_SRC_DIR}/DArray.cpp
     ${COMMON_SRC_DIR}/Utility.cpp
     ${COMMON_SRC_DIR}/Path.cpp
     ${COMMON_SRC_DIR}/Logger.cpp
+    ${COMMON_SRC_DIR}/IFile.cpp
     ${COMMON_SRC_DIR}/File.cpp
+    ${COMMON_SRC_DIR}/FileUtility.cpp
+    ${COMMON_SRC_DIR}/Config.cpp
+    ${COMMON_SRC_DIR}/ConfigImpl.cpp
 )
 
 add_library(COMMON STATIC ${COMMON_SRC})
 
 target_link_libraries(COMMON "-lstdc++fs")
 
-target_include_directories(COMMON PUBLIC ${COMMON_INC_DIR})
+target_include_directories(COMMON PUBLIC ${COMMON_INC_DIR}
+                                  PRIVATE ${RAPIDJSON_INC_DIR})

@@ -1,7 +1,7 @@
 #include "ShaderCooker.hpp"
 
 #include "Path.hpp"
-#include "File.hpp"
+#include "FileUtility.hpp"
 #include "Assert.hpp"
 
 #include "shaderc/shaderc.hpp"
@@ -16,7 +16,7 @@ namespace engine
 
     bool ShaderCooker::Cook(const Path& input, const Path& output)
     {
-        for(auto& p: fs::recursive_directory_iterator(input.GetStr()))
+        for (auto& p: fs::recursive_directory_iterator(input.GetStr()))
         {
             if (p.is_regular_file())
             {
@@ -29,7 +29,7 @@ namespace engine
                     return false;
                 }
 
-                if (!WriteOutputFile(outputFile, binary))
+                if (!SaveFile(outputFile, reinterpret_cast<const Uint8*>(binary.data()), binary.size() * sizeof(Uint32)))
                 {
                     return false;
                 }
@@ -58,21 +58,7 @@ namespace engine
         }
     }
 
-    std::string ShaderCooker::LoadFile(const Path& filePath) const
-    {
-        InputFile inputFile;
-        inputFile.Open(filePath);
-        std::string source;
-        source.resize(inputFile.GetSize());
-        if (inputFile.Read(reinterpret_cast<Uint8*>(&source[0]), inputFile.GetSize()))
-        {
-            return source;
-        }
-        else
-        {
-            return {};
-        }
-    }
+
 
     std::vector<Uint32> ShaderCooker::CompileFile(
         const std::string& source,
@@ -104,23 +90,6 @@ namespace engine
         }
 
         return {module.cbegin(), module.cend()};
-    }
-
-    bool ShaderCooker::WriteOutputFile(const Path& filePath, const std::vector<Uint32>& binary)
-    {
-        OutputFile outputFile;
-        if (!outputFile.Open(filePath, FileMode::CreateD))
-        {
-            LOGE("Could not open output file: %s", filePath.GetCStr());
-            return false;
-        }
-
-        if(!outputFile.Write(reinterpret_cast<const Uint8*>(binary.data()), binary.size() * sizeof(Uint32)))
-        {
-            LOGE("Output file write error: %s", filePath.GetCStr());
-            return false;
-        }
-        return true;
     }
 
     ShaderType ShaderCooker::GetShaderType(const Path& path) const

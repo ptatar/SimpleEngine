@@ -75,6 +75,10 @@ namespace engine
 
         ShaderG CreateShader(const std::vector<Uint8>& data);
 
+        void CreateRenderPass(const ObjectRef<SwapchainVk>& swapchain);
+
+        void CreateFrameBuffer();
+
         void DestroySemaphore(VkSemaphore semaphore) { vkDestroySemaphore(m_device, semaphore, nullptr); }
 
         void DestroySurface(VkSurfaceKHR surface) { vkDestroySurfaceKHR(m_instance, surface, nullptr); }

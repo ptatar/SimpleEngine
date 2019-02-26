@@ -13,12 +13,16 @@ namespace engine
     };
 
     WindowX::WindowX()
-        : m_display(nullptr)
+        : m_initialized(false)
+        , m_fullscreen(false)
+        , m_show(false)
+        , m_terminal(false)
+        , m_display(nullptr)
         , m_window(0)
         , m_screen(0)
         , m_width(0)
         , m_height(0)
-        , m_state(WindowState::NotInitialized) {}
+ {}
 
     WindowX::~WindowX()
     {
@@ -49,7 +53,7 @@ namespace engine
         m_height = wndHeight;
         XSync(m_display, false);
 
-        SetState(WindowState::Initialized);
+        m_initialized = true;
 
         return 0;
     }
@@ -60,7 +64,7 @@ namespace engine
     {
         XMapWindow(m_display, m_window);
         XFlush(m_display);
-        SetState(WindowState::Show);
+        m_show = true;
         for(auto& listener: m_surfaceEventListeners)
         {
             listener->OnShow();
@@ -71,7 +75,7 @@ namespace engine
     {
         XUnmapWindow(m_display, m_window);
         XFlush(m_display);
-        UnsetState(WindowState::Show);
+        m_show = false;
         for(auto& listener: m_surfaceEventListeners)
         {
             listener->OnHide();
@@ -99,14 +103,14 @@ namespace engine
                     case Expose:
                         break;
                     case ClientMessage:
-                        SetState(WindowState::Terminal);
+                        m_terminal = true;
                         return false;
                 }
             }
         }
         if (IsShutdown()) // not sure about this
         {
-            SetState(WindowState::Terminal);
+            m_terminal = true;
             return false;
         }
         return true;
@@ -115,12 +119,12 @@ namespace engine
     void WindowX::Finalize()
     {
         // TO check thread this should be run from main thread
-        if (!CheckState(WindowState::Initialized))
+        if (!m_initialized)
         {
             return;
         }
 
-        if (CheckState(WindowState::Show))
+        if (m_show)
         {
             Hide();
         }
@@ -170,7 +174,11 @@ namespace engine
         }
     }
 
-    Bool WindowX::IsFullscreen() { return false; }
+    Bool WindowX::IsFullscreen() { return m_fullscreen; }
+
+    Bool WindowX::IsShow() { return m_show; }
+
+    Bool WindowX::IsTerminal() { return m_terminal; }
 
     void WindowX::RegisterEventListener(ObjectRef<ISurfaceEventListener>& surfaceEventListener)
     {
@@ -181,5 +189,6 @@ namespace engine
     {
         m_surfaceEventListeners.remove(surfaceEventListener);
     }
+
 
 } // namespace engine

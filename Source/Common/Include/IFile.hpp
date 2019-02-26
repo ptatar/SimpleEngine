@@ -3,6 +3,8 @@
 #include "Types.hpp"
 #include "Path.hpp"
 
+#include <memory>
+
 namespace engine
 {
 
@@ -40,7 +42,7 @@ namespace engine
         public:
         virtual ~IInputFile() {}
 
-        virtual Bool Open(const Path& path, FileMode mode) = 0;
+        virtual Bool Open(const Path& path, FileMode mode = FileMode::None) = 0;
 
         virtual Bool Read(Uint8* output, Uint32 bytes) = 0;
 
@@ -62,7 +64,7 @@ namespace engine
         public:
             virtual ~IOutputFile() {}
 
-            virtual Bool Open(const Path& path, FileMode fileMode) = 0;
+            virtual Bool Open(const Path& path, FileMode fileMode = FileMode::None) = 0;
 
             virtual Bool Write(const Uint8* input, Uint32 bytes) = 0;
 
@@ -74,5 +76,13 @@ namespace engine
 
             virtual const Path& GetFilePath() const = 0;
     };
+
+    typedef std::unique_ptr<IInputFile> IInputFilePtr;
+
+    typedef std::unique_ptr<IOutputFile> IOutputFilePtr;
+
+    IInputFilePtr CreateInputFile();
+
+    IOutputFilePtr CreateOutputFile();
 
 } // namespace engine

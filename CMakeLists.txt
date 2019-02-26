@@ -30,3 +30,7 @@ set(EXTERNAL_DIR "External")
 
 add_subdirectory(${EXTERNAL_DIR})
 add_subdirectory(${SOURCE_DIR})
+
+set(CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Config/config.json)
+
+configure_file(${CONFIG_FILE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config.json)

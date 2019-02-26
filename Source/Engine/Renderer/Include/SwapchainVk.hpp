@@ -41,7 +41,7 @@ namespace engine
 
             Uint32 GetAvailableImageCount() const { return m_availableImages.size(); }
 
-            ImageVk& GetImage(Uint32 index) { return m_images[index]; }
+            const ImageVk& GetImage(Uint32 index) const { return m_images[index]; }
 
             ImageVk& GetCurrentImage();
 

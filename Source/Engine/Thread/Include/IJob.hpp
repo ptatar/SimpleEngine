@@ -11,6 +11,10 @@ namespace engine
     class IJob
     {
     public:
+        IJob()
+            : m_running(false)
+            , m_shutdown(false) {}
+
         virtual ~IJob() {}
 
         virtual Bool Work() = 0;

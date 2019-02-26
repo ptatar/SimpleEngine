@@ -176,6 +176,11 @@ namespace engine
                 return m_type;
             }
 
+            const T* operator->() const
+            {
+                return m_type;
+            }
+
             operator Bool()
             {
                 return m_type != nullptr;
