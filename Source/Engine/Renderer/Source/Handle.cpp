@@ -18,7 +18,8 @@ namespace engine
     CREATE_HANDLE_DESTRUCTOR(ImageViewG, VkImageView, DestroyImageView);
     CREATE_HANDLE_DESTRUCTOR(FenceG, VkFence, DestroyFence);
     CREATE_HANDLE_DESTRUCTOR(ShaderG, VkShaderModule, DestroyShader);
-
+    CREATE_HANDLE_DESTRUCTOR(RenderPassG, VkRenderPass, DestroyRenderPass);
+    CREATE_HANDLE_DESTRUCTOR(FramebufferG, VkFramebuffer, DestoryFramebuffer);
 #undef CREATE_HANDLER_DESTRUCTOR
 
 } // namespace engine

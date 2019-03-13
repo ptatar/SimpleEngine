@@ -21,6 +21,7 @@ namespace engine
     class CommandDispatcher;
     class SwapchainVk;
     class CommandBufferVk;
+    class ImageVk;
 
     struct SwapchainCreateInfo
     {
@@ -75,9 +76,12 @@ namespace engine
 
         ShaderG CreateShader(const std::vector<Uint8>& data);
 
-        void CreateRenderPass(const ObjectRef<SwapchainVk>& swapchain);
+        RenderPassG CreateRenderPass(const std::vector<ImageVk>& colorImages);
 
-        void CreateFrameBuffer();
+        void CreateFramebuffer(RenderPassG& renderPass,
+                               Uint32 width,
+                               Uint32 height,
+                               const std::vector<ImageVk>& colorImages);
 
         void DestroySemaphore(VkSemaphore semaphore) { vkDestroySemaphore(m_device, semaphore, nullptr); }
 
@@ -94,6 +98,10 @@ namespace engine
         void DestroyFence(VkFence fence) { vkDestroyFence(m_device, fence, nullptr); }
 
         void DestroyShader(VkShaderModule shader) { vkDestroyShaderModule(m_device, shader, nullptr); }
+
+        void DestroyRenderPass(VkRenderPass renderPass) { vkDestroyRenderPass(m_device, renderPass, nullptr); }
+
+        void DestoryFramebuffer(VkFramebuffer framebuffer) { vkDestroyFramebuffer(m_device, framebuffer, nullptr); }
 
         std::vector<VkPresentModeKHR> GetSupporedPresentModes(VkSurfaceKHR surface) const;
 

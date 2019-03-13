@@ -7,6 +7,7 @@ namespace engine
     class DeviceVk;
 
     // I don't think it was even worth to write this thing
+    // TODO remove it or smth
 #define CREATE_GUARD(NAME, TYPE, DESTRUCTOR) \
     class NAME \
     { \
@@ -48,7 +49,8 @@ namespace engine
     CREATE_GUARD(ImageViewG, VkImageView, DestroyImageView);
     CREATE_GUARD(FenceG, VkFence, DestroyFence);
     CREATE_GUARD(ShaderG, VkShaderModule, DestroyShader);
-
+    CREATE_GUARD(RenderPassG, VkRenderPass, DestroyRenderPass);
+    CREATE_GUARD(FramebufferG, VkFramebuffer, DestroyFramebuffer);
 
 #undef CREATE_GUARD
 
@@ -110,6 +112,9 @@ namespace engine
     CREATE_HANDLE(ImageViewH, ImageViewG, VkImageView);
     CREATE_HANDLE(FenceH, FenceG, VkFence);
     CREATE_HANDLE(ShaderH, ShaderG, VkShaderModule);
+    CREATE_HANDLE(RenderPassH, RenderPassG, VkRenderPass);
+    CREATE_HANDLE(FramebufferH, FramebufferG, VkFramebuffer);
+
 
 #undef CREATE_HANDLE
 

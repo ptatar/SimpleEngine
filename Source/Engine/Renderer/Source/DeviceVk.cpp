@@ -462,31 +462,33 @@ namespace engine
     }
 
 
-    void DeviceVk::CreateRenderPass(const ObjectRef<SwapchainVk>& swapchain)
+    RenderPassG DeviceVk::CreateRenderPass(const std::vector<ImageVk>& colorImages)
     {
-
-        // TODO CLEAR THIS
-        ASSERT(swapchain->GetImageCount());
-        const ImageVk& image = swapchain->GetImage(0);
-        VkFormat format = ImageFormat2NativeFormat(image.GetImageDesc().format);
-        VkAttachmentDescription attDesc =
+        std::vector<VkAttachmentDescription> attachmentDesc(colorImages.size());
+        std::vector<VkAttachmentReference> attachmentRef;
+        for (int i = 0; i < colorImages.size(); ++i)
         {
-            0,                                // VkAttachmentDescriptionFlags    flags;
-            format,                           // VkFormat                        format;
-            VK_SAMPLE_COUNT_1_BIT,            // VkSampleCountFlagBits           samples;
-            VK_ATTACHMENT_LOAD_OP_CLEAR,      // VkAttachmentLoadOp              loadOp;
-            VK_ATTACHMENT_STORE_OP_STORE,     // VkAttachmentStoreOp             storeOp;
-            VK_ATTACHMENT_LOAD_OP_DONT_CARE,  // VkAttachmentLoadOp              stencilLoadOp;
-            VK_ATTACHMENT_STORE_OP_DONT_CARE, // VkAttachmentStoreOp             stencilStoreOp;
-            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,  // VkImageLayout                   initialLayout;
-            VK_IMAGE_LAYOUT_PRESENT_SRC_KHR   // VkImageLayout                   finalLayout;
-        };
+            const ImageVk& image = colorImages[i];
+            VkFormat format = ImageFormat2NativeFormat(image.GetImageDesc().format);
+            attachmentDesc.push_back(
+            {
+                0,                                // VkAttachmentDescriptionFlags    flags;
+                format,                           // VkFormat                        format;
+                VK_SAMPLE_COUNT_1_BIT,            // VkSampleCountFlagBits           samples;
+                VK_ATTACHMENT_LOAD_OP_CLEAR,      // VkAttachmentLoadOp              loadOp;
+                VK_ATTACHMENT_STORE_OP_STORE,     // VkAttachmentStoreOp             storeOp;
+                VK_ATTACHMENT_LOAD_OP_DONT_CARE,  // VkAttachmentLoadOp              stencilLoadOp;
+                VK_ATTACHMENT_STORE_OP_DONT_CARE, // VkAttachmentStoreOp             stencilStoreOp;
+                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,  // VkImageLayout                   initialLayout;
+                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR   // VkImageLayout                   finalLayout;
+            });
 
-        VkAttachmentReference colorAttRef =
-        {
-            0,                                       // uint32_t         attachment;
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL // VkImageLayout    layout;
-        };
+            attachmentRef.push_back(
+            {
+                0,                                       // uint32_t         attachment;
+                VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL // VkImageLayout    layout;
+            });
+        }
 
         VkSubpassDescription spDesc =
         {
@@ -495,7 +497,7 @@ namespace engine
             0,                               // uint32_t                        inputAttachmentCount;
             nullptr,                         // const VkAttachmentReference*    pInputAttachments;
             1,                               // uint32_t                        colorAttachmentCount;
-            &colorAttRef,                    // const VkAttachmentReference*    pColorAttachments;
+            attachmentRef.data(),            // const VkAttachmentReference*    pColorAttachments;
             nullptr,                         // const VkAttachmentReference*    pResolveAttachments;
             nullptr,                         // const VkAttachmentReference*    pDepthStencilAttachment;
             0,                               // uint32_t                        preserveAttachmentCount;
@@ -510,7 +512,7 @@ namespace engine
             nullptr,                                   //const void*                       pNext;
             0,                                         //VkRenderPassCreateFlags           flags;
             1,                                         //uint32_t                          attachmentCount;
-            &attDesc,                                  //const VkAttachmentDescription*    pAttachments;
+            attachmentDesc.data(),                     //const VkAttachmentDescription*    pAttachments;
             1,                                         //uint32_t                          subpassCount;
             &spDesc,                                   //const VkSubpassDescription*       pSubpasses;
             0,                                         //uint32_t                          dependencyCount;
@@ -520,25 +522,51 @@ namespace engine
         if (result != VK_SUCCESS)
         {
             LOGE("CreateRenderPass failure: %d", result);
-            return;
+            return {};
         }
+        return RenderPassG(this, renderPass);
     }
 
 
-    void DeviceVk::CreateFrameBuffer()
+    void DeviceVk::CreateFramebuffer(RenderPassG& renderPass,
+                                     Uint32 width,
+                                     Uint32 height,
+                                     const std::vector<ImageVk>& colorImages)
     {
+        ASSERT(colorImages.size());
+        ASSERT(renderPass != VK_NULL_HANDLE);
+
+        // its bad but im lazy
+        std::vector<VkImageView> views(colorImages.size());
+        for (int i = 0; i < colorImages.size(); ++i)
+        {
+            views[i] = colorImages[i].GetView();
+
+            const ImageDesc& desc = colorImages[i].GetImageDesc();
+            ASSERT(width <= desc.width && height <= desc.height);
+        }
+
         VkFramebufferCreateInfo info =
         {
             VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO, // VkStructureType             sType;
-            nullptr, // const void*                 pNext;
-            0, // VkFramebufferCreateFlags    flags;
-            // VkRenderPass                renderPass;
-            // uint32_t                    attachmentCount;
-            // const VkImageView*          pAttachments;
-            // uint32_t                    width;
-            // uint32_t                    height;
-            // uint32_t                    layers;
+            nullptr,                             // const void*                 pNext;
+            0,                                   // VkFramebufferCreateFlags    flags;
+            renderPass.Get(),                    // VkRenderPass                renderPass;
+            static_cast<uint32_t>(views.size()), // uint32_t                    attachmentCount;
+            views.data(),                        // const VkImageView*          pAttachments;
+            width,                               // uint32_t                    width;
+            height,                              // uint32_t                    height;
+            1,                                   // uint32_t                    layers;
         };
+
+        VkFramebuffer framebuffer;
+        VkResult result = vkCreateFramebuffer(m_device, &info, nullptr, &framebuffer);
+        if (result != VK_SUCCESS)
+        {
+            LOGE("Framebuffer creation failure: %d", result);
+            return;
+        }
+        return;
     }
 
 

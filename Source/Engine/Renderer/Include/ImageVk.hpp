@@ -4,6 +4,7 @@
 #include "VulkanUtility.hpp"
 #include "Handle.hpp"
 
+#include <vector>
 
 namespace engine
 {
@@ -59,6 +60,29 @@ namespace engine
             friend DeviceVk;
 
             friend CommandBuffer;
+    };
+
+    class ImageVkArray
+    {
+        CLASS_NOT_COPYABLE(ImageVkArray);
+        public:
+            ImageVkArray()
+                : m_device(nullptr)
+                , m_images(nullptr)
+                , m_views(nullptr)
+                , m_layouts(nullptr) {}
+
+            ImageViewArray(DeviceVk* device,
+                           const std::vector<ImageDesc>& desc,
+                           std::vector<VkImage>&& images,
+                           std::vector<VkImageView>&& views)
+            {}
+
+        private:
+            DeviceVk* m_device;
+            std::vector<ImageDesc> m_imageDesc;
+            std::vector<VkImage> m_images;
+            std::vector<VkImageView> m_imageView;
     };
 
 } // namespace engine
