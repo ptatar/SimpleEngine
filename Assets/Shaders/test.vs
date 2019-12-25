@@ -9,6 +9,8 @@ layout(location = 0) in vec3 i_position;
 
 layout(location = 1) in vec4 i_color;
 
+layout(location = 2) in float i_dupa;
+
 layout(location = 0) out vec4 o_color;
 
 void main()

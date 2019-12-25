@@ -462,14 +462,16 @@ namespace engine
     }
 
 
-    RenderPassG DeviceVk::CreateRenderPass(const std::vector<ImageVk>& colorImages)
+    RenderPassG DeviceVk::CreateRenderPass(const FramebufferDesc& framebuffer)
     {
-        std::vector<VkAttachmentDescription> attachmentDesc(colorImages.size());
+
+        std::vector<VkAttachmentDescription> attachmentDesc;
         std::vector<VkAttachmentReference> attachmentRef;
-        for (int i = 0; i < colorImages.size(); ++i)
+        const auto& renderTargets = framebuffer.GetRenderTargets();
+        for (Uint32 i = 0; i < renderTargets.size(); ++i)
         {
-            const ImageVk& image = colorImages[i];
-            VkFormat format = ImageFormat2NativeFormat(image.GetImageDesc().format);
+            const auto& image = renderTargets[i];
+            VkFormat format = ImageFormat2NativeFormat(image->GetImageDesc().format);
             attachmentDesc.push_back(
             {
                 0,                                // VkAttachmentDescriptionFlags    flags;
@@ -485,7 +487,7 @@ namespace engine
 
             attachmentRef.push_back(
             {
-                0,                                       // uint32_t         attachment;
+                i,                                       // uint32_t         attachment;
                 VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL // VkImageLayout    layout;
             });
         }
@@ -496,7 +498,7 @@ namespace engine
             VK_PIPELINE_BIND_POINT_GRAPHICS, // VkPipelineBindPoint             pipelineBindPoint;
             0,                               // uint32_t                        inputAttachmentCount;
             nullptr,                         // const VkAttachmentReference*    pInputAttachments;
-            1,                               // uint32_t                        colorAttachmentCount;
+            (Uint32)attachmentDesc.size(),   // uint32_t                        colorAttachmentCount;
             attachmentRef.data(),            // const VkAttachmentReference*    pColorAttachments;
             nullptr,                         // const VkAttachmentReference*    pResolveAttachments;
             nullptr,                         // const VkAttachmentReference*    pDepthStencilAttachment;
@@ -511,13 +513,14 @@ namespace engine
             VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO, //VkStructureType                   sType;
             nullptr,                                   //const void*                       pNext;
             0,                                         //VkRenderPassCreateFlags           flags;
-            1,                                         //uint32_t                          attachmentCount;
+            (Uint32)attachmentDesc.size(),             //uint32_t                          attachmentCount;
             attachmentDesc.data(),                     //const VkAttachmentDescription*    pAttachments;
             1,                                         //uint32_t                          subpassCount;
             &spDesc,                                   //const VkSubpassDescription*       pSubpasses;
             0,                                         //uint32_t                          dependencyCount;
             nullptr                                    //const VkSubpassDependency*        pDependencies;
         };
+
         VkResult result = vkCreateRenderPass(m_device, &info, nullptr, &renderPass);
         if (result != VK_SUCCESS)
         {
@@ -528,22 +531,17 @@ namespace engine
     }
 
 
-    void DeviceVk::CreateFramebuffer(RenderPassG& renderPass,
-                                     Uint32 width,
-                                     Uint32 height,
-                                     const std::vector<ImageVk>& colorImages)
+    ObjectRef<FramebufferVk> DeviceVk::CreateFramebuffer(RenderPassG& renderPass, const FramebufferDesc& desc)
     {
-        ASSERT(colorImages.size());
+        ASSERT(desc.GetRenderTargets().size());
         ASSERT(renderPass != VK_NULL_HANDLE);
 
-        // its bad but im lazy
-        std::vector<VkImageView> views(colorImages.size());
-        for (int i = 0; i < colorImages.size(); ++i)
-        {
-            views[i] = colorImages[i].GetView();
+        auto& renderTargets = desc.GetRenderTargets();
+        std::vector<VkImageView> views(renderTargets.size());
 
-            const ImageDesc& desc = colorImages[i].GetImageDesc();
-            ASSERT(width <= desc.width && height <= desc.height);
+        for (int i = 0; i < renderTargets.size(); ++i)
+        {
+            views[i] = renderTargets[i]->GetView();
         }
 
         VkFramebufferCreateInfo info =
@@ -554,19 +552,20 @@ namespace engine
             renderPass.Get(),                    // VkRenderPass                renderPass;
             static_cast<uint32_t>(views.size()), // uint32_t                    attachmentCount;
             views.data(),                        // const VkImageView*          pAttachments;
-            width,                               // uint32_t                    width;
-            height,                              // uint32_t                    height;
+            desc.GetWidth(),                     // uint32_t                    width;
+            desc.GetHeight(),                    // uint32_t                    height;
             1,                                   // uint32_t                    layers;
         };
 
-        VkFramebuffer framebuffer;
-        VkResult result = vkCreateFramebuffer(m_device, &info, nullptr, &framebuffer);
+        VkFramebuffer handle;
+        VkResult result = vkCreateFramebuffer(m_device, &info, nullptr, &handle);
         if (result != VK_SUCCESS)
         {
             LOGE("Framebuffer creation failure: %d", result);
-            return;
+            return nullptr;
         }
-        return;
+        ObjectRef<FramebufferVk> framebuffer(new FramebufferVk(this, handle));
+        return framebuffer;
     }
 
 

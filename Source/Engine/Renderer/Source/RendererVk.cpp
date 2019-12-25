@@ -22,6 +22,11 @@ namespace engine
             return false;
         }
 
+        if (!m_shaderManager->Initialize(&m_device))
+        {
+            return false;
+        }
+
         return true;
     }
 
@@ -98,7 +103,7 @@ namespace engine
     Bool RendererVk::CreateSurface(IWindowSurfaceX* windowSurface)
     {
         m_renderSurface = m_device.CreateSurface(windowSurface);
-        ASSERT_RETURN(m_renderSurface);
+        ASSERT(m_renderSurface);
         VkSurfaceKHR& surface = m_renderSurface.Get();
 
         if(!m_device.CheckAdapterSurfaceSupport(surface))
@@ -107,10 +112,10 @@ namespace engine
         }
 
         auto semaphoreImage = m_device.CreateSemaphore();
-        ASSERT_RETURN(semaphoreImage);
+        ASSERT(semaphoreImage);
 
         auto semaphoreRendering = m_device.CreateSemaphore();
-        ASSERT_RETURN(semaphoreRendering);
+        ASSERT(semaphoreRendering);
 
         Bool found = false;
         VkFormat targetFormat = VK_FORMAT_B8G8R8A8_UNORM;
@@ -167,7 +172,7 @@ namespace engine
         info.transformation = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 
         m_swapchain = m_device.CreateSwapchain(info);
-        ASSERT_RETURN(m_swapchain);
+        ASSERT(m_swapchain);
 
         auto commandPool = m_device.CreateCommandPool();
         if (!commandPool)

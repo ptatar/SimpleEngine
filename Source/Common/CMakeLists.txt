@@ -23,6 +23,7 @@ set(COMMON_SRC
     ${COMMON_SRC_DIR}/FileUtility.cpp
     ${COMMON_SRC_DIR}/Config.cpp
     ${COMMON_SRC_DIR}/ConfigImpl.cpp
+    ${COMMON_INC_DIR}/Serializable.hpp
 )
 
 add_library(COMMON STATIC ${COMMON_SRC})
@@ -30,4 +31,5 @@ add_library(COMMON STATIC ${COMMON_SRC})
 target_link_libraries(COMMON "-lstdc++fs")
 
 target_include_directories(COMMON PUBLIC ${COMMON_INC_DIR}
-                                  PRIVATE ${RAPIDJSON_INC_DIR})
+                                  PRIVATE ${RAPIDJSON_INC_DIR}
+                                  PUBLIC ${YAS_INC_DIR})

@@ -23,13 +23,12 @@ namespace engine
     {
         public:
             ShaderVk(DeviceVk* device, const std::string& name, ShaderType type);
-            ~ShaderVk() {};
-            Bool Initialize(const std::vector<Uint8>& binary);
+            ~ShaderVk();
 
         private:
             std::string m_name;
             ShaderType m_type;
-            ShaderG m_shader;
+            VkShaderModule m_shader;
 
             DeviceVk* m_device;
     };

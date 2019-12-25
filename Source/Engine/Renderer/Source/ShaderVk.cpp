@@ -35,15 +35,9 @@ namespace engine
         ASSERT(device);
     }
 
-    Bool ShaderVk::Initialize(const std::vector<Uint8>& binary)
+    ShaderVk::~ShaderVk()
     {
-        m_shader = m_device->CreateShader(binary);
-        if (!m_shader)
-        {
-            LOGE("%s shader initialization failed: %s", ShaderTypeToString(m_type), m_name);
-            return false;
-        }
-        return true;
+        m_device->DestroyShader(m_shader);
     }
 
 } // namespace engine

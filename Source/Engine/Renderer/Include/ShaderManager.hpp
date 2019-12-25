@@ -12,10 +12,10 @@ namespace engine
     class ShaderManager
     {
         public:
-            ShaderManager() {};
+            ShaderManager(): m_device(nullptr) {};
             ~ShaderManager() {};
 
-            Bool Initialize();
+            Bool Initialize(DeviceVk* device);
 
         private:
             Bool CreateShaderCache(const Path& shaderPath);

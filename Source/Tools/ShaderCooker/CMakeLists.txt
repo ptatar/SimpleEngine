@@ -7,16 +7,20 @@ set(SHADER_COOKER_SRC
     ${SHADER_COOKER_INC_DIR}/ArgumentForwardIter.hpp
     ${SHADER_COOKER_INC_DIR}/ShaderCooker.hpp
     ${SHADER_COOKER_SRC_DIR}/ShaderCooker.cpp
+    ${SHADER_COOKER_INC_DIR}/ShaderHeader.hpp
     )
 
 add_executable(SHADER_COOKER_EXE ${SHADER_COOKER_SRC})
 
 target_link_libraries(SHADER_COOKER_EXE COMMON
-                                        shaderc)
+                                        shaderc
+                                        spirv-cross-glsl)
 
 target_include_directories(SHADER_COOKER_EXE PRIVATE ${COMMON_INC_DIR}
                                              PRIVATE ${SHADER_COOKER_INC_DIR}
-                                             PRIVATE ${SHADERC_INC_DIR})
+                                             PRIVATE ${SHADERC_INC_DIR}
+                                             PRIVATE ${SPIRV_CROSS_INC_DIR}
+                                             )
 
 set_target_properties(SHADER_COOKER_EXE
                       PROPERTIES OUTPUT_NAME "ShaderCooker")

@@ -87,7 +87,7 @@ namespace engine
 
         std::vector<ObjectRef<CommandBufferVk>> m_commandBuffers;
 
-        ShaderManager m_shaderManager;
+        ObjectRef<ShaderManager> m_shaderManager;
 
 
     };

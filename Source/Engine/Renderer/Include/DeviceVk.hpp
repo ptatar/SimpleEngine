@@ -7,6 +7,7 @@
 #include "VulkanUtility.hpp"
 #include "Handle.hpp"
 #include "IImage.hpp"
+#include "FramebufferVk.hpp"
 
 namespace engine
 {
@@ -76,12 +77,9 @@ namespace engine
 
         ShaderG CreateShader(const std::vector<Uint8>& data);
 
-        RenderPassG CreateRenderPass(const std::vector<ImageVk>& colorImages);
+        RenderPassG CreateRenderPass(const FramebufferDesc& framebufferDesc);
 
-        void CreateFramebuffer(RenderPassG& renderPass,
-                               Uint32 width,
-                               Uint32 height,
-                               const std::vector<ImageVk>& colorImages);
+        ObjectRef<FramebufferVk> CreateFramebuffer(RenderPassG& renderPass, const FramebufferDesc& desc);
 
         void DestroySemaphore(VkSemaphore semaphore) { vkDestroySemaphore(m_device, semaphore, nullptr); }
 
@@ -101,7 +99,7 @@ namespace engine
 
         void DestroyRenderPass(VkRenderPass renderPass) { vkDestroyRenderPass(m_device, renderPass, nullptr); }
 
-        void DestoryFramebuffer(VkFramebuffer framebuffer) { vkDestroyFramebuffer(m_device, framebuffer, nullptr); }
+        void DestroyFramebuffer(VkFramebuffer framebuffer) { vkDestroyFramebuffer(m_device, framebuffer, nullptr); }
 
         std::vector<VkPresentModeKHR> GetSupporedPresentModes(VkSurfaceKHR surface) const;
 

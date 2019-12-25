@@ -33,6 +33,8 @@ elseif(${PLATFORM_LINUX})
         ${RENDERER_INC_DIR}/ISwapchain.hpp
         ${RENDERER_INC_DIR}/SwapchainVk.hpp
         ${RENDERER_SRC_DIR}/SwapchainVk.cpp
+        ${RENDERER_INC_DIR}/FramebufferVk.hpp
+        ${RENDERER_SRC_DIR}/FramebufferVk.cpp
         ${RENDERER_INC_DIR}/IImage.hpp
         ${RENDERER_INC_DIR}/ImageVk.hpp
         ${RENDERER_SRC_DIR}/ImageVk.cpp
