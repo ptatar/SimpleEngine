@@ -11,6 +11,7 @@ namespace engine
     {
         public:
             SerializationBuffer() {}
+
             virtual ~SerializationBuffer() {}
 
             Uint32 GetSize() const
@@ -34,6 +35,20 @@ namespace engine
             friend ISerializable;
     };
 
+    class SerializationFrame
+    {
+        public:
+            SerializationFrame(const Uint8* data, Uint32 size)
+                : m_buffer(reinterpret_cast<const char*>(data), size) {}
+
+            ~SerializationFrame() {}
+
+        private:
+            yas::intrusive_buffer m_buffer;
+            friend ISerializable;
+    };
+
+
     class ISerializable
     {
         public:
@@ -51,7 +66,11 @@ namespace engine
                 yas::load<s_flags>(buffer.m_buffer, *this);
             }
 
-        protected:
+            virtual void Deserialize(const SerializationFrame& frame)
+            {
+                yas::load<s_flags>(frame.m_buffer, *this);
+            }
+
             template<typename Ar>
             void serialize(Ar &ar)
             {

@@ -24,6 +24,11 @@ set(COMMON_SRC
     ${COMMON_SRC_DIR}/Config.cpp
     ${COMMON_SRC_DIR}/ConfigImpl.cpp
     ${COMMON_INC_DIR}/Serializable.hpp
+    ${COMMON_INC_DIR}/StringUtility.hpp
+    ${COMMON_SRC_DIR}/StringUtility.cpp
+    ${COMMON_INC_DIR}/String.hpp
+    ${COMMON_SRC_DIR}/String.cpp
+    ${COMMON_INC_DIR}/Exception.hpp
 )
 
 add_library(COMMON STATIC ${COMMON_SRC})

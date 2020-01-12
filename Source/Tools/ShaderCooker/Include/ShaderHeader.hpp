@@ -77,7 +77,6 @@ namespace engine
                 return m_type != other.m_type;
             }
 
-        protected:
             template<typename Ar>
             void serialize(Ar& ar)
             {
@@ -110,7 +109,6 @@ namespace engine
 
             ShaderDataType m_type;
 
-        protected:
             template<typename Ar>
             void serialize(Ar& ar)
             {
@@ -149,7 +147,6 @@ namespace engine
                         , m_type(type)
                         , m_offset(offset) {}
 
-                private:
                     template<typename Ar>
                     void serialize(Ar& ar)
                     {
@@ -171,7 +168,7 @@ namespace engine
 
                     Uint32 m_offset;
             };
-        protected:
+
             template<typename Ar>
             void serialize(Ar& ar)
             {
@@ -212,7 +209,6 @@ namespace engine
 
             const std::vector<Constant>& GetConstant() const {return m_constants; }
 
-        protected:
             template<typename Ar>
             void serialize(Ar& ar)
             {
@@ -248,15 +244,14 @@ namespace engine
         ShaderHeader m_header;
         std::vector<Uint32> m_binary;
 
-        protected:
-            template<typename Ar>
-            void serialize(Ar& ar)
-            {
-                ar & YAS_OBJECT(
-                    nullptr,
-                    m_header,
-                    m_binary
-                );
-            }
+        template<typename Ar>
+        void serialize(Ar& ar)
+        {
+            ar & YAS_OBJECT(
+                nullptr,
+                m_header,
+                m_binary
+            );
+        }
     };
 }

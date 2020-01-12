@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <cstring>
 
+#include "Logger.hpp"
+
 namespace engine
 {
 
@@ -37,6 +39,32 @@ namespace engine
             }
         }
         return true;
+    }
+
+    bool ShaderCooker::ReadShader(const Path& inputPath)
+    {
+        auto fileContent = LoadFileVec(inputPath);
+        if (fileContent.size())
+        {
+            SerializationFrame frame(fileContent.data(), fileContent.size());
+            ShaderBinary binary;
+            binary.Deserialize(frame);
+
+            LOGI("Shader heade:");
+            LOGI("Inputs:");
+            for (auto& input: binary.m_header.GetInput())
+            {
+                LOGI("  name: %s", input.m_name.c_str());
+                LOGI("  location: %d", input.m_slot);
+                //LOGI("  type: %s", input.m_type.ToString());
+            }
+            return true;
+        }
+        else
+        {
+            LOGE("Could not load file: %s", inputPath.GetCStr());
+            return false;
+        }
     }
 
 
@@ -172,7 +200,8 @@ namespace engine
         {
             Uint32 descriptorSet = compiler.get_decoration(uniform.id, spv::DecorationDescriptorSet);
             Uint32 binding = compiler.get_decoration(uniform.id, spv::DecorationBinding);
-            const std::string& name = uniform.name;
+            //const std::string& name = uniform.name;
+            const std::string& name = compiler.get_name(uniform.base_type_id);
             auto& type = compiler.get_type(uniform.base_type_id);
 
             header.GetConstant().emplace_back(name, binding);
