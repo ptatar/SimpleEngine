@@ -27,6 +27,15 @@ namespace engine
 
             StringImpl operator+(const StringImpl& str) const;
 
+            StringImpl& operator=(const char* str);
+
+        private:
+            void Alloc(Uint32 size);
+
+            bool Realloc(Uint32 size);
+
+            void Clear();
+
         private:
 
             char* m_buffer;

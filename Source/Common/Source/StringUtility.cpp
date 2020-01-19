@@ -89,4 +89,20 @@ namespace engine
         return 0;
     }
 
+    Uint32 StringLen(const char* str)
+    {
+        if (str == nullptr)
+        {
+            return 0;
+        }
+        
+        const char* ptr = str;
+        while (*ptr != '\0')
+        {
+            ptr++;
+        }
+
+        return str - ptr;
+    }    
+
 } // namespace engine

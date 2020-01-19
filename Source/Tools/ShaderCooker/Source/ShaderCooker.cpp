@@ -56,7 +56,7 @@ namespace engine
             {
                 LOGI("  name: %s", input.m_name.c_str());
                 LOGI("  location: %d", input.m_slot);
-                //LOGI("  type: %s", input.m_type.ToString());
+                LOGI("  type: %s", input.m_type.ToString());
             }
             return true;
         }

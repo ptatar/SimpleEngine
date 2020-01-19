@@ -1,6 +1,7 @@
 #include "Types.hpp"
 
 #include "Serializable.hpp"
+#include "String.hpp"
 
 #include <vector>
 
@@ -8,6 +9,13 @@ namespace engine
 {
     class ShaderDataType: public ISerializable
     {
+        enum class Mask: Uint32
+        {
+            BaseType = 0xFFFFFF00,
+            Col      = 0x000000F0,
+            Row      = 0x0000000F,
+        };
+
         public:
             enum class BaseType : Uint32
             {
@@ -50,6 +58,36 @@ namespace engine
             ~ShaderDataType() {}
 
             bool IsValid() const { return m_type != ComplexType::Invalid; }
+
+            BaseType GetBaseType() const { return BaseType(Uint32(m_type) & Uint32(Mask::BaseType)); }
+
+            Uint32 GetColNum() const { return Uint32(m_type) & Uint32(Mask::Col); }
+
+            Uint32 GetRowNum() const { return Uint32(m_type) & Uint32(Mask::Row); }
+
+            String ToString() const
+            {
+                BaseType baseType = GetBaseType();
+                String str;
+                switch(baseType)
+                {
+                    case BaseType::Float:
+                        str = "Float";
+                        break;
+                    case BaseType::Int:
+                        str = "Int";
+                        break;
+                    case BaseType::Image:
+                        str = "Image";
+                        break;
+                    case BaseType::Sampler:
+                        str = "Sampler";
+                        break;
+                    case BaseType::Invalid:
+                        str = "Invalid";
+                        break;
+                }
+            }
 
             static ShaderDataType Invalid()
             {

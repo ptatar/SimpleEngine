@@ -2,11 +2,11 @@
 
 #include <iostream>
 
-#define LOGD(...) common::Logger::GetInstance().Write(common::LogLevel::Debug,   __FUNCTION__, __LINE__, __VA_ARGS__)
-#define LOGI(...) common::Logger::GetInstance().Write(common::LogLevel::Info,    __FUNCTION__, __LINE__, __VA_ARGS__)
-#define LOGW(...) common::Logger::GetInstance().Write(common::LogLevel::Warning, __FUNCTION__, __LINE__, __VA_ARGS__)
-#define LOGE(...) common::Logger::GetInstance().Write(common::LogLevel::Error,   __FUNCTION__, __LINE__, __VA_ARGS__)
-#define LOGF(...) common::Logger::GetInstance().Write(common::LogLevel::Fatal,   __FUNCTION__, __LINE__, __VA_ARGS__)
+#define LOGD(...) common::Logger::GetInstance().Write(common::LogLevel::Debug, __FILE__,  __FUNCTION__, __LINE__, __VA_ARGS__)
+#define LOGI(...) common::Logger::GetInstance().Write(common::LogLevel::Info, __FILE__,   __FUNCTION__, __LINE__, __VA_ARGS__)
+#define LOGW(...) common::Logger::GetInstance().Write(common::LogLevel::Warning, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
+#define LOGE(...) common::Logger::GetInstance().Write(common::LogLevel::Error, __FILE__,  __FUNCTION__, __LINE__, __VA_ARGS__)
+#define LOGF(...) common::Logger::GetInstance().Write(common::LogLevel::Fatal, __FILE__,   __FUNCTION__, __LINE__, __VA_ARGS__)
 
 #define LOG_SET_THRESHOLD(Threshold) common::Logger::GetInstance().SetGlobalLogThreshold(Threshold)
 
@@ -48,7 +48,7 @@ namespace common {
             #pragma GCC diagnostic ignored "-Wformat-security"
 
             template<typename...Args>
-            void Write(LogLevel level, const char* funcName, int line, const char* str, Args...args)
+            void Write(LogLevel level, const char* file, const char* funcName, int line, const char* str, Args...args)
             {
                 if (level < LOCAL_LOG_THRESHOLD)
                 {
@@ -62,7 +62,7 @@ namespace common {
                     static char buffer[bufferSize];
 
                     snprintf(buffer, bufferSize, str, args...);
-                    std::cout << funcName << " : " << line << "  " << buffer << "\n";
+                    std::cout << file << ':' << line << " "  << funcName << " : " << buffer << "\n";
                 }
                 else
                 {

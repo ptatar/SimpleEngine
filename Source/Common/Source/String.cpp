@@ -14,40 +14,40 @@ namespace engine
 
     StringImpl::StringImpl(const char* cstr)
     {
+        m_size = StringLen(cstr);
 
-        const char* ptr = cstr;
-
-        while(*ptr != '\0')
+        if (m_size == 0)
         {
-            ptr++;
+            return;
         }
 
-        m_capacity = m_size = ptr - cstr;
+        Alloc(m_size + 1);
 
-        m_buffer = new char[m_size];
-        std::memcpy(m_buffer, cstr, m_size);
+        // copy string and null termination
+        std::memcpy(m_buffer, cstr, m_capacity);
     }
 
     StringImpl::StringImpl(const char* cstr, Uint32 size)
     {
 #if DEBUG_BUILD
-        const char* ptr = cstr;
-        while(ptr++ != nullptr) {}
-        Uint32 strSize = ptr - cstr;
+        Uint32 len = StringLen(cstr);
 
         ASSERT(strSize > Size);
 #endif
 
         m_size = size;
-        m_buffer = new char[size];
+        Alloc(m_size + 1);
+
         std::memcpy(m_buffer, cstr, m_size);
+        m_buffer[m_size] = '\0';
     }
 
     StringImpl::StringImpl(const StringImpl& str)
     {
-        m_buffer = new char[str.m_size];
+        Alloc(str.m_capacity);
         m_size = str.m_size;
-        std::memcpy(m_buffer, str.m_buffer, m_size);
+
+        std::memcpy(m_buffer, str.m_buffer, m_capacity);
     }
 
     StringImpl::StringImpl(StringImpl&& str)
@@ -97,6 +97,46 @@ namespace engine
         std::memcpy(str.m_buffer + m_size, other.m_buffer, other.m_size);
 
         return str;
-
     }
+
+    StringImpl& StringImpl::operator=(const char* str)
+    {
+        // maybe new object????
+        Uint32 strLen = StringLen(str);
+        Clear();
+        Alloc(strLen + 1);
+        std::memcpy(m_buffer, str, m_capacity);
+        return *this;
+    }
+
+    void StringImpl::Alloc(Uint32 size)
+    {
+        m_buffer = new char[size];
+        m_capacity = size;
+    }
+
+    bool StringImpl::Realloc(Uint32 size)
+    {
+        char* new_buffer = reinterpret_cast<char*>(realloc(m_buffer, size));
+        if (new_buffer != nullptr)
+        {
+            m_buffer = new_buffer;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    void StringImpl::Clear()
+    {
+        if (m_buffer != nullptr)
+        {
+            delete[] m_buffer;
+            m_size = 0;
+            m_capacity = 0;
+        }
+    }
+
 } // namespace engine
