@@ -1,3 +1,6 @@
+#pragma once
+
+#include "Types.hpp"
 #include "String.hpp"
 
 namespace engine

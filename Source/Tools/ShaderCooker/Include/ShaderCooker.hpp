@@ -25,7 +25,7 @@ namespace engine
             bool Cook(const Path& input, const Path& output);
 
             bool ReadShader(const Path& inputPath);
-            
+
         private:
             ShaderBinary ProcessFile(const Path& inputFile,
                                      const Path& outputFile);

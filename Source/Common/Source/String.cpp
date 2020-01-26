@@ -1,8 +1,10 @@
 #include "String.hpp"
 
 #include "StringUtility.hpp"
+#include "Exception.hpp"
 
 #include <cstring>
+#include <cstdio>
 
 namespace engine
 {
@@ -30,7 +32,7 @@ namespace engine
     StringImpl::StringImpl(const char* cstr, Uint32 size)
     {
 #if DEBUG_BUILD
-        Uint32 len = StringLen(cstr);
+       Uint32 len = StringLen(cstr);
 
         ASSERT(strSize > Size);
 #endif
@@ -109,6 +111,24 @@ namespace engine
         return *this;
     }
 
+    StringImpl& StringImpl::operator=(const StringImpl& str)
+    {
+        Clear();
+        Alloc(str.m_size + 1);
+        std::memcpy(m_buffer, str.m_buffer, m_capacity);
+
+        return *this;
+    }
+
+    StringImpl& StringImpl::operator=(StringImpl&& str)
+    {
+        Clear();
+        std::swap(m_size, str.m_size);
+        std::swap(m_capacity, str.m_capacity);
+        std::swap(m_buffer, str.m_buffer);
+        return *this;
+    }
+
     void StringImpl::Alloc(Uint32 size)
     {
         m_buffer = new char[size];
@@ -139,4 +159,10 @@ namespace engine
         }
     }
 
+    void _ThrowInvalidArgument(const String& str, Uint32 argIdx)
+    {
+        throw InvalidArgument(str, argIdx);
+    }
+
+    void StringImpl::Format()
 } // namespace engine

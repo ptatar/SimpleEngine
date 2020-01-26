@@ -72,11 +72,21 @@ namespace engine
                 switch(baseType)
                 {
                     case BaseType::Float:
+                    {
                         str = "Float";
+                        Uint32 col = GetColNum();
+                        Uint32 row = GetRowNum();
+                        str = String::Format("Float%dx%d",16, col, row);
                         break;
+                    }
                     case BaseType::Int:
+                    {
                         str = "Int";
+                        Uint32 col = GetColNum();
+                        Uint32 row = GetRowNum();
+                        str = String::Format("Int%dx%d",16, col, row);
                         break;
+                    }
                     case BaseType::Image:
                         str = "Image";
                         break;
@@ -86,7 +96,12 @@ namespace engine
                     case BaseType::Invalid:
                         str = "Invalid";
                         break;
+                    default:
+                        str = "Invalid";
+                        break;
                 }
+
+                return str;
             }
 
             static ShaderDataType Invalid()

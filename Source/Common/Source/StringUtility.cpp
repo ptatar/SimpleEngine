@@ -95,7 +95,7 @@ namespace engine
         {
             return 0;
         }
-        
+
         const char* ptr = str;
         while (*ptr != '\0')
         {
@@ -103,6 +103,6 @@ namespace engine
         }
 
         return str - ptr;
-    }    
+    }
 
 } // namespace engine
