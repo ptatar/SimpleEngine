@@ -1,0 +1,15 @@
+[submodule "DirectXShaderCompiler"]
+	path = External/DirectXShaderCompiler
+	url = git://microsoft/DirectXShaderCompiler
+[submodule "SPIRV-Cross"]
+	path = External/SPIRV-Cross
+	url = git://KhronosGroup/SPIRV-Cross
+[submodule "rapidjson"]
+	path = External/rapidjson
+	url = git://Tencent/rapidjson
+[submodule "shaderc"]
+	path = External/shaderc
+	url = git://google/shaderc
+[submodule "yas"]
+	path = External/yas
+	url = git://niXman/yas
