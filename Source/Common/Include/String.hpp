@@ -21,7 +21,7 @@ namespace engine
             StringImpl(StringImpl&& str);
 
             template<typename ...Args>
-            static StringImpl Format(const char* format, Uint32 maxLength, Args... args);
+            static StringImpl Format(const char* format, Args... args);
 
             const char* GetCStr() const { return m_buffer; };
 
@@ -56,35 +56,19 @@ namespace engine
 
     }; // StringImpl
 
-typedef StringImpl String;
+    typedef StringImpl String;
 
-void _ThrowInvalidArgument(const String& str, Uint32 argIdx);
 
-Uint32 _SnprintfImpl(const char* format, Uint32 bufferLen, ...);
-template<typename ...Args>
-StringImpl StringImpl::Format(const char* format, Uint32 maxLength, Args... args)
-{
-    StringImpl str;
-    str.Alloc(maxLength);
-
-    int ret = snprint(str.m_buffer, str.m_capacity, args...);
-    if (ret < maxLength && ret >= 0)
+    namespace impl
     {
-        str.m_size = ret;
-    }
-    else if (ret < 0)
-    {
-        _ThrowInvalidArgument("Invalid format", 0);
-        //throw InvalidArgument("Invalid format", 0);
-    }
-    else
-    {
-        _ThrowInvalidArgument("Buffer to small", 1);
-        //throw InvalidArgument("Buffer to small", 1);
-    }
+        StringImpl FormatImpl(const char* format, ...);
+    } // namespace impl
 
-    return str;
-}
+    template<typename ...Args>
+    StringImpl StringImpl::Format(const char* format, Args... args)
+    {
+        return impl::FormatImpl(format, args...);
+    }
 
 
 } // namespace engine

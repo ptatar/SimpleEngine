@@ -78,7 +78,7 @@ int main(int argc, char** argv)
             iter++;
             if (iter != arguments.End())
             {
-                inputPath = Path(*iter, true);
+                inputPath = Path(*iter);
             }
         }
         else if (ArgCmp(*iter, "--inputPath", "-i"))
@@ -110,6 +110,7 @@ int main(int argc, char** argv)
         else
         {
             LOGE("Invalid argument: %s", (*iter).c_str());
+            LOGI("%s", helpStr);
             return -1;
         }
     }
@@ -123,6 +124,7 @@ int main(int argc, char** argv)
             break;
         default:
             InvalidCommand();
+            LOGI("%s", helpStr);
             break;
 
     }

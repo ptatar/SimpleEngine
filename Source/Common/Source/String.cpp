@@ -32,9 +32,8 @@ namespace engine
     StringImpl::StringImpl(const char* cstr, Uint32 size)
     {
 #if DEBUG_BUILD
-       Uint32 len = StringLen(cstr);
-
-        ASSERT(strSize > Size);
+        Uint32 len = StringLen(cstr);
+        ASSERT(len > size);
 #endif
 
         m_size = size;
@@ -159,10 +158,36 @@ namespace engine
         }
     }
 
-    void _ThrowInvalidArgument(const String& str, Uint32 argIdx)
+    namespace impl
     {
-        throw InvalidArgument(str, argIdx);
-    }
+        #include <stdarg.h>
 
-    void StringImpl::Format()
+        StringImpl FormatImpl(const char* format, ...)
+        {
+            constexpr Uint32 bufferSize = 256;
+            char buffer[256];
+
+            va_list args;
+            va_start(args, format);
+            int ret = vsnprintf(buffer,256,format, args);
+            va_end(args);
+            if (ret < bufferSize && ret >= 0)
+            {
+                StringImpl str(buffer);
+                return str;
+            }
+            else if (ret < 0)
+            {
+                throw InvalidArgument("Invalid format", 0);
+
+                return StringImpl();
+            }
+            else
+            {
+                throw InvalidArgument("Buffer to small", 1);
+
+                return StringImpl();
+            }
+        }
+    } //namespace impl
 } // namespace engine

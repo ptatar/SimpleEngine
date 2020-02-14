@@ -7,13 +7,19 @@
 
 namespace engine
 {
-    class ShaderDataType: public ISerializable
+    class ShaderDataType
     {
         enum class Mask: Uint32
         {
             BaseType = 0xFFFFFF00,
             Col      = 0x000000F0,
             Row      = 0x0000000F,
+        };
+
+        enum class Shift: Uint32
+        {
+            Col      = 4,
+            Row      = 0,
         };
 
         public:
@@ -61,9 +67,9 @@ namespace engine
 
             BaseType GetBaseType() const { return BaseType(Uint32(m_type) & Uint32(Mask::BaseType)); }
 
-            Uint32 GetColNum() const { return Uint32(m_type) & Uint32(Mask::Col); }
+            Uint32 GetColNum() const { return (Uint32(m_type) & Uint32(Mask::Col)) >> Uint32(Shift::Col); }
 
-            Uint32 GetRowNum() const { return Uint32(m_type) & Uint32(Mask::Row); }
+            Uint32 GetRowNum() const { return (Uint32(m_type) & Uint32(Mask::Row)) >> Uint32(Shift::Row); }
 
             String ToString() const
             {
@@ -76,7 +82,7 @@ namespace engine
                         str = "Float";
                         Uint32 col = GetColNum();
                         Uint32 row = GetRowNum();
-                        str = String::Format("Float%dx%d",16, col, row);
+                        str = String::Format("Float%dx%d", col, row);
                         break;
                     }
                     case BaseType::Int:
@@ -84,7 +90,7 @@ namespace engine
                         str = "Int";
                         Uint32 col = GetColNum();
                         Uint32 row = GetRowNum();
-                        str = String::Format("Int%dx%d",16, col, row);
+                        str = String::Format("Int%dx%d", col, row);
                         break;
                     }
                     case BaseType::Image:
@@ -94,11 +100,10 @@ namespace engine
                         str = "Sampler";
                         break;
                     case BaseType::Invalid:
-                        str = "Invalid";
-                        break;
                     default:
                         str = "Invalid";
                         break;
+
                 }
 
                 return str;
@@ -130,10 +135,10 @@ namespace engine
                 return m_type != other.m_type;
             }
 
-            template<typename Ar>
-            void serialize(Ar& ar)
+            template<typename S>
+            void serialize(S& s)
             {
-                ar & YAS_OBJECT(
+                s & YAS_OBJECT(
                     nullptr,
                     m_type
                 );
@@ -162,10 +167,10 @@ namespace engine
 
             ShaderDataType m_type;
 
-            template<typename Ar>
-            void serialize(Ar& ar)
+            template<typename S>
+            void serialize(S& s)
             {
-                ar & YAS_OBJECT(
+                s & YAS_OBJECT(
                     nullptr,
                     m_name,
                     m_slot,
@@ -200,10 +205,10 @@ namespace engine
                         , m_type(type)
                         , m_offset(offset) {}
 
-                    template<typename Ar>
-                    void serialize(Ar& ar)
+                    template<typename S>
+                    void serialize(S& s)
                     {
-                        ar & YAS_OBJECT(
+                        s & YAS_OBJECT(
                             nullptr,
                             m_name,
                             m_binding,
@@ -222,10 +227,10 @@ namespace engine
                     Uint32 m_offset;
             };
 
-            template<typename Ar>
-            void serialize(Ar& ar)
+            template<typename S>
+            void serialize(S& s)
             {
-                ar & YAS_OBJECT(
+                s & YAS_OBJECT(
                     nullptr,
                     m_name,
                     m_binding,
@@ -243,7 +248,7 @@ namespace engine
             std::vector<Member> m_members;
     };
 
-    class ShaderHeader: public ISerializable
+    class ShaderHeader
     {
         public:
             ShaderHeader() {}
@@ -262,10 +267,10 @@ namespace engine
 
             const std::vector<Constant>& GetConstant() const {return m_constants; }
 
-            template<typename Ar>
-            void serialize(Ar& ar)
+            template<typename S>
+            void serialize(S& s)
             {
-                ar & YAS_OBJECT(
+                s & YAS_OBJECT(
                     nullptr,
                     m_name,
                     m_input,
@@ -284,7 +289,7 @@ namespace engine
             std::vector<Constant> m_constants;
     };
 
-    struct ShaderBinary: public ISerializable
+    struct ShaderBinary
     {
         ShaderBinary() {}
 
@@ -296,11 +301,10 @@ namespace engine
 
         ShaderHeader m_header;
         std::vector<Uint32> m_binary;
-
-        template<typename Ar>
-        void serialize(Ar& ar)
+        template <typename S>
+        void serialize(S& s)
         {
-            ar & YAS_OBJECT(
+            s & YAS_OBJECT(
                 nullptr,
                 m_header,
                 m_binary

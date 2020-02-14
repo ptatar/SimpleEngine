@@ -31,7 +31,7 @@ namespace engine
                 {
                     return false;
                 }
-                SerializationBuffer buffer = binary.Serialize();
+                SerializationBuffer buffer = Serialize(binary);
                 if (!SaveFile(outputFile, reinterpret_cast<const Uint8*>(buffer.GetData()), buffer.GetSize()))
                 {
                     return false;
@@ -47,16 +47,32 @@ namespace engine
         if (fileContent.size())
         {
             SerializationFrame frame(fileContent.data(), fileContent.size());
-            ShaderBinary binary;
-            binary.Deserialize(frame);
+            ShaderBinary binary = Deserialize<ShaderBinary>(frame);
 
             LOGI("Shader heade:");
             LOGI("Inputs:");
             for (auto& input: binary.m_header.GetInput())
             {
-                LOGI("  name: %s", input.m_name.c_str());
+                LOGI("  name:     %s", input.m_name.c_str());
                 LOGI("  location: %d", input.m_slot);
-                LOGI("  type: %s", input.m_type.ToString());
+                LOGI("  type:     %s", input.m_type.ToString().GetCStr());
+            }
+
+            LOGI("Outputs:");
+            for (auto& output: binary.m_header.GetOutput())
+            {
+                LOGI("  name:     %s", output.m_name.c_str());
+                LOGI("  location: %d", output.m_slot);
+                LOGI("  type:     %s", output.m_type.ToString().GetCStr());
+            }
+
+            LOGI("Constant:");
+            for (auto& constant: binary.m_header.GetConstant())
+            {
+                LOGI("  name:    %s", constant.m_name.c_str());
+                LOGI("  size:    %d", constant.m_size);
+                LOGI("  binding: %d", constant.m_binding);
+
             }
             return true;
         }

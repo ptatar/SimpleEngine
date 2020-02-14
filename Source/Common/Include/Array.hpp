@@ -9,15 +9,17 @@ namespace engine
     class Array
     {
         public:
-            Array(): m_size(0), m_data(nullptr) {}
+            explicit Array(): m_size(0), m_data(nullptr) {}
 
-            Array(Uint32 size): m_size(size)
+            explicit Array(Uint32 size)
             {
-                m_data = new T[size];
+                Alloc(size);
             }
 
             Array(std::initializer_list<T> initList)
             {
+                Alloc(initList.size());
+
                 Uint32 i = 0;
                 for(auto it = initList.begin(); it < initList.end(); it++)
                 {
@@ -27,8 +29,12 @@ namespace engine
 
             ~Array()
             {
-                delete[] m_data;
-                m_data = nullptr;
+                if (m_data)
+                {
+                    delete[] m_data;
+                    m_data = nullptr;
+                    m_size = 0;
+                }
             }
 
             inline T& operator[](Uint32 index)
@@ -61,6 +67,20 @@ namespace engine
             inline T* Data()
             {
                 return m_data;
+            }
+
+        private:
+            void Alloc(Uint32 size)
+            {
+                m_data = new T[size];
+                m_size = size;
+            }
+
+            void Clear()
+            {
+                delete[] m_data;
+                m_data = nullptr;
+                m_size = 0;
             }
 
         private:

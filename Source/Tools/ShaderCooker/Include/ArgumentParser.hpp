@@ -36,5 +36,5 @@ class Arguments
 
 inline bool ArgCmp(const std::string& arg, const std::string& longName, const std::string& shortName = "")
 {
-    return std::strcmp(arg.c_str(), longName.c_str()) == 0 || std::strcmp(arg.c_str(), longName.c_str()) == 0;
+    return std::strcmp(arg.c_str(), longName.c_str()) == 0 || std::strcmp(arg.c_str(), shortName.c_str()) == 0;
 }

@@ -102,7 +102,7 @@ namespace engine
             ptr++;
         }
 
-        return str - ptr;
+        return ptr - str;
     }
 
 } // namespace engine

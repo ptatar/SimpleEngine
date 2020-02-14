@@ -1,11 +1,10 @@
-#include "yas/serialize.hpp"
-
 #include "Types.hpp"
+
+#include "yas/serialize.hpp"
+#include "yas/std_types.hpp"
 
 namespace engine
 {
-
-    class ISerializable;
 
     class SerializationBuffer
     {
@@ -32,7 +31,11 @@ namespace engine
         private:
             yas::shared_buffer m_buffer;
 
-            friend ISerializable;
+            template<typename T>
+            friend SerializationBuffer Serialize(T& object);
+            template<typename T>
+            friend T Deserialize(const SerializationBuffer& buffer);
+
     };
 
     class SerializationFrame
@@ -45,37 +48,36 @@ namespace engine
 
         private:
             yas::intrusive_buffer m_buffer;
-            friend ISerializable;
+
+            template<typename T>
+            friend T Deserialize(const SerializationFrame& buffer);
     };
 
-
-    class ISerializable
+    template<typename T>
+    SerializationBuffer Serialize(T& object)
     {
-        public:
-            virtual ~ISerializable() {}
+        constexpr std::size_t flags = yas::mem | yas::binary;
+        SerializationBuffer buffer;
+        buffer.m_buffer = yas::save<flags>(object);
+        return buffer;
+    }
 
-            virtual SerializationBuffer Serialize() const
-            {
-                SerializationBuffer buffer;
-                buffer.m_buffer = yas::save<s_flags>(*this);
-                return buffer;
-            }
+    template<typename T>
+    T Deserialize(const SerializationBuffer& buffer)
+    {
+        constexpr std::size_t flags = yas::mem | yas::binary;
+        T object;
+        yas::load<flags>(buffer.m_buffer, &object);
+        return object;
+    }
 
-            virtual void Deserialize(const SerializationBuffer& buffer)
-            {
-                yas::load<s_flags>(buffer.m_buffer, *this);
-            }
+    template<typename T>
+    T Deserialize(const SerializationFrame& frame)
+    {
+        constexpr std::size_t flags = yas::mem | yas::binary;
+        T object;
+        yas::load<flags>(frame.m_buffer, object);
+        return object;
+    }
 
-            virtual void Deserialize(const SerializationFrame& frame)
-            {
-                yas::load<s_flags>(frame.m_buffer, *this);
-            }
-
-            template<typename Ar>
-            void serialize(Ar &ar)
-            {
-            }
-
-            const static std::size_t s_flags = yas::mem | yas::binary;
-    };
 }
